@@ -1,0 +1,39 @@
+# Bobot default Skor Grahantara.
+# Pengguna bisa menggeser bobot dimensi saat runtime; bobot indikator tetap.
+epsilon: 0.01
+
+dimensi:
+  connectivity:  0.40
+  affordability: 0.25
+  amenity:       0.20
+  walkability:   0.15
+
+indikator:
+  connectivity:
+    C1_jarak_halte:            0.30
+    C2_rute_unik:              0.20
+    C3_keterjangkauan_kampus:  0.40
+    C4_jarak_krl:              0.10
+  affordability:
+    A1_harga_kos:              0.60
+    A2_harga_makan:            0.40
+  amenity:
+    M1_kepadatan_makan:        0.35
+    M2_keragaman:              0.20
+    M3_keramaian:              0.20
+    M4_layanan_harian:         0.25
+  walkability:
+    W1_kerapatan_simpang:      0.15
+    W2_keteduhan:              0.20
+    W3_penerangan:             0.15
+    W4_banjir:                 0.15
+    W5_tekanan_lalin:          0.15
+    W6_integritas_jalur:       0.20
+
+# Indeks Integritas (komponen W6)
+w6_komponen:
+  I1_ketersediaan_trotoar: 0.25
+  I2_kecukupan_lebar:      0.15
+  I3_keutuhan:             0.20
+  I4_kemulusan:            0.15
+  I5_keterpaksaan:         0.25
