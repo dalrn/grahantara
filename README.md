@@ -1,7 +1,7 @@
 # Grahantara
 
 WebGIS penilaian kelayakan kawasan hunian mahasiswa di sabuk kampus Sleman, DIY.
-Tim **cinajawabatak** — MAPID WebGIS Competition #2, 2026.
+Tim **cinajawabatak**. MAPID WebGIS Competition #2, 2026.
 
 ## Apa yang dibangun
 
@@ -29,7 +29,7 @@ Digabung dengan **rata-rata geometrik terbobot**:
 Skor = 100 × (C+ε)^0,40 × (A+ε)^0,25 × (M+ε)^0,20 × (W+ε)^0,15     dengan ε = 0,01
 ```
 
-Geometrik, bukan aritmetik — supaya kawasan yang sangat buruk di satu dimensi tidak bisa
+Geometrik, bukan aritmetik, supaya kawasan yang sangat buruk di satu dimensi tidak bisa
 ditutupi oleh dimensi lain. Bobot bisa digeser pengguna saat runtime.
 
 Definisi lengkap tiap indikator ada di [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md).
