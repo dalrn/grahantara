@@ -20,7 +20,7 @@ export default function PanelBobot({ bobot, onBobotBerubah, onKembalikanBawaan }
   const pct = (k) => (total > 0 ? Math.round(((bobot[k] ?? 0) / total) * 100) : 0);
 
   return (
-    <div className="absolute left-4 top-20 z-10 w-72 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm">
+    <div className="absolute left-4 top-3 z-10 w-72 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm">
       <button
         onClick={() => setTerbuka((t) => !t)}
         className="flex w-full items-center justify-between text-left"

@@ -6,3 +6,5 @@ dist/
 !.env.example
 dev_server.log
 *.log
+
+.vercel
