@@ -1,4 +1,8 @@
-
-# artefak lokal
+node_modules/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
 dev_server.log
 *.log
