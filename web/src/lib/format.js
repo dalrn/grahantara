@@ -2,6 +2,10 @@ export function formatNilai(nilai, satuan) {
   if (nilai === null || nilai === undefined) return null;
   if (typeof nilai === "string") return nilai;
   const angka = nilai.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  if (typeof satuan === "string" && /^Rp/i.test(satuan.trim())) {
+    const sisa = satuan.trim().replace(/^Rp/i, "");
+    return `Rp ${angka}${sisa}`;
+  }
   return satuan ? `${angka} ${satuan}` : angka;
 }
 

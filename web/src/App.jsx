@@ -67,14 +67,17 @@ export default function App() {
   })();
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
-      <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
-      <PanelBobot
-        bobot={bobot}
-        onBobotBerubah={ubahBobot}
-        onKembalikanBawaan={kembalikanBawaan}
-      />
-      <PetaHeksagon
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-900">
+      <div className="flex-none">
+        <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
+      </div>
+      <div className="relative flex-1 overflow-hidden">
+        <PanelBobot
+          bobot={bobot}
+          onBobotBerubah={ubahBobot}
+          onKembalikanBawaan={kembalikanBawaan}
+        />
+        <PetaHeksagon
         onPilih={setHeksagonTerpilih}
         onStatusBasemap={setBasemapAktif}
         onPetaSiap={({ versi: v, labels: l }) => {
@@ -110,6 +113,7 @@ export default function App() {
           onTutup={() => setHeksagonTerpilih(null)}
         />
       )}
+      </div>
     </div>
   );
 }
