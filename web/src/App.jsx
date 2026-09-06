@@ -6,6 +6,7 @@ import PanelBobot from "./components/PanelBobot";
 import PanelKawasan from "./components/PanelKawasan";
 import PanelLapisan from "./components/PanelLapisan";
 import PitaPeringatan from "./components/PitaPeringatan";
+import Beranda from "./components/Beranda";
 import { BOBOT_DEFAULT } from "./config";
 import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
@@ -22,7 +23,20 @@ function lapisanAwal() {
   return Object.fromEntries(DEFINISI_LAPISAN.map((d) => [d.id, d.aktifAwal]));
 }
 
+function skorProfilKeBobot(profil) {
+  // bobot dari chip berangka 0-100 (mentah), sama dengan state bobot
+  const b = profil?.bobot;
+  if (!b) return BAWAAN_MENTAH;
+  const salin = { ...BAWAAN_MENTAH };
+  for (const k of ["connectivity", "affordability", "amenity", "walkability"]) {
+    if (typeof b[k] === "number" && Number.isFinite(b[k])) salin[k] = Math.max(0, Math.min(100, b[k]));
+  }
+  return salin;
+}
+
 export default function App() {
+  const [tampilan, setTampilan] = useState("beranda");
+  const [profilTerakhir, setProfilTerakhir] = useState(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [heksagonTerpilih, setHeksagonTerpilih] = useState(null);
   const [versi, setVersi] = useState(null);
@@ -66,12 +80,38 @@ export default function App() {
     return i === undefined ? null : skorTerkini[i];
   })();
 
+  if (tampilan === "beranda") {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-slate-950">
+        <Beranda
+          profilAwal={profilTerakhir}
+          onProfil={(profil) => {
+            setProfilTerakhir(profil);
+            setBobot(skorProfilKeBobot(profil));
+            setTampilan("peta");
+          }}
+          onLewati={() => {
+            setProfilTerakhir(null);
+            setBobot(BAWAAN_MENTAH);
+            setTampilan("peta");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-900">
       <div className="flex-none">
         <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
       </div>
       <div className="relative flex-1 overflow-hidden">
+        <button
+          onClick={() => setTampilan("beranda")}
+          className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+        >
+          ← Kembali ke beranda
+        </button>
         <PanelBobot
           bobot={bobot}
           onBobotBerubah={ubahBobot}
