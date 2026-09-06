@@ -4,14 +4,49 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { GAYA_BASEMAP_MAPID, WARNA_KELAS } from "../config";
 import { hitungKuintil, ekspresiWarna, labelKelas } from "../lib/kelas";
+import { siapkanMesin } from "../lib/mesinSkor";
+import { DEFINISI_LAPISAN } from "../lib/lapisan";
 
 const BATAS = [[110.334, -7.837], [110.473, -7.643]];
+const ID_LAYER_TITIK = DEFINISI_LAPISAN.filter((d) => d.tersedia).map((d) => `titik-${d.id}`);
 
-export default function PetaHeksagon({ onPilih, onStatusBasemap, onPetaSiap }) {
+function ekspresiWarnaTerkini(ambang) {
+  // Skor hasil hitung klien (feature-state) bila ada, fallback skor bawaan.
+  return [
+    "step",
+    ["coalesce", ["feature-state", "skorHitung"], ["get", "skor"]],
+    WARNA_KELAS[0],
+    ambang[0], WARNA_KELAS[1],
+    ambang[1], WARNA_KELAS[2],
+    ambang[2], WARNA_KELAS[3],
+    ambang[3], WARNA_KELAS[4],
+  ];
+}
+
+function hargaPopup(kos) {
+  if (typeof kos.harga_median !== "number") {
+    return { harga: "harga tidak tercatat", lencana: null };
+  }
+  return { harga: `Rp ${kos.harga_median.toLocaleString("id-ID")} / bulan`, lencana: kos.sumber_harga };
+}
+
+export default function PetaHeksagon({
+  onPilih,
+  onStatusBasemap,
+  onPetaSiap,
+  skorTerkini,
+  onDataSiap,
+  onAmbangBerubah,
+  lapisanAktif,
+  onJumlahLapisan,
+}) {
   const wadah = useRef(null);
   const peta = useRef(null);
   const hoverId = useRef(null);
   const terpilihId = useRef(null);
+  const mesin = useRef(null);
+  const raf = useRef(null);
+  const ambangBawaan = useRef(null);
 
   useEffect(() => {
     if (!wadah.current || peta.current) return;
@@ -82,8 +117,99 @@ export default function PetaHeksagon({ onPilih, onStatusBasemap, onPetaSiap }) {
       });
       map.fitBounds(BATAS, { padding: 40 });
 
+      // --- layer titik (fetch paralel) ---
+      const jumlah = {};
+      const hasilFetch = await Promise.all(
+        DEFINISI_LAPISAN.filter((d) => d.berkas).map(async (def) => {
+          const geo = await (await fetch(def.berkas)).json();
+          return { def, geo };
+        }),
+      );
+      for (const { def, geo } of hasilFetch) {
+        const n = geo.features?.length ?? 0;
+        jumlah[def.id] = n;
+        map.addSource(`titik-${def.id}`, { type: "geojson", data: geo });
+        const jari = def.jari;
+        const radius = [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11, jari * 0.6,
+          15, jari,
+          17, jari * 1.6,
+        ];
+        let warna = def.warna;
+        let stroke = "#0b1220";
+        if (def.id === "kos") {
+          warna = ["case", ["==", ["get", "harga_median"], null], "#64748b", "#f43f5e"];
+          stroke = ["case", ["==", ["get", "harga_median"], null], "#f8fafc", "#0b1220"];
+        }
+        map.addLayer({
+          id: `titik-${def.id}`,
+          type: "circle",
+          source: `titik-${def.id}`,
+          paint: {
+            "circle-radius": radius,
+            "circle-color": warna,
+            "circle-stroke-width": 1,
+            "circle-stroke-color": stroke,
+          },
+        });
+        if (!lapisanAktif[def.id]) {
+          map.setLayoutProperty(`titik-${def.id}`, "visibility", "none");
+        }
+      }
+      onJumlahLapisan(jumlah);
+
       onPetaSiap({ versi: data.metadata?.versi ?? null, labels: labelKelas(ambang, minSkor, maksSkor) });
+      mesin.current = siapkanMesin(data);
+      ambangBawaan.current = ambang;
+      onDataSiap(mesin.current);
     });
+
+    // popup titik (handler didaftarkan lebih dulu)
+    for (const def of DEFINISI_LAPISAN.filter((d) => d.tersedia)) {
+      map.on("click", `titik-${def.id}`, (e) => {
+        if (!e.features?.length) return;
+        const p = e.features[0].properties;
+        let isi;
+        if (def.id === "kampus") {
+          isi = `<div class="text-sm"><b>${p.nama}</b><br/><span class="text-slate-400">Jumlah gerbang: ${p.jumlah_gerbang}</span></div>`;
+        } else if (def.id === "halte") {
+          let koridor = p.koridor;
+          if (typeof koridor === "string") {
+            try {
+              koridor = JSON.parse(koridor);
+            } catch {
+              koridor = null;
+            }
+          }
+          const teksKoridor =
+            Array.isArray(koridor) && koridor.length ? koridor.join(", ") : null;
+          isi = `<div class="text-sm"><b>${p.nama}</b><br/><span class="text-slate-400">Koridor: ${teksKoridor ?? "tidak tercatat"}</span></div>`;
+        } else {
+          const { harga, lencana } = hargaPopup(p);
+          const lencanaHtml =
+            lencana === "model"
+              ? '<span class="ml-1 rounded bg-yellow-700 px-1 text-[10px] text-yellow-100">Estimasi</span>'
+              : lencana === "survei"
+                ? '<span class="ml-1 rounded bg-slate-500 px-1 text-[10px] text-slate-100">Survei lapangan</span>'
+                : "";
+          const jarak = typeof p.jarak_halte_m === "number" ? `<br/><span class="text-slate-400">Jarak ke halte: ${p.jarak_halte_m.toLocaleString("id-ID")} m</span>` : "";
+          isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}</div>`;
+        }
+        new maplibregl.Popup({ closeButton: false, offset: 12 })
+          .setLngLat(e.lngLat)
+          .setHTML(isi)
+          .addTo(map);
+      });
+      map.on("mouseenter", `titik-${def.id}`, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", `titik-${def.id}`, () => {
+        map.getCanvas().style.cursor = "";
+      });
+    }
 
     map.on("mousemove", "heksagon-isi", (e) => {
       if (!e.features?.length) return;
@@ -105,6 +231,11 @@ export default function PetaHeksagon({ onPilih, onStatusBasemap, onPetaSiap }) {
       map.getCanvas().style.cursor = "";
     });
     map.on("click", "heksagon-isi", (e) => {
+      // klik titik tidak boleh memicu seleksi heksagon
+      if (e.originalEvent && ID_LAYER_TITIK.length) {
+        const titik = map.queryRenderedFeatures(e.point, { layers: ID_LAYER_TITIK });
+        if (titik.length) return;
+      }
       if (!e.features?.length) return;
       const id = e.features[0].properties.h3_index;
       if (terpilihId.current && terpilihId.current !== id) {
@@ -113,17 +244,67 @@ export default function PetaHeksagon({ onPilih, onStatusBasemap, onPetaSiap }) {
       terpilihId.current = id;
       map.setFeatureState({ source: "heksagon", id }, { terpilih: true });
       // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
-      const props = e.features[0].properties;
-      const sub = typeof props.subskor === "string" ? JSON.parse(props.subskor) : props.subskor;
-      onPilih({ ...props, subskor: sub });
+      const props = { ...e.features[0].properties };
+      let galat = false;
+      for (const k of ["subskor", "indikator"]) {
+        if (typeof props[k] === "string") {
+          try {
+            props[k] = JSON.parse(props[k]);
+          } catch {
+            galat = true;
+            props[k] = null;
+          }
+        }
+      }
+      onPilih({ ...props, galatParsing: galat || undefined });
     });
 
     return () => {
+      if (raf.current) cancelAnimationFrame(raf.current);
       map.remove();
       peta.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // visibilitas layer titik mengikuti lapisanAktif
+  useEffect(() => {
+    const map = peta.current;
+    if (!map) return;
+    for (const def of DEFINISI_LAPISAN.filter((d) => d.tersedia)) {
+      if (!map.getLayer(`titik-${def.id}`)) continue;
+      map.setLayoutProperty(
+        `titik-${def.id}`,
+        "visibility",
+        lapisanAktif[def.id] ? "visible" : "none",
+      );
+    }
+  }, [lapisanAktif]);
+
+  // skor hasil hitung klien -> feature-state + ambang + warna (satu rAF per gerakan)
+  useEffect(() => {
+    const map = peta.current;
+    if (!map || !mesin.current || !map.getLayer("heksagon-isi")) return;
+    if (raf.current) cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(() => {
+      if (skorTerkini === null) {
+        map.setPaintProperty("heksagon-isi", "fill-color",
+          ekspresiWarna(ambangBawaan.current, WARNA_KELAS));
+        return;
+      }
+      const { h3, n } = mesin.current;
+      for (let i = 0; i < n; i++) {
+        map.setFeatureState({ source: "heksagon", id: h3[i] }, { skorHitung: skorTerkini[i] });
+      }
+      const urut = [...skorTerkini].sort((a, b) => a - b);
+      const ambang = hitungKuintil(urut);
+      const minSkor = urut[0];
+      const maksSkor = urut[n - 1];
+      map.setPaintProperty("heksagon-isi", "fill-color", ekspresiWarnaTerkini(ambang));
+      onAmbangBerubah({ ambang, minSkor, maksSkor });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skorTerkini]);
 
   return <div ref={wadah} className="absolute inset-0" style={{ position: "absolute" }} />;
 }
