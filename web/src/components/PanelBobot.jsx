@@ -10,7 +10,10 @@ const DIMENSI = [
 ];
 
 export default function PanelBobot({ bobot, onBobotBerubah, onKembalikanBawaan }) {
-  const [terbuka, setTerbuka] = useState(true);
+  // terlipat bawaan di mobile (< md), terbuka di desktop
+  const [terbuka, setTerbuka] = useState(
+    () => window.matchMedia("(min-width: 768px)").matches,
+  );
   const total = DIMENSI.reduce((a, [k]) => a + (bobot[k] ?? 0), 0);
   const bedaDariBawaan =
     Math.abs(bobot.connectivity - BOBOT_DEFAULT.connectivity * 100) > 0.5 ||
@@ -20,7 +23,7 @@ export default function PanelBobot({ bobot, onBobotBerubah, onKembalikanBawaan }
   const pct = (k) => (total > 0 ? Math.round(((bobot[k] ?? 0) / total) * 100) : 0);
 
   return (
-    <div className="absolute left-4 top-3 z-10 w-72 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm">
+    <div className="absolute left-2 top-14 z-20 w-48 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm md:left-4 md:top-3 md:w-72">
       <button
         onClick={() => setTerbuka((t) => !t)}
         className="flex w-full items-center justify-between text-left"

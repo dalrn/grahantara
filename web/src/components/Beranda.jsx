@@ -35,7 +35,7 @@ function ChipBobot({ kunci, nama, nilai, onChange }) {
   );
 }
 
-export default function Beranda({ onProfil, onLewati, profilAwal }) {
+export default function Beranda({ onProfil, onLewati, onMetodologi, profilAwal }) {
   const [teks, setTeks] = useState("");
   const [memuat, setMemuat] = useState(false);
   const [galat, setGalat] = useState(null);
@@ -118,9 +118,12 @@ export default function Beranda({ onProfil, onLewati, profilAwal }) {
         >
           {memuat ? "Memproses…" : "Proses"}
         </button>
-        <div className="mt-2 text-center">
+        <div className="mt-2 flex justify-center gap-3">
           <button onClick={onLewati} className="text-xs text-slate-500 underline hover:text-slate-300">
             Lewati, langsung ke peta
+          </button>
+          <button onClick={onMetodologi} className="text-xs text-slate-500 underline hover:text-slate-300">
+            Metodologi
           </button>
         </div>
 

@@ -3,9 +3,12 @@ import { useState } from "react";
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 
 export default function PanelLapisan({ lapisanAktif, onToggle, jumlahLapisan }) {
-  const [terbuka, setTerbuka] = useState(true);
+  // terlipat bawaan di mobile (< md), terbuka di desktop
+  const [terbuka, setTerbuka] = useState(
+    () => window.matchMedia("(min-width: 768px)").matches,
+  );
   return (
-    <div className="absolute bottom-4 right-4 z-10 w-64 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm">
+    <div className="absolute bottom-2 right-2 z-20 w-56 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm md:bottom-4 md:right-4 md:w-64">
       <button
         onClick={() => setTerbuka((t) => !t)}
         className="flex w-full items-center justify-between text-left"
