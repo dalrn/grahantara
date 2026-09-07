@@ -1,8 +1,113 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { KELOMPOK_INDIKATOR } from "../lib/kamus";
-import { formatSkor } from "../lib/format";
+import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
+import { formatNilai, formatSkor } from "../lib/format";
+import { BOBOT_DEFAULT } from "../config";
 import BarisIndikator from "./BarisIndikator";
+
+function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
+  const [memuat, setMemuat] = useState(false);
+  const [galat, setGalat] = useState(null);
+
+  useEffect(() => {
+    setMemuat(false);
+    setGalat(null);
+  }, [heksagon.h3_index]);
+
+  const kirim = async () => {
+    setMemuat(true);
+    setGalat(null);
+    try {
+      const bobot = bobotKini
+        ? Object.fromEntries(Object.entries(bobotKini).map(([k, v]) => [k, Math.round(v * 100)]))
+        : Object.fromEntries(Object.entries(BOBOT_DEFAULT).map(([k, v]) => [k, Math.round(v * 100)]));
+      const indikator = [];
+      for (const kelompok of KELOMPOK_INDIKATOR) {
+        for (const k of kelompok.kunci) {
+          const ik = heksagon.indikator?.[k];
+          indikator.push({
+            nama: NAMA_INDIKATOR[k] ?? k,
+            nilai: ik && ik.nilai !== null && ik.nilai !== undefined
+              ? formatNilai(ik.nilai, ik.satuan)
+              : null,
+            persentil: ik && typeof ik.persentil === "number" ? ik.persentil : null,
+            sumber: ik?.sumber ?? null,
+          });
+        }
+      }
+      const r = await fetch("/api/explain-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          h3_index: heksagon.h3_index,
+          skor: heksagon.skor,
+          subskor: heksagon.subskor,
+          bobot,
+          indikator,
+        }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => null);
+        setGalat(j?.galat ?? `Server menjawab ${r.status}.`);
+        return;
+      }
+      const hasil = await r.json();
+      padaJelaskan(heksagon.h3_index, hasil);
+    } catch {
+      setGalat("Tidak dapat menghubungi server. Coba lagi.");
+    } finally {
+      setMemuat(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-white/10 py-3">
+      <div className="text-sm font-semibold text-white">Insight</div>
+      {!narasi && !memuat && !galat && (
+        <button
+          onClick={kirim}
+          className="mt-2 w-full rounded bg-sky-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-sky-500"
+        >
+          Jelaskan kawasan ini
+        </button>
+      )}
+      {memuat && <div className="mt-2 text-xs text-slate-400">Menyusun penjelasan...</div>}
+      {galat && (
+        <div className="mt-2 rounded bg-red-900/60 p-2 text-xs text-red-100">
+          {galat}{" "}
+          <button onClick={kirim} className="underline">
+            Coba lagi
+          </button>
+        </div>
+      )}
+      {narasi && (
+        <div className="mt-2 space-y-1.5 text-xs">
+          {narasi.kekuatan?.map((k) => (
+            <div key={k} className="flex gap-1.5 text-emerald-300">
+              <span className="shrink-0 font-bold">▲</span>
+              <span>{k}</span>
+            </div>
+          ))}
+          {narasi.kelemahan?.map((k) => (
+            <div key={k} className="flex gap-1.5 text-yellow-300">
+              <span className="shrink-0 font-bold">▼</span>
+              <span>{k}</span>
+            </div>
+          ))}
+          <div className="pt-1 italic text-slate-300">{narasi.ringkas}</div>
+          {narasi.sumber === "fallback" && (
+            <div className="rounded bg-yellow-700 px-2 py-1 text-[10px] font-semibold text-white">
+              Disusun tanpa AI. Layanan bahasa tidak merespons.
+            </div>
+          )}
+          <div className="text-[10px] text-slate-600">
+            Disusun AI dari angka pada panel ini.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function BlokDimensi({ kelompok, subskor, indikator, bobot, terbuka, onToggle }) {
   const nilai = subskor?.[kelompok.dimensi];
@@ -44,7 +149,9 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, terbuka, onToggle })
   );
 }
 
-export default function PanelKawasan({ heksagon, versi, skorKini, bobotKini, onTutup }) {
+export default function PanelKawasan({
+  heksagon, versi, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
+}) {
   const [terbuka, setTerbuka] = useState(
     () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
   );
@@ -100,6 +207,13 @@ export default function PanelKawasan({ heksagon, versi, skorKini, bobotKini, onT
           Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
           metadata.bobot_default.
         </div>
+
+        <BlokInsight
+          heksagon={heksagon}
+          bobotKini={bobotKini}
+          narasi={narasiCache?.[heksagon.h3_index]}
+          padaJelaskan={(h3, hasil) => simpanNarasi(h3, hasil)}
+        />
 
         <div>
           {KELOMPOK_INDIKATOR.map((kelompok) => (

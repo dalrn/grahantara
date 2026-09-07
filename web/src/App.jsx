@@ -46,6 +46,7 @@ export default function App() {
   const [ambangInfo, setAmbangInfo] = useState(null);
   const [lapisanAktif, setLapisanAktif] = useState(lapisanAwal);
   const [jumlahLapisan, setJumlahLapisan] = useState({});
+  const [narasiCache, setNarasiCache] = useState({});
   const mesin = useRef(null);
   const indeksH3 = useRef(null);
   const timer = useRef(null);
@@ -151,6 +152,10 @@ export default function App() {
           skorKini={skorTerpilih}
           bobotKini={bedaDariBawaan ? normalisasiBobot(bobot).bobot : null}
           onTutup={() => setHeksagonTerpilih(null)}
+          narasiCache={narasiCache}
+          simpanNarasi={(h3, hasil) =>
+            setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
+          }
         />
       )}
       </div>
