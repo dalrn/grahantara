@@ -39,6 +39,9 @@ export default function PetaHeksagon({
   onAmbangBerubah,
   lapisanAktif,
   onJumlahLapisan,
+  modeBanding,
+  pilihanBanding,
+  onPilihBanding,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -105,11 +108,15 @@ export default function PetaHeksagon({
         paint: {
           "line-color": [
             "case",
+            ["boolean", ["feature-state", "bandingA"], false], "#38bdf8",
+            ["boolean", ["feature-state", "bandingB"], false], "#f97316",
             ["boolean", ["feature-state", "terpilih"], false], "#0f172a",
             "rgba(15,23,42,0.25)",
           ],
           "line-width": [
             "case",
+            ["boolean", ["feature-state", "bandingA"], false], 3,
+            ["boolean", ["feature-state", "bandingB"], false], 3,
             ["boolean", ["feature-state", "terpilih"], false], 2,
             0.4,
           ],
@@ -238,6 +245,21 @@ export default function PetaHeksagon({
       }
       if (!e.features?.length) return;
       const id = e.features[0].properties.h3_index;
+      if (modeRef.current) {
+        // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
+        const props = { ...e.features[0].properties };
+        for (const k of ["subskor", "indikator"]) {
+          if (typeof props[k] === "string") {
+            try {
+              props[k] = JSON.parse(props[k]);
+            } catch {
+              props[k] = null;
+            }
+          }
+        }
+        onPilihBanding({ ...props, h3_index: id });
+        return;
+      }
       if (terpilihId.current && terpilihId.current !== id) {
         map.setFeatureState({ source: "heksagon", id: terpilihId.current }, { terpilih: false });
       }
@@ -280,6 +302,37 @@ export default function PetaHeksagon({
       );
     }
   }, [lapisanAktif]);
+
+  // sorotan banding A/B lewat feature-state (modeBanding via ref, klik pakai nilai terbaru)
+  const modeRef = useRef(modeBanding);
+  const pilihanRef = useRef(pilihanBanding);
+  const bandingAId = useRef(null);
+  const bandingBId = useRef(null);
+  useEffect(() => {
+    modeRef.current = modeBanding;
+    pilihanRef.current = pilihanBanding;
+    const map = peta.current;
+    if (!map || !map.getLayer("heksagon-isi")) return;
+    const set = (lama, baru, kunci, ref) => {
+      if (lama && lama !== baru) {
+        map.setFeatureState({ source: "heksagon", id: lama }, { [kunci]: false });
+      }
+      if (baru && baru !== lama) {
+        map.setFeatureState({ source: "heksagon", id: baru }, { [kunci]: true });
+      }
+      ref.current = baru;
+    };
+    if (!modeBanding) {
+      if (bandingAId.current) map.setFeatureState({ source: "heksagon", id: bandingAId.current }, { bandingA: false });
+      if (bandingBId.current) map.setFeatureState({ source: "heksagon", id: bandingBId.current }, { bandingB: false });
+      bandingAId.current = null;
+      bandingBId.current = null;
+      return;
+    }
+    set(bandingAId.current, pilihanBanding?.a ?? null, "bandingA", bandingAId);
+    set(bandingBId.current, pilihanBanding?.b ?? null, "bandingB", bandingBId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeBanding, pilihanBanding]);
 
   // skor hasil hitung klien -> feature-state + ambang + warna (satu rAF per gerakan)
   useEffect(() => {

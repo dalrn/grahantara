@@ -5,6 +5,7 @@ import Legenda from "./components/Legenda";
 import PanelBobot from "./components/PanelBobot";
 import PanelKawasan from "./components/PanelKawasan";
 import PanelLapisan from "./components/PanelLapisan";
+import PanelBanding from "./components/PanelBanding";
 import PitaPeringatan from "./components/PitaPeringatan";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
@@ -12,6 +13,8 @@ import { BOBOT_DEFAULT } from "./config";
 import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
+import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "./lib/kamus";
+import { formatNilai } from "./lib/format";
 
 const BAWAAN_MENTAH = {
   connectivity: 40,
@@ -48,11 +51,94 @@ export default function App() {
   const [lapisanAktif, setLapisanAktif] = useState(lapisanAwal);
   const [jumlahLapisan, setJumlahLapisan] = useState({});
   const [narasiCache, setNarasiCache] = useState({});
+  const [modeBanding, setModeBanding] = useState(false);
+  const [pilihanBanding, setPilihanBanding] = useState({ a: null, b: null });
+  const [hasilBanding, setHasilBanding] = useState(null);
+  const [cacheBanding, setCacheBanding] = useState({});
+  const [galatBanding, setGalatBanding] = useState(null);
   const mesin = useRef(null);
   const indeksH3 = useRef(null);
   const timer = useRef(null);
+  const memuatBanding = useRef(false);
 
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  const klikBanding = (props) => {
+    setGalatBanding(null);
+    setHasilBanding(null);
+    setPilihanBanding((sebelum) => {
+      if (!sebelum.a) return { a: props, b: null };
+      if (!sebelum.b) {
+        if (sebelum.a.h3_index === props.h3_index) return sebelum;
+        return { a: sebelum.a, b: props };
+      }
+      return { a: props, b: sebelum.b };
+    });
+  };
+
+  const gantiSlot = (slot) => {
+    setPilihanBanding((s) => ({ ...s, [slot]: null }));
+    setHasilBanding(null);
+    setGalatBanding(null);
+  };
+
+  const skorUntuk = (props) => {
+    if (!props || !mesin.current || !skorTerkini || !indeksH3.current) return null;
+    const i = indeksH3.current.get(props.h3_index);
+    return i === undefined ? null : skorTerkini[i];
+  };
+
+  const mintaBanding = () => {
+    const { a, b } = pilihanBanding;
+    if (!a || !b || memuatBanding.current) return;
+    const kunci = `${a.h3_index}|${b.h3_index}`;
+    if (cacheBanding[kunci]) {
+      setHasilBanding(cacheBanding[kunci]);
+      return;
+    }
+    memuatBanding.current = true;
+    setHasilBanding("memuat");
+    setGalatBanding(null);
+    const buat = (d) => ({
+      h3_index: d.h3_index,
+      skor: d.skor,
+      subskor: d.subskor,
+      indikator: KELOMPOK_INDIKATOR.flatMap((kel) =>
+        kel.kunci.map((k) => {
+          const ik = d.indikator?.[k];
+          return {
+            nama: NAMA_INDIKATOR[k] ?? k,
+            nilai: ik && ik.nilai !== null && ik.nilai !== undefined ? formatNilai(ik.nilai, ik.satuan) : null,
+            persentil: ik && typeof ik.persentil === "number" ? ik.persentil : null,
+            sumber: ik?.sumber ?? null,
+          };
+        })),
+    });
+    fetch("/api/compare", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bobot, a: buat(a), b: buat(b) }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((j) => {
+        setCacheBanding((c) => ({ ...c, [kunci]: j }));
+        setHasilBanding(j);
+      })
+      .catch(() => setGalatBanding("Tidak dapat menghubungi server. Coba lagi."))
+      .finally(() => {
+        memuatBanding.current = false;
+      });
+  };
+
+  const keluarBanding = () => {
+    setModeBanding(false);
+    setPilihanBanding({ a: null, b: null });
+    setHasilBanding(null);
+    setGalatBanding(null);
+  };
 
   // debounce 120 ms: normalisasi -> hitungSemua -> skorTerkini
   useEffect(() => {
@@ -117,7 +203,7 @@ export default function App() {
         <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
       </div>
       <div className="relative flex-1 overflow-hidden">
-        <div className="absolute left-1/2 top-3 z-10 flex -translate-x-1/2 gap-1.5">
+        <div className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1.5">
           <button
             onClick={() => setTampilan("beranda")}
             className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
@@ -130,7 +216,30 @@ export default function App() {
           >
             Metodologi
           </button>
+          {modeBanding ? (
+            <button
+              onClick={keluarBanding}
+              className="rounded bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-500"
+            >
+              Selesai banding
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setHeksagonTerpilih(null);
+                setModeBanding(true);
+              }}
+              className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+            >
+              Bandingkan
+            </button>
+          )}
         </div>
+        {modeBanding && (
+          <div className="absolute left-2 top-14 z-10 rounded bg-slate-900/85 px-2 py-1 text-[10px] text-slate-300 md:left-auto md:right-3">
+            Klik dua heksagon di peta.
+          </div>
+        )}
         <PanelBobot
           bobot={bobot}
           onBobotBerubah={ubahBobot}
@@ -156,6 +265,9 @@ export default function App() {
         }}
         lapisanAktif={lapisanAktif}
         onJumlahLapisan={setJumlahLapisan}
+        modeBanding={modeBanding}
+        pilihanBanding={pilihanBanding}
+        onPilihBanding={klikBanding}
       />
       <Legenda labels={labels} />
       <PanelLapisan
@@ -163,7 +275,7 @@ export default function App() {
         onToggle={toggleLapisan}
         jumlahLapisan={jumlahLapisan}
       />
-      {heksagonTerpilih && (
+      {!modeBanding && heksagonTerpilih && (
         <PanelKawasan
           heksagon={heksagonTerpilih}
           versi={versi}
@@ -174,6 +286,21 @@ export default function App() {
           simpanNarasi={(h3, hasil) =>
             setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
           }
+        />
+      )}
+      {modeBanding && (pilihanBanding.a || pilihanBanding.b) && (
+        <PanelBanding
+          pilihan={pilihanBanding}
+          skorKini={{
+            a: skorUntuk(pilihanBanding.a),
+            b: skorUntuk(pilihanBanding.b),
+          }}
+          versi={versi}
+          onTutup={keluarBanding}
+          onGanti={gantiSlot}
+          hasilBanding={hasilBanding}
+          galat={galatBanding}
+          padaBanding={mintaBanding}
         />
       )}
       </div>
