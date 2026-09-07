@@ -92,9 +92,9 @@ export default function PetaHeksagon({
           "fill-color": ekspresiWarna(ambang, WARNA_KELAS),
           "fill-opacity": [
             "case",
-            ["boolean", ["feature-state", "terpilih"], false], 0.95,
-            ["boolean", ["feature-state", "hover"], false], 0.85,
-            0.7,
+            ["boolean", ["feature-state", "terpilih"], false], 0.85,
+            ["boolean", ["feature-state", "hover"], false], 0.75,
+            0.55,
           ],
         },
       });
@@ -105,8 +105,8 @@ export default function PetaHeksagon({
         paint: {
           "line-color": [
             "case",
-            ["boolean", ["feature-state", "terpilih"], false], "#ffffff",
-            "rgba(255,255,255,0.15)",
+            ["boolean", ["feature-state", "terpilih"], false], "#0f172a",
+            "rgba(15,23,42,0.25)",
           ],
           "line-width": [
             "case",
@@ -139,10 +139,10 @@ export default function PetaHeksagon({
           17, jari * 1.6,
         ];
         let warna = def.warna;
-        let stroke = "#0b1220";
+        let stroke = "#ffffff";
         if (def.id === "kos") {
           warna = ["case", ["==", ["get", "harga_median"], null], "#64748b", "#f43f5e"];
-          stroke = ["case", ["==", ["get", "harga_median"], null], "#f8fafc", "#0b1220"];
+          stroke = ["case", ["==", ["get", "harga_median"], null], "#0f172a", "#ffffff"];
         }
         map.addLayer({
           id: `titik-${def.id}`,
