@@ -170,7 +170,8 @@ export default function PanelKawasan({
   const pakaiBobotAnda = skorKini !== null && bobotKini !== null;
 
   return (
-    <div className="absolute right-0 top-0 z-20 flex h-full w-[380px] flex-col bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm">
+    <div className="absolute inset-x-0 bottom-0 z-20 flex h-[70dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[380px] md:rounded-none">
+      <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-white/25 md:hidden" />
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <span className="text-sm font-semibold">Kawasan terpilih</span>
         <button

@@ -102,6 +102,8 @@ ATURAN:
   diberikan, apa adanya.
 - HANYA boleh memakai angka yang ada di data yang diberikan. DILARANG
   menghitung, menaksir, atau mengarang angka baru.
+- Salin angka beserta satuannya PERSIS seperti diberikan, termasuk
+  posisi "Rp". Jangan menata ulang format angka atau satuan.
 - DILARANG menyebut indikator yang bertanda "tidak tersedia" sebagai
   kekuatan atau kelemahan. Boleh disebut sebagai keterbatasan data.
 - DILARANG menyebut nama tempat, jalan, kampus, atau kos tertentu.

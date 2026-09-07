@@ -7,6 +7,7 @@ import PanelKawasan from "./components/PanelKawasan";
 import PanelLapisan from "./components/PanelLapisan";
 import PitaPeringatan from "./components/PitaPeringatan";
 import Beranda from "./components/Beranda";
+import Metodologi from "./components/Metodologi";
 import { BOBOT_DEFAULT } from "./config";
 import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
@@ -81,11 +82,20 @@ export default function App() {
     return i === undefined ? null : skorTerkini[i];
   })();
 
+  if (tampilan === "metodologi") {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-slate-950">
+        <Metodologi onKembali={() => setTampilan("peta")} versi={versi} />
+      </div>
+    );
+  }
+
   if (tampilan === "beranda") {
     return (
       <div className="h-screen w-screen overflow-hidden bg-slate-950">
         <Beranda
           profilAwal={profilTerakhir}
+          onMetodologi={() => setTampilan("metodologi")}
           onProfil={(profil) => {
             setProfilTerakhir(profil);
             setBobot(skorProfilKeBobot(profil));
@@ -107,12 +117,20 @@ export default function App() {
         <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
       </div>
       <div className="relative flex-1 overflow-hidden">
-        <button
-          onClick={() => setTampilan("beranda")}
-          className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
-        >
-          ← Kembali ke beranda
-        </button>
+        <div className="absolute left-1/2 top-3 z-10 flex -translate-x-1/2 gap-1.5">
+          <button
+            onClick={() => setTampilan("beranda")}
+            className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+          >
+            ← Beranda
+          </button>
+          <button
+            onClick={() => setTampilan("metodologi")}
+            className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+          >
+            Metodologi
+          </button>
+        </div>
         <PanelBobot
           bobot={bobot}
           onBobotBerubah={ubahBobot}
