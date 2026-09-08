@@ -10,5 +10,5 @@ export const DAFTAR_KAMPUS = [
   "Instiper",
   "UII Kaliurang",
   "STIE YKPN",
-  "Universitas Respati",
+  "UIN Sunan Kalijaga",
 ];
