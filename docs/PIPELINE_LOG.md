@@ -595,3 +595,95 @@ Angka itu setara ambang **±1.250 m**, bukan 400 m yang dipakai C1. Bukan
 kesalahan, hanya definisi "jangkauan jalan kaki" yang berbeda. Perlu diseragamkan
 di halaman metodologi supaya angka publik dan angka pipeline tidak saling
 bertentangan.
+
+---
+
+## Ekspor MAPID gelombang kedua (2026-09-08)
+
+Lima GeoJSON diterima, dipindah ke `data/raw/mapid/` dengan nama pendek.
+
+| Berkas | Fitur | Di wilayah studi | Untuk |
+|---|---|---|---|
+| `makanan_minuman_2025.geojson` | 1.712 | **1.338** | **M1, M2** |
+| `toko_makanan_minuman_2025.geojson` | 1.603 | 525 | M1, M4 |
+| `harga_properti_2024.geojson` | 1.221 | 835 | A1 (kovariat) |
+| `risiko_banjir.geojson` | 588 poligon | 118 | **W4** |
+| `bahaya_banjir.geojson` | 1.057 poligon | 248 | W4 (alternatif) |
+
+### Amenity tidak lagi terblokir
+
+1.338 titik makanan-minuman di dalam wilayah studi untuk 2.134 heksagon.
+Bandingkan dengan 200 titik terpotong dari Open API — sekarang cakupannya nyata.
+**M1 dan M2 bisa dihitung.**
+
+**Dua layer makanan itu berbeda, bukan duplikat.** Sudah diperiksa: tumpang
+tindihnya hanya **9 titik** dari 1.712/1.603.
+
+| Layer | TIPE_1 | Isi TIPE_2 |
+|---|---|---|
+| `makanan_minuman` | MAKANAN DAN MINUMAN | RESTORAN 1.227, ROTI DAN KUE 250, MINUMAN 234, BAR 1 |
+| `toko_makanan_minuman` | PERDAGANGAN DAN RETAIL | TOKO MAKANAN DAN MINUMAN 1.603 |
+
+Yang pertama adalah **tempat makan** (tempat orang duduk makan). Yang kedua
+adalah **toko yang menjual bahan makanan**. Beda peruntukan:
+
+- **M1 kepadatan tempat makan** dan **M2 keragaman kuliner** memakai
+  `makanan_minuman` saja. Memasukkan toko bahan makanan akan salah — mahasiswa
+  yang mencari makan siang tidak dilayani toko kelontong.
+- **M4 layanan harian** justru cocok memakai `toko_makanan_minuman`, karena
+  kategori "warung" di kamus data memang toko kebutuhan sehari-hari.
+
+Keduanya dipakai, di indikator yang berbeda. Menggabungkannya jadi satu kolam
+akan menggelembungkan M1 hampir dua kali lipat.
+
+### HARGA PROPERTI — ada harga, tapi BUKAN harga sewa kos
+
+Dugaan sebelumnya sebagian benar dan sebagian salah. Layer ini memang memuat
+kolom harga sungguhan, terisi rapat:
+
+| Kolom | Terisi | Median |
+|---|---|---|
+| `HARGA PROPERTI NET (RP)` | 1.161/1.221 | Rp 700.100.000 |
+| `HARGA TANAH NET (RP/M²)` | 316/1.221 | — |
+
+Tetapi `TIPE_3` menunjukkan isinya: TANAH KOMERSIAL 476, TANAH RESIDENSIAL 441,
+RUMAH SEKEN 179, APARTEMEN SEKEN 55, RUKO 43. **Ini harga JUAL properti, bukan
+sewa bulanan kos.** Skalanya ratusan juta sampai miliar rupiah, sedangkan harga
+kos dari survei sekitar Rp700 ribu per bulan. Tiga orde besaran berbeda.
+
+**Tidak bisa dipakai sebagai label A1.** Label harga sewa tetap hanya 31 kos
+survei — tidak berubah.
+
+**Tapi sangat berguna sebagai kovariat.** 835 titik harga properti di dalam
+wilayah studi adalah proksi kuat untuk nilai tanah setempat, dan nilai tanah
+adalah penentu utama harga sewa kos. Model A1 yang dilatih pada 31 label akan
+jauh lebih kuat dengan fitur "median harga properti di sekitar heksagon ini"
+dibanding hanya jarak-ke-kampus dan kepadatan POI.
+
+Catatan: seluruh 1.221 baris bertanda `WAKTU = Q2 2024`, jadi satu potret waktu,
+bukan deret waktu. Geometrinya MultiPoint, perlu di-centroid saat dibaca.
+
+38 baris menyebut KOS di salah satu kolom tipe/nama — terlalu sedikit untuk
+label, tapi layak diperiksa saat membangun model A1.
+
+### Dua layer banjir — keduanya diterima, `bahaya_banjir` yang dipilih
+
+| Berkas | Poligon | Kelas |
+|---|---|---|
+| `risiko_banjir` | 588 (118 di wilayah studi) | TINGGI 239, SEDANG 301, RENDAH 48 |
+| `bahaya_banjir` | 1.057 (248 di wilayah studi) | Sangat Rendah 177, Cukup Rendah 338, Sedang 318, Cukup Tinggi 182, Tinggi 42 |
+
+**`bahaya_banjir` dipakai untuk W4**, dengan dua alasan:
+
+1. **Lima kelas, bukan tiga.** Kamus data mendefinisikan W4 sebagai
+   `1 - indeks bahaya`, dan lima tingkat memberi gradasi yang jauh lebih halus
+   setelah dinormalisasi persentil.
+2. **Cakupan dua kali lipat** di dalam wilayah studi (248 vs 118 poligon).
+
+Namanya pun cocok: kamus data menyebut "indeks **bahaya**", dan layer ini
+memang layer bahaya. `risiko_banjir` disimpan sebagai pembanding.
+
+**Ini menggantikan InaRISK.** Satu dependensi eksternal hilang, dan W4 kini
+bersumber dari data resmi panitia — nilai tambah untuk penilaian lomba.
+
+Yang belum: layer NIGHTTIME LIGHT (107–114) untuk menggantikan VIIRS di W3.
