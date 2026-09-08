@@ -1015,3 +1015,53 @@ Dua keputusan metodologis:
 2. **Direduksi pada buffer 15 m di sekitar jaringan jalan kaki**, bukan seluruh
    heksagon. Keteduhan penting di tempat orang berjalan; heksagon yang
    separuhnya sawah tidak berarti trotoarnya teduh.
+
+### Geokode kos — hasilnya sederhana, dan itu perlu dinyatakan jujur
+
+Survei tidak merekam koordinat kos. `02_geocode_kos.py` memulihkan posisi dari
+nama jalan, memakai **graf jalan OSM sebagai gazetteer** (3.297 jalan bernama).
+
+**Google Maps tidak dipakai** dan tidak akan dipakai: Places API butuh kunci
+Google Cloud dengan penagihan aktif, dan menyapu halaman Maps melanggar
+ketentuan layanannya sekaligus rapuh. OSM sudah terunduh, gratis, offline, dan
+reproducible.
+
+Tiga tingkat, sesuai urutan yang diusulkan pemilik repo:
+
+| Tingkat | Jumlah | Cara |
+|---|---|---|
+| `nama_kos` | 2 | nama jalan tertulis eksplisit di catatan kos |
+| `ruas_terkait` | 17 | lewat `ID ruas terkait`, ruas yang dicatat surveyor |
+| `pusat_kawasan` | 9 | rata-rata kos lain di kawasan yang sama |
+| `gagal` | 2 | tidak ada petunjuk sama sekali |
+
+28 dari 29 kos berharga kini punya koordinat.
+
+**Jebakan yang sempat terjadi dan hampir lolos.** Versi pertama mencocokkan
+**seluruh nama kos** dengan nama jalan. Hasilnya tampak bagus — 12 kecocokan
+"nama_kos" dengan skor tinggi — padahal isinya sampah:
+
+| Kos | Dicocokkan ke | Nyata? |
+|---|---|---|
+| Kost Soto Medan | Gang Noto Dimejan | tidak, hanya mirip huruf |
+| Kos Aydin | Jalan Gading | tidak |
+| Kost Putri Annisa | Gang Angsa | tidak |
+| Kos Elisa Putri | Jalan Delima Raya | tidak |
+
+Ketahuan saat audit satu per satu. Sekaligus terlihat KOS-001 yang namanya
+memuat "Jl. Kaliurang Km 13" justru jatuh ke pusat kawasan — logikanya terbalik.
+
+Diperbaiki: tingkat 1 kini **hanya menerima nama jalan eksplisit** yang didahului
+penanda (Jl./Jln/Gg./Gang), diambil lewat regex. Kalau catatan kos tidak memuat
+penanda itu, langsung turun ke tingkat 2. Sekarang seluruh kecocokan bisa
+ditelusuri ke jalan yang memang dicatat surveyor.
+
+**Hasil sebenarnya: 15 lokasi unik, naik dari 12.** Bukan lompatan besar.
+Penyebabnya beberapa kos berbagi ruas yang sama (KOS-010 dan KOS-011 sama-sama
+Jl. Raya Tajem; empat kos di Ring Road Utara), dan koordinatnya adalah
+**centroid seluruh jalan** — untuk jalan panjang seperti Ring Road Utara, itu
+bisa meleset ratusan meter.
+
+Ini **memperbaiki** masukan A1, tetapi **tidak menyelesaikan** masalah dasarnya:
+29 label harga tetap terlalu sedikit untuk melatih model di 2.134 heksagon.
+Keputusan pendekatan A1 masih terbuka.
