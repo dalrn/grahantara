@@ -12,7 +12,8 @@ Ditemukan saat Fase 2, 2026-09-08.
 > jadi keempatnya menghitung ulang sendiri. Menulis nilai ke dalamnya akan
 > merusak logika workbook.
 >
-> Masih terbuka: **C1 (RUAS-053)** di bagian bawah dokumen ini.
+> **C1 (RUAS-053)** sebagian diputuskan: lebar trotoar dikonfirmasi 2 m.
+> Bagian `Lebar Jalan = 0,0` pada ruas itu **masih terbuka**.
 
 Untuk tiap butir: apa yang tertulis, kenapa itu janggal, dan nilai yang
 **kemungkinan** dimaksud. Nilai usulan itu dugaan berdasar bukti di baris yang
@@ -172,8 +173,15 @@ Dampaknya nyata: dengan `Trotoar = "Ada"` tapi lebar 0, komponen I-2 menjadi
 `min(0/1,5 , 1) = 0`, sehingga W-6 ruas ini tertekan padahal trotoarnya
 dinyatakan ada.
 
-**Perlu ingatan pencatat:**
-- Berapa lebar jalan sebenarnya? (perkiraan 3–4 m wajar untuk "jalan kecil")
-- Berapa lebar trotoarnya, atau apakah `Trotoar` seharusnya "Tidak ada"?
+**DITERAPKAN SEBAGIAN 2026-09-08.** Pencatat mengonfirmasi **ada trotoar
+selebar 2 m**, jadi `Lebar Trotoar = 2,0`. Kolom `Trotoar` yang berbunyi "Ada"
+memang benar; yang salah hanya lebarnya yang terisi 0.
 
-Sampai ada jawaban, dibiarkan apa adanya.
+Akibatnya W-6 ruas ini **naik dari 0,0 menjadi 0,75** — I-1, I-2, I-3, dan I-4
+semuanya penuh, hanya I-5 nol karena `Pejalan turun ke jalan = "Ya"`. Profil ini
+konsisten: trotoar lebar dan mulus, tetapi pejalan kaki tetap turun ke jalan.
+
+**MASIH TERBUKA: `Lebar Jalan (m)` tetap 0,0.** Tidak diubah karena yang
+dikonfirmasi hanya lebar trotoar. Menebak lebar jalan berarti mengarang data.
+Ruas ini muat satu mobil, jadi angka sebenarnya kemungkinan 3–4 m, tetapi itu
+perlu konfirmasi pencatat. Berdampak pada W-5 tekanan lalu lintas, bukan W-6.
