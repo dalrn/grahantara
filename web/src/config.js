@@ -11,4 +11,7 @@ export const EPS = 0.01;
 
 export const WARNA_KELAS = ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"];
 
-export const GAYA_BASEMAP_MAPID = "street-2d-building";
+// Slug terverifikasi dengan kunci nyata: dark-v2.0 -> 200.
+// Keputusan tim: basemap gelap (street-v2.0 terang membuat kelas skor
+// tertinggi #fde725 nyaris menyatu dengan latar).
+export const GAYA_BASEMAP_MAPID = "dark-v2.0";

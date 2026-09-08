@@ -1,0 +1,38 @@
+export const DEFINISI_LAPISAN = [
+  {
+    id: "kampus",
+    label: "Kampus",
+    berkas: "/data/kampus.geojson",
+    warna: "#f97316",
+    jari: 6,
+    aktifAwal: true,
+    tersedia: true,
+  },
+  {
+    id: "halte",
+    label: "Halte Trans Jogja",
+    berkas: "/data/halte.geojson",
+    warna: "#38bdf8",
+    jari: 4,
+    aktifAwal: true,
+    tersedia: true,
+  },
+  {
+    id: "krl",
+    label: "Stasiun KRL",
+    berkas: null,
+    warna: "#a78bfa",
+    jari: 5,
+    aktifAwal: false,
+    tersedia: false,
+  },
+  {
+    id: "kos",
+    label: "Titik kos",
+    berkas: "/data/kos.geojson",
+    warna: "#f43f5e",
+    jari: 3,
+    aktifAwal: false,
+    tersedia: true,
+  },
+];
