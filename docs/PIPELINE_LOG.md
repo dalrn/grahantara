@@ -188,9 +188,35 @@ Field per aktivitas: `_id`, `title`, `description`, `geometry`, `medias`,
 Tidak ada field numerik terstruktur — sesuai ARCHITECTURE.md, Activities adalah
 **lapisan bukti** (foto, provenance untuk narasi AI-2), bukan sumber angka.
 
-**Terbuka:** dokumen menyebut 160 aktivitas, API mengembalikan 158. Selisih dua
-kemungkinan di luar poligon wilayah studi atau di luar rentang tanggal. Dicek di
-Fase 1, jangan ditebak.
+**Selisih 160 vs 158 — SELESAI, bukan masalah.** Dokumen benar: dengan kotak
+pencarian yang lebih luas (lon 110,25–110,50 / lat −7,90–−7,65) API mengembalikan
+**160** dan `meta.total` juga 160. Dengan poligon wilayah studi yang ketat
+(213 km²) hasilnya **158**.
+
+Dua aktivitas selisihnya memang berada **di luar wilayah studi**, sekitar
+200–300 m di sebelah barat batas (batas barat lon 110,3341):
+
+| Aktivitas | Koordinat |
+|---|---|
+| Kost Putri Mulia Sari | 110,33683 · −7,76749 |
+| Potret Suasana Jalan Mojo, Area Ringroad Barat Yogya | 110,33654 · −7,76733 |
+
+Tanggal tidak berpengaruh — rentang sempit (25 Jul–3 Sep 2026) dan rentang setahun
+penuh sama-sama memberi 160 pada kotak yang sama.
+
+**Keputusan: pakai 158.** Keduanya di luar area yang diberi skor, jadi menariknya
+masuk berarti menempelkan bukti foto ke heksagon yang tidak ada. Activities adalah
+lapisan bukti untuk narasi AI-2, dan setiap butirnya harus menempel pada heksagon
+yang benar-benar dinilai.
+
+**Catatan penting soal filter `hashtag`:** dokumentasi MAPID menyatakan filter ini
+adalah *partial match* pada **description**, bukan field tag terstruktur. Jadi
+postingan yang lupa menulis `#cinajawabatak` di keterangannya tidak akan muncul di
+hitungan mana pun. Angka 160 adalah "yang bertag dan di dalam kotak", belum tentu
+seluruh postingan tim.
+
+`meta.total` tersedia sebagai penghitung resmi — Fase 1 sebaiknya memeriksa
+`len(activities)` terhadap `meta.total`, bukan sekadar percaya panjang array.
 
 ### Keputusan: C4 memakai `sumber: "osm"`, bukan `"krl"`
 
