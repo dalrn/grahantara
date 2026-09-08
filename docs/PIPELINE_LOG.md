@@ -231,3 +231,83 @@ lewat, padahal tidak. Itu klaim berlebih yang akan ketahuan juri, sekaligus
 memberi premis palsu ke narasi AI-2.
 
 Nilai `krl` dibiarkan ada di enum skema tapi tidak dipakai.
+
+---
+
+## Fase 1 — Ingest (2026-09-08) — SEBAGIAN
+
+Sumber OSM dan MAPID Activities selesai. MAPID POI tertahan menunggu informasi
+endpoint. GEE belum dikerjakan.
+
+### Selesai
+
+| Keluaran | Isi | Catatan |
+|---|---|---|
+| `walk_graph.graphml` | 71.045 simpul, 182.866 ruas, 73 MB | satu komponen terhubung penuh |
+| `halte.parquet` | 675 halte bertag (650 bernama) | query tag OSM |
+| `rute.parquet` | 23 relasi: **20 Trans Jogja** + 3 Trans Gadjah Mada | urutan halte tersimpan |
+| `krl_stasiun.parquet` | 14 stasiun | Yogyakarta, Lempuyangan, Maguwo termasuk |
+| `halte_rute.parquet` | 679 halte, 589 berkoridor diketahui | masukan C1/C2/C3 |
+| `activities.parquet` | 158 aktivitas, semuanya berfoto | lapisan bukti AI-2 |
+
+### Kualitas graf jalan kaki
+
+Diunduh untuk wilayah studi **+ buffer 2 km**, bukan wilayah studi telanjang.
+Memotong graf rute di batas analisis membuat heksagon tepi tampak tak terjangkau,
+padahal pejalan kaki nyata boleh keluar batas lalu kembali.
+
+Hasil verifikasi:
+
+- **Satu komponen terhubung penuh** (71.045 simpul, 100%). Tidak ada pulau.
+- Jarak snap pusat heksagon ke simpul terdekat: median 37,4 m, p90 116 m, maks 819 m.
+- **Nol heksagon** yang snap ke luar komponen utama — semuanya bisa dirutekan.
+- 17 heksagon snap lebih jauh dari satu lebar heksagon (>380 m). Kemungkinan
+  sawah atau hutan yang jalannya memang jarang. Ditandai, bukan dianggap galat.
+
+### Tiga jebakan OSM yang sudah kena dan diperbaiki
+
+**1. `ox.features_from_polygon` tidak bisa mengambil relasi rute.**
+Fungsi itu hanya mengembalikan fitur yang geometrinya bisa dirakit, dan relasi
+rute bus sering gagal dirakit — hasilnya `InsufficientResponseError: No matching
+features`, seolah-olah tidak ada rute sama sekali. Padahal ada 23. Solusinya
+query Overpass langsung dan menyimpan daftar anggota relasi, karena yang
+dibutuhkan C3 memang **topologi koridor**, bukan garis yang tergambar.
+
+**2. Overpass menjawab HTTP 406 tanpa User-Agent.** Selalu kirim header itu.
+
+**3. `out body` sekaligus untuk seluruh bbox kena HTTP 504.** Bukan query salah,
+tapi terlalu berat karena setiap anggota relasi ikut diperluas. Dipecah dua
+tahap: `out tags` untuk mengambil id, lalu `out body` per batch 5 id. Satu batch
+selesai ~1 detik. Ditambah retry berjenjang karena 504 sering hanya beban sesaat.
+
+### Dedup halte di dalam relasi
+
+Satu halte fisik biasanya dipetakan **dua kali** dalam relasi rute: sekali
+`role=stop` (titik di badan jalan) dan sekali `role=platform` (area tunggu di
+tepi). Keduanya perjalanan yang sama. Dedup dilakukan sambil **mempertahankan
+urutan**, karena urutan itulah topologi koridornya.
+
+### Halte yang hanya ada sebagai anggota relasi
+
+Query tag menemukan 675 halte. Relasi rute menyebut 653 id halte, dan **68 di
+antaranya tidak ada di hasil query tag** — node itu tidak memikul tag halte
+sendiri, hanya menjadi anggota relasi.
+
+Diperiksa satu per satu, bukan ditebak: 65 dari 68 memang di luar wilayah studi
+(median 3,4 km, maks 11,4 km) — wajar, koridor Trans Jogja menjangkau pusat kota.
+Tetapi **3 berada di dalam wilayah studi**. Kalau dibiarkan, C3 kehilangan
+koridor yang lewat situ tanpa peringatan apa pun.
+
+`03_halte_rute_join.py` menggabungkan keduanya, lalu memangkas ke wilayah studi
++2 km. Hasil: **679 halte, 589 (86,7%) berkoridor diketahui**, median 2 koridor
+per halte, maksimum 13.
+
+### Tertahan
+
+**MAPID POI belum bisa diambil.** Endpoint Activities sudah pasti benar, tapi
+endpoint POI/layer belum diketahui — tebakan `/web/competition/layers`, `/layer`,
+dan `/poi` semuanya 404. Butuh informasi dari pemilik repo. Ini memblokir
+M1, M2, M4 (80% dimensi Amenity).
+
+**GEE (W2 NDVI, W3 VIIRS) belum dikerjakan.** Kredensial sudah terverifikasi
+bekerja, tinggal ditulis skripnya.
