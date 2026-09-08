@@ -1,7 +1,10 @@
 # data mentah dan antara - jangan pernah di-commit
-data/raw/
-data/interim/
-data/processed/
+# Seluruh isi data/ diabaikan, bukan hanya subfolder. Sebelumnya hanya tiga
+# subfolder yang tercakup, sehingga berkas yang jatuh di akar data/ lolos dan
+# sempat ter-commit ke GitHub. reference/ adalah tempat masukan hasil kurasi
+# tangan yang memang dilacak git.
+data/
+!data/README.md
 *.parquet
 *.graphml
 *.gpkg
@@ -29,3 +32,6 @@ dist/
 # artefak ingest yang besar (cache, bisa diunduh ulang)
 data/*.tif
 *.osm.pbf
+
+# cache unduhan osmnx/overpass
+cache/
