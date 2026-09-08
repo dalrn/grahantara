@@ -34,10 +34,20 @@ bisa dipakai apa adanya di resolusi heksagon. `A1` akan sebagian besar bersumber
 
 | Kunci | Definisi | Rumus | Sumber | Bobot |
 |---|---|---|---|---|
-| `M1_kepadatan_makan` | Jumlah titik tempat makan per heksagon | `1 - exp(-n/5)` | MAPID POI | 0,35 |
-| `M2_keragaman` | Keragaman jenis tempat makan | Shannon entropy ternormalisasi | MAPID POI | 0,20 |
+| `M1_kepadatan_makan` | Jumlah titik tempat makan dalam radius jalan kaki 800 m | `1 - exp(-n/5)` | MAPID POI | 0,35 |
+| `M2_keragaman` | Keragaman jenis tempat makan dalam radius yang sama | Shannon entropy ternormalisasi | MAPID POI | 0,20 |
 | `M3_keramaian` | Proksi footfall | Ordinal: sepi 0 · sedang 0,5 · ramai 1 | Survei (12 titik) | 0,20 |
 | `M4_layanan_harian` | Kategori layanan nonkuliner ≤800 m | `k/3` (apotek, minimarket, warung) | MAPID POI | 0,25 |
+
+**Perubahan radius M1/M2 (2026-09-08).** Definisi awal menghitung tempat makan **di dalam
+heksagon**. Itu ternyata mengukur kisi, bukan kawasan: heksagon res 9 hanya selebar ~380 m,
+sehingga warung 200 m di seberang batas — lima menit jalan kaki — terhitung nol. Hasilnya
+75% heksagon bernilai nol pada M1 dan kehilangan M2 sama sekali.
+
+Diubah menjadi **radius jalan kaki 800 m dari pusat heksagon**, sama dengan radius M4 dan
+anggaran jalan kaki C3. Heksagon bernilai nol turun dari 1.606 menjadi 540, dan M2 tersedia
+di 1.594 heksagon (sebelumnya 528). Angka 800 m dipilih agar konsisten dengan indikator
+lain, bukan untuk memperbagus sebaran.
 
 Delapan puluh persen dimensi ini berjalan di atas POI premium MAPID yang menutupi seluruh
 wilayah studi. Hanya `M3` yang terikat survei, dan 12 titik terlalu sedikit — kemungkinan
@@ -52,7 +62,7 @@ besar `tidak_tersedia` dengan bobot dinormalisasi ulang ke M1/M2/M4.
 | `W3_penerangan` | Radiansi malam | `log(1+x)`, persentil | VIIRS | 0,15 |
 | `W4_banjir` | Keamanan dari genangan | `1 - indeks bahaya` | InaRISK | 0,15 |
 | `W5_tekanan_lalin` | Tekanan lalu lintas terhadap pejalan | Kelas jalan OSM + lebar, **dikalibrasi** ke survei | OSM + survei | 0,15 |
-| `W6_integritas_jalur` | Kondisi mikro trotoar | Indeks komposit 5 komponen, lihat bawah | Survei (73 ruas) → **model** | 0,20 |
+| `W6_integritas_jalur` | Kondisi mikro trotoar | Indeks komposit 5 komponen, lihat bawah | Survei (76 ruas) → **model** | 0,20 |
 
 `W5` sudah menggunakan pola kalibrasi: survei tidak dipakai langsung, tapi melatih model di
 atas data sekunder yang menutupi seluruh wilayah. Pola yang sama dipakai untuk `A1` dan `W6`.
@@ -68,8 +78,9 @@ atas data sekunder yang menutupi seluruh wilayah. Pola yang sama dipakai untuk `
 | I-5 | Keterpaksaan turun ke jalan | `Pejalan turun ke jalan` | Tidak 1,0 · Ya 0,0 | 0,25 |
 
 Setelah aturan **nol struktural** (kalau `Trotoar = "Tidak ada"` maka lebar dan panjang
-terputus adalah 0, bukan kosong), 73 dari 84 ruas bisa dihitung. Sebelas sisanya
-terkonsentrasi di KWS-09.
+terputus adalah 0, bukan kosong), **76 dari 84 ruas** bisa dihitung. Delapan sisanya
+**tersebar**, bukan terkonsentrasi: KWS-02 (2), KWS-09 (2), KWS-10 (2), KWS-12 (1),
+KWS-08 (1). Angka lama (73 ruas, terkonsentrasi di KWS-09) sudah tidak berlaku.
 
 ## Agregasi
 
