@@ -931,3 +931,66 @@ M2 jauh lebih mandiri (0,35–0,50) — keragaman berbeda dari jumlah.
 
 Jumlah ruas W-6 yang bisa dihitung diperbarui dari "73 ruas, terkonsentrasi di
 KWS-09" menjadi **76 ruas**, dengan 8 sisanya **tersebar** di lima kawasan.
+
+### W3 dan W5 (2026-09-08)
+
+| Indikator | Terisi | Sumber |
+|---|---|---|
+| W3 penerangan | 1.775 (83,2%) | `nighttime_light_2023` MAPID |
+| W5 tekanan lalin | 2.095 (98,2%) | kelas jalan OSM, dikalibrasi survei |
+
+### W3 menggantikan VIIRS lewat GEE
+
+Layer MAPID sudah terklasifikasi lima kelas DN dengan rentang intensitas
+(nW/sr/cm²), sudah terpotong untuk Sleman. Radians ditaksir dari **titik tengah
+tiap rentang**; kelas tertinggi (≥20) diberi nilai wakil 30. Karena hasil akhir
+adalah peringkat persentil, yang penting hanya **urutannya**, bukan besaran
+persisnya.
+
+Cakupan 83,2% jauh lebih baik daripada W4 (14,1%). 359 heksagon yang tidak
+terpetakan tetap `tidak_tersedia`.
+
+**Satu dependensi eksternal hilang.** W3 kini bersumber data resmi panitia,
+bukan Google Earth Engine. Tersisa W2 (NDVI) yang masih butuh GEE.
+
+**Batasan yang harus dinyatakan di halaman metodologi:** cahaya malam satelit
+adalah proksi rasa aman berjalan ke halte selepas magrib, **bukan** ukuran lampu
+jalan. Jalan pertokoan terang dan lapangan parkir bersorot terbaca sama oleh
+satelit.
+
+### W5 memakai pola kalibrasi yang diminta kamus data
+
+Survei tidak memberi nilai langsung — 84 ruas tidak mungkin menutupi 2.134
+heksagon. Survei **mengalibrasi aturan** yang diterapkan pada data sekunder yang
+cakupannya penuh.
+
+Bukti kalibrasi dari 84 ruas survei:
+
+| Jenis jalan | Ramai | Sedang | Sepi | Median lebar |
+|---|---|---|---|---|
+| Gang | 0 | 0 | **20** | ~3 m |
+| Jalan kecil | 1 | 8 | 15 | 5,25 m |
+| Jalan raya | **30** | 10 | 0 | 10,50 m |
+
+Jenis jalan memprediksi kepadatan hampir sempurna: **seluruh 20 gang "Sepi"**,
+dan **30 dari 31 ruas "Ramai" adalah jalan raya**. Lebar jalan juga memisahkan
+ketiganya dengan bersih (rata-rata 3,8 / 6,9 / 13,4 m). Jadi kelas jalan OSM
+yang menutupi seluruh wilayah adalah proksi sah untuk kepadatan yang disurvei.
+
+Pemetaan kelas OSM ke tekanan: trunk/primary 1,00 · secondary 0,85 ·
+tertiary 0,60 · unclassified/residential 0,35 · living_street/service 0,15 ·
+footway/path 0,00.
+
+Tiap heksagon memakai **rata-rata tertimbang panjang** jalan di dalamnya,
+sehingga heksagon dengan satu ruas arteri dan banyak gang tidak dinilai dari
+arterinya saja — tetapi heksagon yang isinya memang mayoritas arteri, ya.
+
+Hierarki jalan hasilnya realistis: residential 6.102 km, living_street 1.510 km,
+sementara trunk hanya 197 km. Median tekanan 0,34 wajar untuk wilayah yang
+didominasi permukiman.
+
+**Batasan yang jujur dicatat:** kalibrasi ini memvalidasi **urutan**, bukan
+besaran. Ruas survei tidak membawa koordinat sendiri di berkas bersih, jadi
+tidak bisa dicocokkan satu-satu dengan ruas OSM untuk mengukur akurasi per
+ruas. Yang bisa dipastikan: urutan model (gang paling tenang, arteri paling
+menekan) sama persis dengan urutan yang diamati di lapangan.
