@@ -764,3 +764,66 @@ KWS-09". Kenyataannya **8 ruas**, tersebar di KWS-02 (2), KWS-09 (2), KWS-10
 Kolom `Harga (teks asli)` bertipe campur (`'775rb/1.2jt'` dan satu baris berupa
 angka), ditolak Parquet. Di-cast ke string agar teks aslinya utuh; angka yang
 sudah diurai tetap ada di `Harga median/min/maks`.
+
+### Koreksi anomali diterapkan (2026-09-08)
+
+Ketiganya disetujui pemilik repo dan diterapkan pada
+`Hasil_Survei_BERSIH.xlsx`. Cadangan sebelum koreksi disimpan sebagai
+`Hasil_Survei_BERSIH.SEBELUM_KOREKSI_2026-09-08.xlsx`.
+
+| Ruas | Perubahan | W-6 |
+|---|---|---|
+| RUAS-029 | Lebar Jalan 0,0→3,0 · Lebar Trotoar 3,0→0,0 | 0,0 (tetap) |
+| RUAS-034 | Trotoar "Tidak ada"→"Sebagian" | **0,0 → 0,5182** |
+| RUAS-069 | hanya catatan verifikasi | 0,0 (tetap) |
+
+### Temuan penting: W-6 adalah RUMUS EXCEL, bukan nilai statis
+
+Hampir merusak workbook karena mengira kolom I-1..I-5 dan W-6 berisi angka.
+Ternyata seluruhnya **rumus hidup** yang membaca parameter dari sheet
+`Panduan_W6`. Percobaan menulis nilai ke sana dibatalkan dan berkas dipulihkan
+dari cadangan.
+
+Yang benar: **hanya kolom sumber yang diubah** (`Trotoar`, `Lebar Jalan`,
+`Lebar Trotoar`, `Catatan`). Rumus menghitung ulang sendiri.
+
+Parameter yang ternyata berbeda dari dugaan:
+
+| Parameter | Nilai sebenarnya | Dugaan awal |
+|---|---|---|
+| Konstanta pemulusan I-4 | **3** | 1 |
+| Lebar trotoar standar | 1,5 m | 1,5 m (benar) |
+| Pengecualian gang sepi | **"Tidak"** (nonaktif) | tidak diketahui ada |
+
+Karena konstanta I-4 adalah 3 dan bukan 1, perkiraan awal W-6 RUAS-034 (0,4609)
+meleset; nilai sebenarnya **0,5182**.
+
+Ada pula aturan "Lengkap (gang)" di rumus status yang memberi perlakuan khusus
+untuk gang sepi, tetapi saklarnya (`Panduan_W6!B11`) sedang **"Tidak"**, jadi
+tidak aktif. Perlu diketahui kalau nanti dinyalakan.
+
+**Pembaca sekarang menghitung ulang W-6 sendiri** dari parameter `Panduan_W6`.
+Diperlukan karena openpyxl menyimpan rumus tanpa hasil cache Excel, sehingga
+setelah penyuntingan programatik kolom I-* dan W-6 terbaca kosong sampai berkas
+dibuka di Excel. Sekaligus menjadi pemeriksaan silang terhadap spreadsheet.
+
+### Catatan lapangan RUAS-034 sempat tertimpa, sudah dipulihkan
+
+Teks asli pencatat — *"gang persis di samping UPN, ada warmindo dan kos.
+terhalang bekas bakar sampah, jalannya kecil dan cukup bersampah"* — sempat
+tertimpa teks koreksi, lalu dipulihkan dan koreksi ditambahkan setelahnya.
+
+Isinya penting justru karena **bertentangan dengan koreksi yang dipilih**:
+menggambarkan gang kecil bersampah yang terhalang bekas bakar sampah, dan kolom
+`Pejalan turun ke jalan` tetap "Ya". Keduanya tidak mendukung adanya trotoar
+layak. Koreksi tetap diterapkan sesuai keputusan pemilik repo, tetapi dasarnya
+dicatat terbuka di `docs/SURVEI_ANOMALI.md` karena ini satu-satunya koreksi yang
+**menaikkan** skor, dan itu yang paling akan disorot juri.
+
+### Anomali baru yang belum diputuskan: RUAS-053
+
+Terlewat di laporan awal. `Lebar Jalan = 0,0` pada ruas yang muat satu mobil,
+**dan** `Trotoar = "Ada"` tapi `Lebar Trotoar = 0,0` — kebalikan dari A1/A2.
+
+Tidak seperti RUAS-029, di sini tidak ada angka yang bisa ditukar karena
+keduanya nol. Perlu ingatan pencatat. Dibiarkan apa adanya sampai ada keputusan.
