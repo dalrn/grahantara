@@ -311,3 +311,49 @@ M1, M2, M4 (80% dimensi Amenity).
 
 **GEE (W2 NDVI, W3 VIIRS) belum dikerjakan.** Kredensial sudah terverifikasi
 bekerja, tinggal ditulis skripnya.
+
+### MAPID Open API — endpoint ditemukan, tapi ada plafon 200
+
+Endpoint yang benar (dari layar Edit Layer, bukan dokumentasi Activities):
+
+```
+GET https://geoserver.mapid.io/layers_new/get_layer_list?api_key=..&project_id=..
+GET https://geoserver.mapid.io/layers_new/get_layer?api_key=..&layer_id=..&project_id=..
+```
+
+Kunci disimpan di `.env` sebagai `MAPID_API_KEY_DATA` dan `MAPID_PROJECT_ID`.
+Layer `uji_api` yang ada di tangkapan layar ternyata layer uji kosong — 1 fitur,
+0 field. Bukan itu yang dicari.
+
+**Sembilan layer di proyek:**
+
+| Layer | Fitur | Kegunaan |
+|---|---|---|
+| HALTE Sleman 2025 (premium) | 87 | pembanding 679 halte OSM |
+| All Point of Interest | **200 (terpotong)** | M1, M2, M4 |
+| Transportation | 48 | — |
+| KOS Sleman 2025 | 60 | **A1** — hampir tiga kali lipat sampel survei |
+| ALFAMART Sleman | 61 | M4 minimarket |
+| DEMOGRAFI Sleman | 86 poligon, 110 field | konteks |
+| SITE SELECTION Sleman | **200 (terpotong)** | hasil skoring pihak lain |
+| Cyberjaya Transportation / POI | 48 / **200** | bukan wilayah studi |
+
+**Plafon 200 dikonfirmasi, bukan dugaan.** `page=2` mengembalikan hasil yang
+**identik byte per byte**, dan semua parameter yang dicoba (`limit`, `skip`,
+`offset`, `per_page`, `max`) tidak berpengaruh. Layer yang isinya di bawah 200
+mengembalikan jumlah aslinya (87, 60, 61, 86), jadi 200 adalah batas atas
+endpoint, bukan ukuran halaman.
+
+**Konsekuensi serius untuk Amenity.** Kamus data mengasumsikan POI MAPID
+"menutupi seluruh wilayah studi" dan menopang M1, M2, M4 — 80% dimensi Amenity.
+200 titik tidak bisa menutupi 2.134 heksagon. Kalau dipaksakan, sebagian besar
+heksagon dapat nol tempat makan, dan nol itu akan dibaca sebagai **fakta**
+("tidak ada warung") padahal yang benar adalah **tidak tahu**. Persis mode
+kegagalan yang dilarang CLAUDE.md.
+
+Belum diputuskan — menunggu pemilik repo. Opsi yang terbuka: cari endpoint lain
+yang tidak berplafon, ekspor manual dari UI MAPID, atau alihkan M1/M2 ke POI OSM
+dan pakai MAPID sebagai pembanding kualitas.
+
+**Temuan sampingan yang berguna:** layer KOS berisi 60 titik. Survei lapangan
+hanya punya 31 kos berharga, jadi ini bisa memperkuat model A1 secara berarti.
