@@ -478,3 +478,120 @@ yang sekarang hanya punya 31 label survei bisa jauh lebih kuat.
 (sudah tercakup layer payung, dan menggabungnya akan dobel hitung), SITE
 SELECTION (skoring pihak lain, membuat penilaian melingkar), dan layer Cyberjaya
 (Malaysia).
+
+---
+
+## Fase 3 — Jaringan (2026-09-08) — SELESAI
+
+C1, C2, C3, C4, dan W1 dihitung untuk seluruh 2.134 heksagon. Tidak ada nilai
+kosong. Himpunan heksagon cocok persis dengan `reference/hex_index.txt`.
+
+| Skrip | Keluaran | Isi |
+|---|---|---|
+| `01_snap.py` | `snap.parquet` | 3.046 titik ditempelkan ke simpul graf |
+| `02_c1_c4.py` | `c1_c4.parquet` | jarak jaringan ke halte dan stasiun |
+| `03_c2.py` | `c2.parquet` | koridor unik dalam 400 m |
+| `04_c3.py` | `c3.parquet`, `c3_per_kampus.parquet` | keterjangkauan 10 kampus |
+| `05_w1.py` | `w1.parquet` | kerapatan simpang |
+
+### Kualitas snap
+
+| Jenis | Titik | Median | Maks |
+|---|---|---|---|
+| heksagon | 2.134 | 37,5 m | 819 m |
+| halte | 679 | 17,3 m | 103 m |
+| gerbang | 219 | 6,6 m | 168 m |
+| stasiun KRL | 14 | 882 m | 12.827 m |
+
+Stasiun KRL bermedian besar karena sebagian berada jauh di luar wilayah studi.
+Tidak masalah — hanya stasiun terdekat yang dipakai C4.
+
+### Hasil
+
+- **C1** median jarak jaringan ke halte **1.199 m**. Hanya **348 heksagon**
+  (16%) punya halte dalam 400 m, 761 dalam 800 m.
+- **C2** median **0 koridor** dalam 400 m. **82,1% heksagon tidak punya koridor
+  apa pun** dalam jarak itu.
+- **C4** median jarak ke stasiun KRL **6.233 m**. Praktis tidak relevan bagi
+  sebagian besar wilayah, sesuai bobotnya yang memang kecil (0,10).
+- **W1** median **160 simpang per km²**, dihitung hanya dari simpul berderajat
+  ≥3 supaya tidak menggelembung oleh titik lengkung jalan.
+
+Korelasi C1–C2–C3 tinggi (0,61–0,81), wajar karena ketiganya mengukur akses
+transit dari sudut berbeda. C4 jauh lebih mandiri (0,28–0,38).
+
+### Jebakan pemodelan C3 — penting, jangan diulang
+
+Model graf pertama **salah**, dan salahnya menghasilkan angka yang kelihatan
+masuk akal. Itu jenis kesalahan paling berbahaya.
+
+Model salah: **halte sebagai simpul**, sisi antara halte berurutan pada satu
+koridor. Terlihat wajar, tetapi **295 dari 589 halte dilayani lebih dari satu
+koridor**. Halte bersama itu menyatukan seluruh 20 koridor menjadi satu
+komponen tunggal, sehingga berpindah dari koridor 1A ke 4B berbiaya **nol
+transfer**. Akibatnya sembilan kampus mendapat angka identik 97,5% "langsung".
+
+Ketahuan justru karena keseragamannya: README menyebut 65% UGM, 20% STIE YKPN,
+18% AMIKOM — angka yang sangat **berbeda-beda**. Hasil yang rata untuk sembilan
+kampus mustahil benar.
+
+Model benar: simpul adalah pasangan **(halte, koridor)**.
+
+```
+ride     (s1, 1A) -> (s2, 1A)   biaya 0   tetap di dalam bus
+transfer (s,  1A) -> (s,  4B)   biaya 1   ganti koridor di halte yang sama
+walk     (s1, 1A) -> (s2, 4B)   biaya 1   jalan kaki pendek untuk ganti
+```
+
+Dengan model ini setiap pergantian koridor menjadi sisi eksplisit yang dihitung.
+Hasilnya langsung terdiferensiasi: UGM 79,0% langsung, STIE YKPN 43,4%, sesuai
+urutan yang disebut README meski angkanya lebih tinggi karena ambang jalan kaki
+di sini lebih longgar.
+
+Pencarian memakai **0-1 BFS** (deque, sisi biaya 0 masuk depan, biaya 1 masuk
+belakang), bukan Dijkstra — bobotnya hanya 0 dan 1.
+
+### GATE_M dinaikkan 600 -> 1.000 m, dengan alasan
+
+Pada 600 m, Instiper dan Sanata Dharma III punya **nol halte pelayan**. Terlihat
+seperti bug, ternyata bukan:
+
+| Kampus | Garis lurus | **Jaringan jalan kaki** |
+|---|---|---|
+| Instiper | 330 m | **918 m** |
+| Sanata Dharma III | 905 m | **1.184 m** |
+
+Rute jalan kaki nyata memang berkelok hampir tiga kali garis lurusnya. Uji
+sensitivitas 600/800/1.000/1.200/1.500 m menunjukkan **1.000 m** adalah titik
+di mana sembilan dari sepuluh kampus mendapat halte pelayan.
+
+**Sanata Dharma III tetap nol sampai 1.200 m, dan itu dibiarkan.** Skor 0,20 di
+seluruh wilayah untuk kampus itu adalah **temuan yang benar** tentang aksesnya,
+bukan cacat yang harus disetel hilang. Menaikkan ambang sampai semua kampus
+"lulus" berarti menyembunyikan justru hal yang produk ini ingin ungkap.
+
+### UGM dan UNY identik — benar, bukan bug
+
+Keduanya menghasilkan angka persis sama (601 langsung, 143 satu transfer). Sudah
+diperiksa: keduanya kampus bersebelahan yang **berbagi 27 halte**, dan 12
+koridor UNY hampir seluruhnya himpunan bagian dari 14 koridor UGM. Koridor yang
+mencapai satu kampus mencapai yang lain. Konsisten pula dengan temuan Fase 0
+bahwa dua gerbang memang melayani kedua kampus.
+
+### C3 per kampus disimpan terpisah
+
+`c3_per_kampus.parquet` memuat sepuluh kolom skor per heksagon. Ini yang
+dibutuhkan AI-1 saat pengguna menyebut kampusnya dan frontend menghitung ulang
+di klien. Disimpan sebagai berkas pendamping supaya GeoJSON 2.134 fitur tidak
+membengkak sepuluh field per heksagon, dan `mesinSkor.js` Devon tidak perlu
+berubah.
+
+C3 bawaan di GeoJSON memakai **kampus terbaik** yang terjangkau tiap heksagon.
+
+### Catatan: 1.105 di README
+
+README menyebut "1.105 kawasan yang punya halte dalam jangkauan jalan kaki".
+Angka itu setara ambang **±1.250 m**, bukan 400 m yang dipakai C1. Bukan
+kesalahan, hanya definisi "jangkauan jalan kaki" yang berbeda. Perlu diseragamkan
+di halaman metodologi supaya angka publik dan angka pipeline tidak saling
+bertentangan.
