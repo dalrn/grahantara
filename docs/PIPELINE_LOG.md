@@ -994,3 +994,24 @@ besaran. Ruas survei tidak membawa koordinat sendiri di berkas bersih, jadi
 tidak bisa dicocokkan satu-satu dengan ruas OSM untuk mengukur akurasi per
 ruas. Yang bisa dipastikan: urutan model (gang paling tenang, arteri paling
 menekan) sama persis dengan urutan yang diamati di lapangan.
+
+### W2 keteduhan (2026-09-08)
+
+`05_w2_keteduhan.py` — **2.099 heksagon (98,4%)**, NDVI median 0,382
+(rentang 0,108–0,765). Wajar untuk Sleman yang campuran permukiman dan sawah.
+
+Satu-satunya indikator yang masih memakai Google Earth Engine. Layer MAPID
+TUTUPAN LAHAN dan URBAN HEAT ISLAND sempat dipertimbangkan sebagai pengganti,
+tapi tutupan lahan bersifat **kategorikal** (bukan ukuran kehijauan kontinu) dan
+urban heat island adalah **akibat** dari vegetasi, bukan vegetasinya. NDVI
+mengukur tajuk secara langsung.
+
+Dua keputusan metodologis:
+
+1. **Komposit median musim kemarau** (April–Oktober 2025, awan <40%, mask SCL
+   untuk bayangan awan dan sirus). Satu lintasan berawan tidak bisa mengacaukan
+   satu heksagon, dan tajuk yang bertahan di musim kemarau adalah keteduhan
+   nyata, bukan tanaman padi musiman.
+2. **Direduksi pada buffer 15 m di sekitar jaringan jalan kaki**, bukan seluruh
+   heksagon. Keteduhan penting di tempat orang berjalan; heksagon yang
+   separuhnya sawah tidak berarti trotoarnya teduh.
