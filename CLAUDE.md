@@ -14,9 +14,10 @@ kamu tahu sedang bekerja di wilayah siapa.
    dump MAPID tidak masuk git.
 4. **Jangan menaruh API key di kode klien.** Kunci LLM hidup sebagai environment variable
    di serverless function (`web/api/`). Kunci basemap MAPID boleh publik terbatas.
-5. **Data di `web/public/data/` saat ini palsu.** Jangan menyimpulkan apa pun dari angkanya,
-   jangan menulis logika yang bergantung pada nilai spesifik, dan jangan "memperbaiki"
-   skor yang terlihat aneh. Cek `metadata.versi` — `"stub-0.1"` berarti stub.
+5. **Data di `web/public/data/` sudah asli sejak 2026-09-08 (`versi: "1.0"`).**
+   Tetap cek `metadata.versi` sebelum menyimpulkan apa pun — `"stub-0.x"` berarti
+   palsu. Jangan "memperbaiki" skor yang terlihat aneh tanpa menelusuri sumbernya:
+   banyak heksagon memang kehilangan dimensi Affordability, dan itu disengaja.
 
 ## Bahasa
 
