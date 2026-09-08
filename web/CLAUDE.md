@@ -10,19 +10,31 @@ Basemap dari MAPID MAPS lewat style API. Bukan Leaflet, bukan Mapbox GL (berbaya
 
 ## Sumber data
 
-Empat file di `public/data/`, semuanya statis, dimuat lewat `fetch` saat aplikasi start.
+Enam berkas di `public/data/`, semuanya statis, dimuat lewat `fetch` saat aplikasi start.
 
 | File | Isi | Ukuran |
 |---|---|---|
-| `hexagons.geojson` | 2.134 poligon, skor + 4 subskor + 16 indikator | ~4 MB |
-| `kampus.geojson` | 10 titik kampus | kecil |
-| `halte.geojson` | Titik halte + daftar koridor | kecil |
-| `kos.geojson` | Titik kos + harga + label sumber | kecil |
+| `hexagons.geojson` | 2.134 poligon, skor + 4 subskor + 16 indikator | ~4,5 MB |
+| `kampus.geojson` | 10 titik kampus + jumlah gerbang | kecil |
+| `halte.geojson` | 566 halte + daftar koridor | kecil |
+| `kos.geojson` | 31 kos survei + harga + presisi koordinat | kecil |
+| `krl.geojson` | 12 stasiun KRL | kecil |
+| `c3_per_kampus.json` | keterjangkauan tiap kampus per heksagon | ~0,5 MB |
 
-**Semuanya masih stub berisi angka acak.** Cek `metadata.versi` pada `hexagons.geojson`:
-`"stub-0.1"` berarti palsu. Bentuk dan skalanya benar, jadi UI yang dibangun di atasnya akan
-langsung bekerja saat data asli masuk. Tapi jangan menyimpulkan apa pun dari nilainya, dan
-jangan menulis logika yang bergantung pada angka tertentu.
+**Data sudah ASLI sejak 2026-09-08 (`metadata.versi: "1.0"`).** Stub sudah ditimpa.
+Sebaran skor: minimum 14,4 · median 45,1 · maksimum 87,5.
+
+**Dua hal baru yang perlu diperhatikan:**
+
+1. **`properties.dimensi_kosong`** — daftar dimensi yang seluruh indikatornya
+   `tidak_tersedia`. Dimensi itu **dikeluarkan** dari skor dan bobot dimensi sisanya
+   dinormalisasi ulang; nilainya ditulis `0` pada `subskor` hanya demi kesesuaian skema.
+   `mesinSkor.js` sudah membacanya. Kalau menulis kode lain yang menghitung skor,
+   **wajib** membaca field ini — 1.981 dari 2.134 heksagon tidak punya Affordability,
+   dan mengabaikannya membuat angkanya meleset sampai 59 poin.
+
+2. **`krl.geojson` sekarang ada.** `lapisan.js` sudah mendeklarasikan lapisan itu dengan
+   `tersedia: false` karena datanya belum ada. Sekarang sudah ada.
 
 Kontraknya ada di `../contracts/hexagon.schema.json`. Baca itu sebelum menulis kode yang
 membaca GeoJSON.

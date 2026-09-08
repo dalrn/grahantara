@@ -50,3 +50,28 @@ def load_weights() -> dict:
 def ensure_dirs() -> None:
     for d in (DATA_RAW, DATA_INTERIM, DATA_PROCESSED):
         d.mkdir(parents=True, exist_ok=True)
+
+
+def masukan(nama: str, subfolder: str = "mapid") -> Path:
+    """Locate a required pipeline input, preferring the version tracked in git.
+
+    Inputs that the pipeline CANNOT run without live in reference/, which is
+    committed. data/ is gitignored, so a file that exists only there makes the
+    pipeline unreproducible for anyone else -- and the MAPID layers cannot be
+    re-downloaded, because get_layer caps at 200 features and these were
+    exported by hand.
+
+    reference/ wins when both exist, so a stray edit under data/ cannot quietly
+    change results while the committed copy says otherwise.
+    """
+    for dasar in (REFERENCE / subfolder, REFERENCE, DATA_RAW / subfolder,
+                  DATA_RAW, DATA_PROCESSED):
+        calon = dasar / nama
+        if calon.exists():
+            return calon
+    raise SystemExit(
+        f"masukan tidak ditemukan: {nama}\n"
+        f"  dicari di: reference/{subfolder}/, reference/, "
+        f"data/raw/{subfolder}/, data/raw/, data/processed/\n"
+        f"  lihat docs/MAPID_UNDUH.md"
+    )

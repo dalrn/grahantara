@@ -100,4 +100,5 @@ seluruh halaman rusak karena LLM mengarang format.
 - Jangan menghitung ulang indikator atau persentil di frontend
 - Jangan merender `null` sebagai `0`
 - Jangan menambah field ke GeoJSON tanpa mengubah `contracts/hexagon.schema.json` dulu
-- Jangan menyimpulkan apa pun dari angka stub
+- Data sudah asli sejak 2026-09-08 (`metadata.versi: "1.0"`), stub sudah ditimpa
+- Baca `properties.dimensi_kosong` di tiap heksagon kalau menghitung skor sendiri
