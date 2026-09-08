@@ -70,7 +70,8 @@ def tidak_tersedia(satuan: str | None = None) -> dict:
     return indikator(None, satuan, None, "tidak_tersedia")
 
 
-def subskor(indikator_dimensi: dict[str, dict], bobot: dict[str, float]) -> float:
+def subskor(indikator_dimensi: dict[str, dict],
+            bobot: dict[str, float]) -> float | None:
     """Weighted mean of indicator percentiles, on a 0-100 scale.
 
     Indicators sourced `tidak_tersedia` are dropped and the remaining weights
@@ -88,21 +89,45 @@ def subskor(indikator_dimensi: dict[str, dict], bobot: dict[str, float]) -> floa
         total_bobot += w
 
     if total_bobot == 0:
-        return 0.0
+        # Every indicator in the dimension is missing. Returning None (not 0)
+        # lets skor_akhir exclude the dimension and renormalise, instead of
+        # scoring the hexagon as if it were genuinely bad.
+        return None
     return round(100.0 * total / total_bobot, 2)
 
 
-def skor_akhir(sub: dict[str, float], bobot_dimensi: dict[str, float],
+def skor_akhir(sub: dict[str, float | None], bobot_dimensi: dict[str, float],
                eps: float = EPS) -> float:
-    """Weighted geometric mean of the four subscores, 0-100.
+    """Weighted geometric mean of the subscores, 0-100.
 
         Skor = 100 * PROD((sub_d/100 + eps) ** bobot_d)
 
-    eps keeps the function defined when a dimension is genuinely empty. This
-    mirrors web/src/lib/mesinSkor.js, which recomputes the same thing in log
-    space when the user moves the weight sliders -- the two must agree.
+    A dimension whose value is None is EXCLUDED and the remaining dimension
+    weights are renormalised, exactly as indicator weights are renormalised
+    inside a dimension when an indicator is tidak_tersedia.
+
+    This matters because Affordability is unavailable in 1,981 of 2,134
+    hexagons: A1 covers 7.2% and A2 has no source at all. Scoring the empty
+    dimension as 0 dragged a typical hexagon from ~47 to ~18, which punishes
+    93% of the map for MISSING DATA rather than for being expensive -- the one
+    thing docs/DATA_DICTIONARY.md and CLAUDE.md both forbid.
+
+    The dictionary defines renormalisation for missing indicators but is silent
+    on a missing dimension; this applies its stated principle one level up.
+
+    NOTE for web/src/lib/mesinSkor.js: the client recomputes this in log space
+    from the four subscores. Hexagons with an excluded dimension carry that
+    dimension as 0 in the GeoJSON for schema conformance, so the client MUST
+    read metadata.dimensi_terpakai to reproduce these numbers.
     """
+    ada = {d: v for d, v in sub.items() if v is not None}
+    if not ada:
+        return 0.0
+    total = sum(bobot_dimensi[d] for d in ada)
+    if total <= 0:
+        return 0.0
     log_sum = 0.0
-    for dim, w in bobot_dimensi.items():
-        log_sum += w * np.log(sub[dim] / 100.0 + eps)
+    for dim, nilai in ada.items():
+        w = bobot_dimensi[dim] / total
+        log_sum += w * np.log(nilai / 100.0 + eps)
     return round(float(np.clip(100.0 * np.exp(log_sum), 0.0, 100.0)), 2)
