@@ -4,72 +4,147 @@
   "title": "Grahantara hexagon FeatureCollection",
   "description": "Kontrak data antara pipeline analisis (Dal) dan WebGIS (Devon). Perubahan pada file ini harus disepakati dua pihak.",
   "type": "object",
-  "required": ["type", "metadata", "features"],
+  "required": [
+    "type",
+    "metadata",
+    "features"
+  ],
   "properties": {
-    "type": { "const": "FeatureCollection" },
-    "name": { "type": "string" },
+    "type": {
+      "const": "FeatureCollection"
+    },
+    "name": {
+      "type": "string"
+    },
     "metadata": {
       "type": "object",
-      "required": ["versi", "h3_resolution", "jumlah"],
+      "required": [
+        "versi",
+        "h3_resolution",
+        "jumlah"
+      ],
       "properties": {
         "versi": {
           "type": "string",
           "description": "stub-0.x = data palsu untuk pengembangan UI. 1.x = skor asli."
         },
-        "h3_resolution": { "type": "integer", "const": 9 },
-        "jumlah": { "type": "integer" },
-        "dihitung_pada": { "type": "string", "format": "date-time" },
+        "h3_resolution": {
+          "type": "integer",
+          "const": 9
+        },
+        "jumlah": {
+          "type": "integer"
+        },
+        "dihitung_pada": {
+          "type": "string",
+          "format": "date-time"
+        },
         "bobot_default": {
           "type": "object",
           "properties": {
-            "connectivity": { "type": "number" },
-            "affordability": { "type": "number" },
-            "amenity": { "type": "number" },
-            "walkability": { "type": "number" }
+            "connectivity": {
+              "type": "number"
+            },
+            "affordability": {
+              "type": "number"
+            },
+            "amenity": {
+              "type": "number"
+            },
+            "walkability": {
+              "type": "number"
+            }
           }
         },
-        "peringatan": { "type": "string" }
+        "peringatan": {
+          "type": "string"
+        },
+        "aturan_dimensi_kosong": {
+          "type": "string",
+          "description": "Penjelasan aturan dimensi kosong yang berlaku pada berkas ini."
+        }
       }
     },
     "features": {
       "type": "array",
-      "items": { "$ref": "#/$defs/hexagon" }
+      "items": {
+        "$ref": "#/$defs/hexagon"
+      }
     }
   },
   "$defs": {
     "sumber": {
       "type": "string",
-      "enum": ["survei", "mapid_poi", "osm", "sentinel2", "viirs", "inarisk", "krl", "model", "tidak_tersedia"],
+      "enum": [
+        "survei",
+        "mapid_poi",
+        "osm",
+        "sentinel2",
+        "viirs",
+        "inarisk",
+        "krl",
+        "model",
+        "tidak_tersedia"
+      ],
       "description": "Asal nilai. 'model' = ditaksir dari data sekunder dan WAJIB ditandai di UI. 'tidak_tersedia' = dikeluarkan dari skor, bobotnya dinormalisasi ulang."
     },
     "indikator": {
       "type": "object",
-      "required": ["nilai", "persentil", "sumber"],
+      "required": [
+        "nilai",
+        "persentil",
+        "sumber"
+      ],
       "properties": {
         "nilai": {
-          "type": ["number", "string", "null"],
+          "type": [
+            "number",
+            "string",
+            "null"
+          ],
           "description": "Nilai mentah dalam satuannya sendiri. null jika sumber = tidak_tersedia."
         },
-        "satuan": { "type": ["string", "null"] },
+        "satuan": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "persentil": {
-          "type": ["number", "null"],
+          "type": [
+            "number",
+            "null"
+          ],
           "minimum": 0,
           "maximum": 1,
           "description": "Peringkat persentil (ECDF) terhadap seluruh wilayah studi. Inilah yang masuk ke perhitungan skor."
         },
-        "sumber": { "$ref": "#/$defs/sumber" }
+        "sumber": {
+          "$ref": "#/$defs/sumber"
+        }
       }
     },
     "hexagon": {
       "type": "object",
-      "required": ["type", "geometry", "properties"],
+      "required": [
+        "type",
+        "geometry",
+        "properties"
+      ],
       "properties": {
-        "type": { "const": "Feature" },
+        "type": {
+          "const": "Feature"
+        },
         "geometry": {
           "type": "object",
-          "required": ["type", "coordinates"],
+          "required": [
+            "type",
+            "coordinates"
+          ],
           "properties": {
-            "type": { "const": "Polygon" },
+            "type": {
+              "const": "Polygon"
+            },
             "coordinates": {
               "type": "array",
               "description": "Cincin tunggal, tertutup, urutan [lon, lat]."
@@ -78,7 +153,12 @@
         },
         "properties": {
           "type": "object",
-          "required": ["h3_index", "skor", "subskor", "indikator"],
+          "required": [
+            "h3_index",
+            "skor",
+            "subskor",
+            "indikator"
+          ],
           "properties": {
             "h3_index": {
               "type": "string",
@@ -93,20 +173,55 @@
             },
             "subskor": {
               "type": "object",
-              "required": ["connectivity", "affordability", "amenity", "walkability"],
-              "additionalProperties": { "type": "number", "minimum": 0, "maximum": 100 }
+              "required": [
+                "connectivity",
+                "affordability",
+                "amenity",
+                "walkability"
+              ],
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
             },
             "indikator": {
               "type": "object",
               "description": "Kunci tetap. Frontend boleh mengandalkan keberadaan keenam belas kunci ini.",
               "required": [
-                "C1_jarak_halte", "C2_rute_unik", "C3_keterjangkauan_kampus", "C4_jarak_krl",
-                "A1_harga_kos", "A2_harga_makan",
-                "M1_kepadatan_makan", "M2_keragaman", "M3_keramaian", "M4_layanan_harian",
-                "W1_kerapatan_simpang", "W2_keteduhan", "W3_penerangan", "W4_banjir",
-                "W5_tekanan_lalin", "W6_integritas_jalur"
+                "C1_jarak_halte",
+                "C2_rute_unik",
+                "C3_keterjangkauan_kampus",
+                "C4_jarak_krl",
+                "A1_harga_kos",
+                "A2_harga_makan",
+                "M1_kepadatan_makan",
+                "M2_keragaman",
+                "M3_keramaian",
+                "M4_layanan_harian",
+                "W1_kerapatan_simpang",
+                "W2_keteduhan",
+                "W3_penerangan",
+                "W4_banjir",
+                "W5_tekanan_lalin",
+                "W6_integritas_jalur"
               ],
-              "additionalProperties": { "$ref": "#/$defs/indikator" }
+              "additionalProperties": {
+                "$ref": "#/$defs/indikator"
+              }
+            },
+            "dimensi_kosong": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "connectivity",
+                  "affordability",
+                  "amenity",
+                  "walkability"
+                ]
+              },
+              "description": "Dimensi yang SELURUH indikatornya tidak_tersedia. Dimensi ini dikeluarkan dari rata-rata geometrik dan bobot dimensi sisanya dinormalisasi ulang. Nilai subskor-nya ditulis 0 hanya demi kesesuaian skema. Klien yang menghitung ulang skor WAJIB membaca field ini, kalau tidak hasilnya akan berbeda dari properties.skor."
             }
           }
         }
