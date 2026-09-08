@@ -3,8 +3,11 @@
 # subfolder yang tercakup, sehingga berkas yang jatuh di akar data/ lolos dan
 # sempat ter-commit ke GitHub. reference/ adalah tempat masukan hasil kurasi
 # tangan yang memang dilacak git.
-data/
-!data/README.md
+# Awalan "/" mengikat pola ke akar repo. Tanpa itu, "data/" juga cocok dengan
+# web/public/data/ yang justru HARUS di-commit karena itu keluaran yang disajikan
+# frontend.
+/data/
+!/data/README.md
 *.parquet
 *.graphml
 *.gpkg
