@@ -1147,3 +1147,75 @@ Kini **30 kos berharga**, naik dari 29.
 
 Berada ~250 m di barat batas wilayah studi. Tidak bisa menempel ke heksagon mana
 pun, jadi dikeluarkan dari A1 alih-alih digeser paksa ke heksagon terdekat.
+
+---
+
+## W6 integritas jalur — model DIBENARKAN, berbeda dari A1 (2026-09-08)
+
+**2.095 heksagon (98,2%)**. Model dilatih pada 83 ruas survei, diterapkan ke
+182.866 ruas OSM.
+
+### Kenapa W6 boleh dimodelkan padahal A1 tidak
+
+Diuji dengan cara yang sama persis, dan hasilnya berbeda tajam:
+
+| Pendekatan | W6 (n=83) | A1 (n=29) |
+|---|---|---|
+| tebak rata-rata | R² 0,000 | R² 0,000 |
+| model | **R² +0,394** | **R² −0,386** |
+| MAE | 0,197 vs dasar 0,285 | Rp297rb vs dasar Rp259rb |
+
+W6 **mengalahkan** tebakan rata-rata dengan selisih besar; galatnya 31% lebih
+kecil. A1 justru **lebih buruk**. Itulah alasan A1 hanya melaporkan yang terukur
+sementara W6 dimodelkan — keputusannya dari bukti, bukan preferensi.
+
+Sebabnya jelas dari data survei: ketersediaan trotoar adalah **fungsi hierarki
+jalan**, dan itu keteraturan tata kota yang nyata.
+
+| Trotoar | Ruas | Rata-rata W6 | | Jenis jalan | Rata-rata W6 |
+|---|---|---|---|---|---|
+| Ada | 22 | 0,731 | | Jalan raya | 0,449 |
+| Sebagian | 7 | 0,440 | | Jalan kecil | 0,129 |
+| Tidak ada | 54 | 0,049 | | Gang | 0,044 |
+
+Jalan arteri dapat trotoar, gang tidak. Harga sewa tidak punya keteraturan
+setara — 45% ragamnya terjadi antar-kos di jalan yang sama.
+
+### Fitur: hanya yang OSM punya di mana-mana
+
+- **Kelas jalan** (100% terisi) — dipetakan ke tiga jenis jalan survei
+- **Lebar** (24% tertag) — sisanya diisi median kelas itu **dari survei**, jadi
+  cadangannya pun berasal dari pengukuran lapangan
+
+Kelas jalan saja memberi R² 0,262; ditambah lebar naik ke 0,394.
+
+**Kepadatan kendaraan sengaja tidak dipakai** meski menambah R² 0,017. Nilainya
+berasal dari survei, dan W5 sudah menurunkannya dari kelas jalan yang sama —
+memakainya berarti mencuci satu fitur menjadi dua.
+
+### Rentang prediksi lebih sempit dari survei, dan itu BENAR
+
+Survei bermedian 0,000 dengan maksimum 1,000; prediksi bermedian 0,130 dengan
+maksimum 0,339. Penyusutan ke rata-rata adalah perilaku regresi yang wajar,
+tetapi ada sebab yang lebih penting dan perlu dinyatakan di halaman metodologi:
+
+**Survei mengambil sampel jalan arteri secara berlebih.**
+
+| Jenis | Porsi survei | Porsi jaringan nyata |
+|---|---|---|
+| Jalan raya | **47,6%** | **12,9%** |
+| Jalan kecil | 28,6% | 62,5% |
+| Gang | 23,8% | 24,5% |
+
+Surveyor memilih ruas beragam supaya tiap kondisi terwakili — metode survei yang
+benar. Tetapi karena trotoar hampir hanya ada di jalan arteri, **W6 hasil survei
+terlihat lebih baik daripada kenyataan wilayah studi**. Nilai model yang lebih
+rendah adalah koreksinya, bukan cacatnya.
+
+Konsekuensi jujur: model tidak akan pernah memprediksi 1,0 karena tidak ada
+kombinasi kelas+lebar yang, rata-rata, bertrotoar sempurna. Sifat ini melekat
+pada model linear dengan dua fitur dan harus dicatat, bukan disamarkan.
+
+Skrip **berhenti sendiri** kalau R² validasi silang jatuh ke nol atau negatif,
+supaya perubahan data di kemudian hari tidak diam-diam menghidupkan model yang
+tidak lebih baik daripada menebak.
