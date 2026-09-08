@@ -1065,3 +1065,85 @@ bisa meleset ratusan meter.
 Ini **memperbaiki** masukan A1, tetapi **tidak menyelesaikan** masalah dasarnya:
 29 label harga tetap terlalu sedikit untuk melatih model di 2.134 heksagon.
 Keputusan pendekatan A1 masih terbuka.
+
+---
+
+## A1 — dilaporkan hanya di tempat yang benar-benar disurvei (2026-09-08)
+
+**153 heksagon (7,2%)** punya harga terukur. Sisanya `tidak_tersedia`.
+
+### Tidak ada model, dan itu keputusan berdasar bukti
+
+Kamus data mengandaikan A1 ditaksir model dari data sekunder. Sudah diuji dan
+**ditolak karena hasilnya buruk**, bukan karena preferensi. Validasi silang
+leave-one-out atas 29 label:
+
+| Pendekatan | R² | MAE |
+|---|---|---|
+| tebak rata-rata saja | 0,000 | Rp 259.067 |
+| Ridge, 9 fitur spasial | **−0,386** | Rp 297.467 |
+| RandomForest | **−0,152** | Rp 284.665 |
+| median kawasan survei | −0,045 | Rp 252.635 |
+
+**R² negatif berarti model aktif memperburuk** dibanding menebak satu angka
+tetap. Menerbitkannya dengan catatan kelemahan bukan kejujuran — itu peta yang
+salah dan bisa dibuktikan salah oleh juri dalam satu klik.
+
+### Sebabnya struktural, tidak bisa diperbaiki fitur apa pun
+
+**45% ragam harga terjadi antar-kos di jalan yang sama.** Di KWS-06 harga
+berkisar Rp350.000 sampai Rp1.200.000 dalam satu kawasan. Itu ukuran kamar,
+kamar mandi dalam atau luar, usia bangunan — tidak satu pun bersifat spasial.
+Plafon teoretis prediktor berbasis lokasi sekitar 55%, dan korelat terbaik yang
+kita punya (kepadatan tempat makan) hanya r = 0,30.
+
+### Radius 500 m, bukan 800 m seperti amenitas
+
+Empat pertimbangan:
+
+1. **Harga adalah observasi titik tentang satu bangunan**, bukan medan seperti
+   cahaya atau vegetasi. "Ada warung dalam jarak jalan kaki" tetap benar sejauh
+   800 m; "sewa di sini Rp700rb" tidak.
+2. **Surveyor sudah menjawabnya sendiri.** Jarak kos ke halte yang mereka ukur
+   bermedian **220 m** dengan p75 **500 m**. Itu definisi operasional tim
+   sendiri tentang "di sini".
+3. **Radius lebar membeli cakupan dengan mengencerkan makna.** Rentang harga
+   yang tercampur dalam satu heksagon naik dari Rp350rb (500 m) ke Rp450rb
+   (800 m) ke Rp550rb (1.500 m).
+4. **Data tidak bisa memilih radius.** Uji leave-one-out — bisakah kos tetangga
+   memprediksi kos yang ditutup — memberi R² antara +0,14 dan −0,24 **tanpa
+   tren**. Itu derau pada n≈20. Kalau data tidak bisa memilih, pilihan
+   konservatif yang menang.
+
+500 m memberi 153 heksagon; 800 m memberi 310. Angka lebih kecil dipilih karena
+**kekosongan yang dinyatakan lebih terpertanggungjawabkan daripada angka kabur**
+— standar yang sama seperti W4.
+
+### Koordinat kos akhirnya lengkap
+
+Seluruh **31 kos punya koordinat unik**, dari sebelumnya 12 lokasi efektif.
+
+| Presisi | Jumlah |
+|---|---|
+| `ruas_terkait` | 18 |
+| `pusat_kawasan` | 8 |
+| `manual` | 3 |
+| `nama_kos` | 2 |
+
+Tiga koreksi manual pemilik repo: KOS-025 Kost HM4 dan KOS-026 Janti 54 (dua kos
+yang sebelumnya gagal dicocokkan), serta **KOS-004 Kost Green Villa** yang
+koordinatnya sempat salah ketik di lat −7,4904 — sekitar **17 km di utara
+wilayah studi**, dekat Merapi. Yang benar −7,701534, 110,415575. Ketahuan karena
+skrip menolak titik di luar batas wilayah studi.
+
+Dua kos cadangan menggantikan entri lama: **Kost HM4** (Rp850.000) menggantikan
+"Kos ekslusif sorjem", dan **Kost Bu Moyo** (Rp750.000) menggantikan "Kos putri
+Wisma Bharata". Harga min/maks lama Wisma Bharata dikosongkan karena milik kos
+yang berbeda.
+
+Kini **30 kos berharga**, naik dari 29.
+
+### KOS-023 Mulia Sari dikeluarkan
+
+Berada ~250 m di barat batas wilayah studi. Tidak bisa menempel ke heksagon mana
+pun, jadi dikeluarkan dari A1 alih-alih digeser paksa ke heksagon terdekat.
