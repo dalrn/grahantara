@@ -687,3 +687,80 @@ memang layer bahaya. `risiko_banjir` disimpan sebagai pembanding.
 bersumber dari data resmi panitia — nilai tambah untuk penilaian lomba.
 
 Yang belum: layer NIGHTTIME LIGHT (107–114) untuk menggantikan VIIRS di W3.
+
+---
+
+## Fase 2 — Baca survei (2026-09-08) — SELESAI, dengan 3 butir menunggu keputusan
+
+`10_clean/01_baca_survei.py` membaca `Hasil_Survei_BERSIH.xlsx` menjadi empat
+tabel Parquet. Sesuai keputusan pemilik repo, pembersihan Excel **tidak**
+direproduksi ulang di kode.
+
+| Keluaran | Baris | Catatan |
+|---|---|---|
+| `survei_ruas.parquet` | 84 | W-6 lengkap 76, belum lengkap 8 |
+| `survei_halte.parquet` | 12 | 11 dengan pengamatan waktu |
+| `survei_ekonomi.parquet` | 12 | Total usaha cocok di semua baris |
+| `survei_kos.parquet` | 31 | 29 berharga, median Rp775.000 |
+
+### Yang diverifikasi dan LOLOS
+
+- **Aritmetika W-6 tepat pada seluruh 84 ruas.** Dihitung ulang mandiri dari
+  I-1..I-5 dengan bobot 0,25/0,15/0,20/0,15/0,25 plus normalisasi ulang saat
+  ada komponen kosong. **Nol selisih.**
+- **Sheet Ekonomi konsisten**: `Total usaha` sama dengan jumlah delapan kolom
+  kategori di seluruh 12 baris.
+- **Harga kos wajar**: rentang Rp350.000–Rp1.400.000, median Rp775.000, tidak
+  ada `min > maks`.
+
+### Aturan nol struktural diterapkan
+
+Sesuai kamus data: `Trotoar = "Tidak ada"` berarti lebar dan panjang terputus
+memang **0**, bukan tidak diketahui. Diterapkan pada 6 sel `Lebar Trotoar` dan
+12 sel `Panjang trotoar terputus` yang kosong.
+
+**Hanya pada sel KOSONG.** Tidak pernah menimpa nilai yang tercatat, sekalipun
+nilai itu bertentangan — itu wilayah keputusan manusia.
+
+### Tiga anomali — TIDAK diubah, dilaporkan di docs/SURVEI_ANOMALI.md
+
+| # | Ruas | Masalah |
+|---|---|---|
+| A1 | RUAS-029 | `Lebar Jalan = 0` di gang yang muat mobil, sekaligus `Trotoar = "Tidak ada"` tapi `Lebar Trotoar = 3,0` |
+| A2 | RUAS-034 | `Trotoar = "Tidak ada"` tapi `Lebar Trotoar = 1,0` |
+| B1 | RUAS-069 | Panjang 865,9 m (ruas lain 50–255 m), waktu 1.200 detik |
+
+A1 dan A2 **tidak tercatat di sheet `Flag`** — luput dari pembersihan manual.
+B1 sudah tercatat dan sengaja dibiarkan.
+
+Dugaan untuk A1: nilai lebar jalan dan lebar trotoar **tertukar**. 3,0 m wajar
+untuk lebar gang, tidak wajar untuk trotoar gang; dan 0 m mustahil untuk jalan
+yang muat satu mobil. Untuk B1: panjang dan waktu **saling konsisten**
+(kecepatan 0,72 m/s), jadi kemungkinan besar memang ruas panjang di jalan
+arteri, bukan salah ketik.
+
+Dampak ketiganya kecil: A1 dan A2 sudah menghasilkan W-6 = 0,0, jadi koreksi
+apa pun tidak mengubah W-6 — hanya mempengaruhi W-5 yang memakai lebar jalan.
+
+Skrip **mendeteksi ulang** anomali ini setiap kali dijalankan, sehingga
+perubahan pada workbook tidak bisa menyembunyikannya diam-diam.
+
+### Kekosongan yang wajar, bukan data hilang
+
+- `I-4 kemulusan` kosong di 59 dari 84 ruas — 55 di antaranya tidak bertrotoar.
+  Kemulusan permukaan trotoar memang tidak terdefinisi kalau trotoarnya tidak
+  ada. Ini kekosongan yang benar.
+- `Interval OSM (detik)` kosong di seluruh 12 halte — kolom belum pernah diisi.
+- HLT-010 Halte Nogotirto tanpa pengamatan sama sekali.
+
+### Koreksi terhadap kamus data
+
+`DATA_DICTIONARY.md` menyatakan 11 ruas tidak terhitung dan "terkonsentrasi di
+KWS-09". Kenyataannya **8 ruas**, tersebar di KWS-02 (2), KWS-09 (2), KWS-10
+(2), KWS-12 (1), KWS-08 (1). Perlu diperbarui di dokumen.
+
+### Catatan teknis
+
+Kolom `Harga (teks asli)` bertipe campur (`'775rb/1.2jt'` dan satu baris berupa
+angka), ditolak Parquet. Di-cast ke string agar teks aslinya utuh; angka yang
+sudah diurai tetap ada di `Harga median/min/maks`.
