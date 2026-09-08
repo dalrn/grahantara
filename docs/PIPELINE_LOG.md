@@ -827,3 +827,19 @@ Terlewat di laporan awal. `Lebar Jalan = 0,0` pada ruas yang muat satu mobil,
 
 Tidak seperti RUAS-029, di sini tidak ada angka yang bisa ditukar karena
 keduanya nol. Perlu ingatan pencatat. Dibiarkan apa adanya sampai ada keputusan.
+
+### RUAS-053 sebagian diputuskan (2026-09-08)
+
+Pencatat mengonfirmasi ada trotoar selebar **2 m**. `Lebar Trotoar` 0,0 → 2,0.
+Kolom `Trotoar = "Ada"` memang benar sejak awal; yang salah hanya lebarnya.
+
+**W-6 ruas ini naik dari 0,0 menjadi 0,75.** I-1 sampai I-4 penuh, I-5 nol
+karena `Pejalan turun ke jalan = "Ya"` — profil yang konsisten: trotoar lebar
+dan mulus, tapi pejalan kaki tetap turun ke jalan.
+
+`Lebar Jalan = 0,0` pada ruas yang sama **tidak diubah**. Yang dikonfirmasi
+hanya lebar trotoar. Peringatan anomali untuk kolom itu sengaja dibiarkan
+menyala. Berdampak pada W-5, bukan W-6.
+
+Ringkasan W-6 setelah empat koreksi: median 0,0000, rata-rata 0,2629,
+lengkap 76 dari 84 ruas.
