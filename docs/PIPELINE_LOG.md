@@ -391,3 +391,90 @@ ketiadaan data, melainkan data yang belum diimpor ke proyek.
 Struktur `TIPE_1`/`TIPE_2`/`TIPE_3` di berkas ekspor adalah taksonomi kategori
 MAPID, dan itulah yang dibutuhkan M2 untuk menghitung entropi keragaman kuliner.
 Kolom itu **wajib dipertahankan** saat ekspor.
+
+### PRD dibaca (2026-09-08) — dan ia menjawab beberapa pertanyaan terbuka
+
+PRD 25 halaman baru dibaca sekarang. Seharusnya dibaca di Fase 0. Isinya
+mengonfirmasi beberapa temuan yang sebelumnya ditemukan sendiri lewat kode, dan
+itu kabar baik: dua jalur berbeda sampai ke kesimpulan sama.
+
+**Yang dikonfirmasi PRD (halaman 8–9):**
+
+- **Dataset kos MAPID memang tidak punya kolom harga.** PRD menyatakannya
+  eksplisit: "Dataset kos MAPID tidak memuat kolom harga sewa, sehingga dimensi
+  Affordability bertumpu pada harga hasil survei lapangan." Koreksi yang sudah
+  dibuat sebelumnya tepat.
+- **Connectivity memang harus memakai OSM, bukan MAPID.** PRD: "hanya OSM yang
+  membawa relasi rute yang dibutuhkan untuk pemodelan graf antarrute, sedangkan
+  dataset MAPID digunakan sebagai lapisan validasi." Persis keputusan yang
+  sudah diambil di Fase 1.
+- **Kategori POI yang dimaksud disebut jelas:** Perdagangan dan Retail, Makanan
+  dan Minuman, Kesehatan dan Pengobatan, Pendidikan, Layanan atau Jasa. Inilah
+  yang selama ini hilang dari `DATA_DICTIONARY.md`.
+- **Halte: 87 MAPID vs 347 platform OSM.** PRD menjelaskan keduanya beda konsep —
+  MAPID menghitung fasilitas per kabupaten, OSM menghitung platform per arah.
+  Angka pipeline (679 dalam wilayah studi + 2 km) lebih besar lagi karena
+  cakupannya lebih luas dan menyertakan node anggota relasi. Bukan kontradiksi.
+
+**Tim ternyata berempat, bukan berdua.** PRD mencantumkan Bernardinus Adhika
+(Project Leader) dan Gerardus Theo (UI/UX) selain Dal dan Devon. README dan
+CLAUDE.md hanya menyebut dua orang.
+
+### Mission Go diuji — Menu Go praktis kosong
+
+Ditanyakan apakah kita punya akses Menu Go. Ketiganya diuji langsung:
+
+| Mission | Di wilayah studi | Kotak luas | Field |
+|---|---|---|---|
+| `menugo` | **0** | **1** | — |
+| `propertigo` | **156** | 179 | kategori, jenis, alamat, 2 foto |
+| `struckgo` | **73** | 79 | nama, kategori, metode bayar, foto struk |
+
+**Menu Go memang kosong, bukan salah pemakaian API.** Satu-satunya record
+("Halte Library Cafe") berada di luar wilayah studi, dan `hasMore: false`
+menandakan itu memang seluruh isinya.
+
+Konsekuensinya langsung: **A2_harga_makan hampir pasti `tidak_tersedia`** di
+seluruh wilayah. Kamus data sudah menduga ini ("kecuali Menu Go menutupinya") —
+sekarang terbukti Menu Go tidak menutupinya. Bobot A2 (0,40 di dalam
+Affordability) akan dinormalisasi ulang ke A1.
+
+**Properti Go dan Struck Go tidak menyelamatkan A2.** Keduanya tidak punya
+kolom numerik sama sekali — hanya foto. 156 foto spanduk properti adalah bahan
+yang tepat untuk AI-3 (pembaca spanduk kos), fungsi yang di ARCHITECTURE.md
+berstatus ditangguhkan. Layak dipertimbangkan ulang kalau A1 butuh label lebih
+banyak.
+
+Catatan API: endpoint Mission Go memakai paginasi `offset`, dengan `limit`
+terkunci di 100 dan tidak bisa diubah lewat body. Beda dari `get_layer` di
+geoserver yang berplafon keras 200 tanpa paginasi.
+
+### 254 dataset MAPID dianalisis
+
+Rekomendasi lengkap ditulis di kepala `mapid_data.txt`, mengacu nomor daftar
+aslinya. Ringkasnya:
+
+**Prioritas 1** — lima layer payung sesuai kategori PRD, dipimpin
+**97. MAKANAN DAN MINUMAN 2025** yang memikul M1 dan M2 (55% dimensi Amenity).
+
+**Temuan tak terduga — empat dataset yang bisa menggantikan sumber luar:**
+
+| # | Dataset | Berpotensi menggantikan |
+|---|---|---|
+| 44 | HARGA PROPERTI 2024 | label harga tambahan untuk A1 |
+| 250 | WILAYAH RISIKO BANJIR | **InaRISK** (W4) |
+| 107–114 | NIGHTTIME LIGHT 2016–2023 | **VIIRS lewat GEE** (W3) |
+| 245/246 | TUTUPAN LAHAN / URBAN HEAT ISLAND | pelengkap **Sentinel-2 NDVI** (W2) |
+
+Kalau 250 dan 114 memadai, dua dependensi eksternal (InaRISK dan sebagian GEE)
+bisa dihapus, dan seluruh W3/W4 pindah ke sumber resmi panitia — nilai tambah
+untuk penilaian lomba, bukan sekadar kemudahan teknis.
+
+**44. HARGA PROPERTI** perlu diperiksa lebih dulu. Ini satu-satunya nama dataset
+di seluruh katalog yang menyebut "HARGA". Kalau isinya harga per titik, model A1
+yang sekarang hanya punya 31 label survei bisa jauh lebih kuat.
+
+**Yang sengaja dikecualikan:** belasan layer partai politik, layer merek tunggal
+(sudah tercakup layer payung, dan menggabungnya akan dobel hitung), SITE
+SELECTION (skoring pihak lain, membuat penilaian melingkar), dan layer Cyberjaya
+(Malaysia).
