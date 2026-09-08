@@ -1219,3 +1219,77 @@ pada model linear dengan dua fitur dan harus dicatat, bukan disamarkan.
 Skrip **berhenti sendiri** kalau R² validasi silang jatuh ke nol atau negatif,
 supaya perubahan data di kemudian hari tidak diam-diam menghidupkan model yang
 tidak lebih baik daripada menebak.
+
+---
+
+## Fase 5 — Skor dan GeoJSON (2026-09-08)
+
+`40_score/01_skor.py` menghasilkan `data/processed/hexagons.geojson` (4,6 MB,
+2.134 fitur) dan `c3_per_kampus.json`. **Validasi skema LOLOS.**
+
+Skor: min 14,4 · median 45,1 · maks 87,5 · rata-rata 47,3.
+
+### Masalah besar yang ditemukan saat menjalankan, dan diperbaiki
+
+Jalan pertama menghasilkan **median skor 17,5** dan seluruh peta terlihat buruk.
+Penyebabnya: **Affordability tidak tersedia di 1.981 heksagon (93%)** — A1 hanya
+menutupi 7,2% dan A2 tidak punya sumber sama sekali. Fungsi `subskor()` dari
+Fase 0 mengembalikan **0,0** saat seluruh indikator dimensi hilang, dan rata-rata
+geometrik lalu menyeret skor total ke bawah.
+
+Dampaknya terukur pada heksagon tipikal (C=41, M=54, W=50):
+
+| Perlakuan | Skor |
+|---|---|
+| Affordability dianggap 0 | **17,9** |
+| Affordability dikeluarkan, bobot dinormalisasi | **46,9** |
+| Affordability diimputasi 50 (dilarang kamus data) | 47,9 |
+
+**93% peta dihukum karena kita tidak punya data, bukan karena kawasannya mahal.**
+Itu persis mode kegagalan yang dilarang CLAUDE.md dan `DATA_DICTIONARY.md`.
+
+Kamus data mendefinisikan normalisasi ulang untuk **indikator** yang hilang tapi
+**diam soal dimensi** yang hilang seluruhnya. Diputuskan pemilik repo: terapkan
+prinsip yang sama satu tingkat di atas — **keluarkan dimensi kosong dari
+rata-rata geometrik dan normalisasi ulang bobot dimensi**.
+
+Bobot efektif untuk heksagon tanpa Affordability:
+connectivity 0,40 → **0,5333**, amenity 0,20 → **0,2667**,
+walkability 0,15 → **0,2000**.
+
+### Sebelum memutuskan, sumber harga lain dicari dan semuanya buntu
+
+Diminta memastikan tidak ada cara lain mendapat harga tanpa survei ulang:
+
+| Sumber | Hasil |
+|---|---|
+| **Properti Go** (156 record, punya `foto_spanduk`) | Hanya **2 dari 156** berkategori Kos. Sisanya Tanah 27, Rumah 41, Ruko 58. Membaca spanduknya memberi sewa komersial, bukan harga kos mahasiswa. **Jalur AI-3 tertutup.** |
+| **Struck Go** (73 record) | Tidak ada kolom nominal, hanya foto struk. |
+| **Menu Go** | Kosong — 1 record, di luar wilayah studi. |
+| **`kos_sleman_2025` MAPID** | Tidak ada kolom harga. Sebagai kovariat kepadatan korelasinya −0,24. |
+| **`harga_properti_2024`** | Harga **jual** properti (median Rp700 juta), bukan sewa bulanan. |
+| **Survei sendiri** | Hanya 1 kos tanpa harga (KOS-022), dan ia tidak punya foto spanduk. |
+
+Jadi 30 harga survei memang seluruh yang ada. Bukan karena kurang dicari.
+
+### Kontrak: `dimensi_kosong` ditambahkan ke properties
+
+Skema mewajibkan keempat subskor berupa angka, jadi dimensi kosong tetap ditulis
+**0** demi kesesuaian — tetapi ia **dikeluarkan** dari perhitungan, bukan dinilai 0.
+
+Agar tidak ambigu, tiap fitur kini membawa `properties.dimensi_kosong` berisi
+daftar dimensi yang dikeluarkan, dan `metadata.aturan_dimensi_kosong` menjelaskan
+aturannya.
+
+**PENTING UNTUK DEVON:** `web/src/lib/mesinSkor.js` menghitung ulang skor dari
+keempat subskor saat slider digeser. Tanpa membaca `dimensi_kosong`, klien akan
+memakai subskor 0 dan menghasilkan angka yang **berbeda dari GeoJSON** untuk
+1.981 heksagon. Ini perubahan kontrak yang perlu disepakati.
+
+### Verifikasi
+
+- **Skema: LOLOS** — 2.134 heksagon, 16 indikator.
+- **Aritmetika skor dihitung ulang secara mandiri: 2.134/2.134 cocok**, nol meleset.
+- 153 heksagon punya keempat dimensi lengkap.
+- Heksagon terbaik (skor 83,1) masuk akal: 214 m ke halte, rute langsung ke
+  kampus, sewa Rp550.000, 99 tempat makan dalam jangkauan jalan kaki.
