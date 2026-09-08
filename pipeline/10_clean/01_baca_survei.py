@@ -24,6 +24,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+import math
+
 import pandas as pd
 
 from pipeline.common.cache import cached, interim
@@ -39,6 +41,77 @@ W6 = {
     "I-4 kemulusan": 0.15,
     "I-5 tidak turun": 0.25,
 }
+
+
+# W-6 parameters, read from the workbook's own Panduan_W6 sheet rather than
+# hardcoded, so a change there flows through instead of silently diverging.
+def _panduan(xl) -> dict:
+    p = xl.parse("Panduan_W6", header=None)
+    out = {}
+    for _, row in p.iterrows():
+        label, val = row.iloc[0], row.iloc[1]
+        if isinstance(label, str) and pd.notna(val):
+            out[label.strip()] = val
+    return out
+
+
+def _recompute_w6(r: pd.DataFrame, par: dict) -> pd.DataFrame:
+    """Recompute I-1..I-5 and W-6 with the workbook's own rules.
+
+    Necessary because openpyxl writes formulas without Excel's cached results:
+    after any programmatic edit the I-* and W-6 columns read as blank until the
+    file is next opened in Excel. Recomputing here keeps the pipeline correct
+    regardless, and doubles as a check on the spreadsheet.
+    """
+    std_w = float(par.get("Lebar trotoar standar (m)", 1.5))
+    k = float(par.get("Konstanta pemulusan I-4", 3))
+    w = {
+        "I-1 ketersediaan": float(par.get("Bobot I-1 ketersediaan trotoar", 0.25)),
+        "I-2 lebar": float(par.get("Bobot I-2 kecukupan lebar", 0.15)),
+        "I-3 keutuhan": float(par.get("Bobot I-3 keutuhan trotoar", 0.20)),
+        "I-4 kemulusan": float(par.get("Bobot I-4 kemulusan permukaan", 0.15)),
+        "I-5 tidak turun": float(par.get("Bobot I-5 tidak turun ke jalan", 0.25)),
+    }
+
+    def komponen(row):
+        tr = row["Trotoar"]
+        if pd.isna(tr):
+            return [None] * 5
+        i1 = 1.0 if tr == "Ada" else (0.5 if tr == "Sebagian" else 0.0)
+        kosong = tr == "Tidak ada"
+        panjang = row["Panjang ruas (m)"]
+        if kosong:
+            i2 = i3 = 0.0
+            i4 = None          # sidewalk smoothness is undefined with no sidewalk
+        else:
+            lebar = row["Lebar Trotoar (m)"]
+            i2 = None if pd.isna(lebar) else min(float(lebar) / std_w, 1.0)
+            putus = row["Panjang trotoar terputus (m)"]
+            i3 = (None if pd.isna(putus) or pd.isna(panjang)
+                  else max(0.0, 1.0 - float(putus) / float(panjang)))
+            lubang = row["Jumlah lubang atau paving lepas"]
+            i4 = (None if pd.isna(lubang) or pd.isna(panjang)
+                  else math.exp(-float(lubang) / float(panjang) * 100.0 / k))
+        turun = row["Pejalan turun ke jalan"]
+        i5 = None if pd.isna(turun) else (1.0 if turun == "Tidak" else 0.0)
+        return [i1, i2, i3, i4, i5]
+
+    kolom = list(w)
+    hasil = r.apply(komponen, axis=1, result_type="expand")
+    hasil.columns = kolom
+    for c in kolom:
+        r[c] = hasil[c]
+
+    num = sum(w[c] * r[c].fillna(0.0).astype(float) for c in kolom)
+    tot = sum(w[c] * r[c].notna().astype(float) for c in kolom)
+    r["Bobot terpakai"] = tot.round(2)
+    # Weight 0 means every component is missing; the index is undefined, not 0.
+    r["W-6 integritas"] = (num / tot.where(tot > 0)).round(4)
+    lengkap = (r["I-1 ketersediaan"].notna() & r["I-2 lebar"].notna()
+               & r["I-3 keutuhan"].notna() & r["I-5 tidak turun"].notna()
+               & (r["I-4 kemulusan"].notna() | r["Trotoar"].eq("Tidak ada")))
+    r["W-6 status"] = lengkap.map({True: "Lengkap", False: "Belum lengkap"})
+    return r
 
 
 def _verify_w6(r: pd.DataFrame) -> None:
@@ -93,6 +166,7 @@ def main(force: bool = False) -> int:
 
     # ---- Ruas -------------------------------------------------------------
     ruas = xl.parse("Ruas")
+    ruas = _recompute_w6(ruas, _panduan(xl))
     _verify_w6(ruas)
     _report_anomalies(ruas)
 

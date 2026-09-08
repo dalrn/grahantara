@@ -1,7 +1,18 @@
-# Anomali Data Survei — perlu keputusan manusia
+# Anomali Data Survei
 
-Ditemukan saat Fase 2, 2026-09-08. **Tidak satu pun sudah diubah.**
-Pipeline membaca berkas apa adanya sampai ada keputusan.
+Ditemukan saat Fase 2, 2026-09-08.
+
+> **STATUS: A1, A2, dan B1 SUDAH DIPUTUSKAN dan diterapkan pada
+> `Hasil_Survei_BERSIH.xlsx` (2026-09-08, disetujui pemilik repo).**
+> Cadangan sebelum koreksi:
+> `data/processed/Hasil_Survei_BERSIH.SEBELUM_KOREKSI_2026-09-08.xlsx`
+>
+> Hanya **kolom sumber** yang diubah. I-1..I-5, Bobot terpakai, W-6 integritas,
+> dan W-6 status adalah **rumus Excel hidup** yang membaca sheet `Panduan_W6`,
+> jadi keempatnya menghitung ulang sendiri. Menulis nilai ke dalamnya akan
+> merusak logika workbook.
+>
+> Masih terbuka: **C1 (RUAS-053)** di bagian bawah dokumen ini.
 
 Untuk tiap butir: apa yang tertulis, kenapa itu janggal, dan nilai yang
 **kemungkinan** dimaksud. Nilai usulan itu dugaan berdasar bukti di baris yang
@@ -31,9 +42,8 @@ Dugaan: **kedua nilai tertukar.** Lebar jalan 3,0 m dan lebar trotoar 0,0 m
 konsisten dengan gang yang muat satu mobil dan tidak bertrotoar. Nilai 3,0 m
 juga wajar untuk lebar gang, tidak wajar untuk trotoar gang.
 
-**Usulan:** `Lebar Jalan = 3,0` dan `Lebar Trotoar = 0,0`.
-Dampak: W-6 tetap 0,0 (tidak berubah). Yang berubah hanya W-5 tekanan lalu
-lintas, yang memakai lebar jalan.
+**DITERAPKAN 2026-09-08:** `Lebar Jalan = 3,0`, `Lebar Trotoar = 0,0`.
+W-6 tetap 0,0 seperti diperkirakan. Yang berubah hanya W-5 tekanan lalu lintas.
 
 ### A2. RUAS-034 — KWS-03, Jl. UPN
 
@@ -49,10 +59,21 @@ Lebar jalan wajar. Hanya trotoar yang bertentangan: "Tidak ada" tapi lebar 1 m.
 Dugaan: ada trotoar sempit sepanjang sebagian ruas, dan pencatat memilih
 "Tidak ada" karena tidak menerus. Atau angka 1,0 salah masuk kolom.
 
-**Usulan:** `Lebar Trotoar = 0,0`, mengikuti kolom `Trotoar` yang lebih
-eksplisit. **Atau** `Trotoar = "Sebagian"` kalau memang ada trotoar sepenggal —
-ini perlu ingatan pencatat, tidak bisa disimpulkan dari data.
-Dampak: W-6 tetap 0,0 pada opsi pertama; naik kalau dipilih "Sebagian".
+**DITERAPKAN 2026-09-08:** dipilih `Trotoar = "Sebagian"`.
+**W-6 naik dari 0,0 menjadi 0,5182** — perubahan satu baris terbesar di dataset.
+
+**Dasar keputusan perlu dicatat jujur.** Pilihan ini bersandar pada keputusan
+pemilik repo, bukan pada nilai yang tercatat. Dua kolom lain pada baris yang
+sama justru **tidak mendukung** adanya trotoar layak:
+
+- `Pejalan turun ke jalan = "Ya"` — pejalan kaki terpaksa turun ke badan jalan.
+- Catatan lapangan asli: *"gang persis di samping UPN, ada warmindo dan kos.
+  terhalang bekas bakar sampah, jalannya kecil dan cukup bersampah."*
+
+Catatan lapangan itu **dipertahankan utuh** di kolom `Catatan`, dengan teks
+koreksi ditambahkan setelahnya. Sebaiknya ditinjau ulang oleh pencatat sebelum
+halaman metodologi terbit, karena ini satu-satunya koreksi yang **menaikkan**
+skor dan itu yang paling akan disorot juri.
 
 ---
 
@@ -72,8 +93,9 @@ Panjang dan waktu **saling konsisten**, jadi ini kemungkinan besar bukan salah
 ketik melainkan ruas yang memang panjang. Ringroad Barat adalah jalan arteri,
 wajar disurvei dalam penggal panjang.
 
-**Usulan: biarkan apa adanya.** Dicatat di sini hanya supaya diketahui, karena
-satu ruas 866 m akan mendominasi rata-rata tertimbang panjang di KWS-09.
+**DITERAPKAN 2026-09-08:** dibiarkan apa adanya, diberi catatan verifikasi di
+kolom `Catatan`. Satu ruas 866 m tetap akan mendominasi rata-rata tertimbang
+panjang di KWS-09 — perlu diingat saat menghitung W-5 dan W-6 per kawasan.
 
 ---
 
@@ -116,3 +138,42 @@ Diperiksa ulang secara independen dan lolos:
 
 Selama belum diputuskan, pipeline memakai berkas apa adanya. Dampaknya kecil:
 A1 dan A2 tidak mengubah W-6 (keduanya sudah 0,0), hanya mempengaruhi W-5.
+
+
+---
+
+## C. MASIH TERBUKA
+
+### C1. RUAS-053 — KWS-05, Jl. Brojowikalpo
+
+Terlewat di laporan awal: disebut di bagian "Lebar Jalan = 0" tapi tidak pernah
+diberi usulan.
+
+| Kolom | Nilai tertulis |
+|---|---|
+| Jenis jalan | Jalan kecil |
+| Muat mobil | 1 unit |
+| **Lebar Jalan (m)** | **0,0** |
+| Trotoar | **Ada** |
+| **Lebar Trotoar (m)** | **0,0** |
+| Panjang ruas | 120 m |
+| Catatan | (kosong) |
+
+Dua kejanggalan:
+
+1. **Lebar jalan 0 m** pada ruas yang muat satu mobil — sama seperti RUAS-029.
+2. **`Trotoar = "Ada"` tapi `Lebar Trotoar = 0,0`** — kebalikan dari A1/A2.
+   Trotoar yang ada mestinya punya lebar.
+
+Berbeda dari RUAS-029, di sini **tidak ada angka yang bisa ditukar** — keduanya
+0,0. Jadi tidak ada dugaan yang bisa ditarik dari data itu sendiri.
+
+Dampaknya nyata: dengan `Trotoar = "Ada"` tapi lebar 0, komponen I-2 menjadi
+`min(0/1,5 , 1) = 0`, sehingga W-6 ruas ini tertekan padahal trotoarnya
+dinyatakan ada.
+
+**Perlu ingatan pencatat:**
+- Berapa lebar jalan sebenarnya? (perkiraan 3–4 m wajar untuk "jalan kecil")
+- Berapa lebar trotoarnya, atau apakah `Trotoar` seharusnya "Tidak ada"?
+
+Sampai ada jawaban, dibiarkan apa adanya.
