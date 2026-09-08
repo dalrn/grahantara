@@ -71,18 +71,27 @@ Tim ini dua orang. Pembagiannya dijaga oleh satu artefak: `contracts/hexagon.sch
 Aturannya sederhana: **kalau perubahanmu mengharuskan orang lain mengubah kodenya, itu
 perubahan schema.** Bicarakan dulu, ubah `hexagon.schema.json`, baru kerjakan.
 
-## Data di `web/public/data/` saat ini adalah STUB
+## Data di `web/public/data/` sudah ASLI (versi 1.0)
 
-> **PERINGATAN.** Keempat file GeoJSON di `web/public/data/` berisi **angka palsu** yang
-> dibangkitkan secara acak. Bentuk dan skalanya benar (2.134 heksagon, geometri H3 res 9
-> yang valid, properti sesuai schema), tapi skornya tidak berarti apa-apa.
->
-> Tujuannya supaya Devon bisa membangun seluruh UI hari ini tanpa menunggu pipeline selesai.
-> Saat skor asli siap, file-file ini ditimpa dan UI tidak perlu diubah sama sekali.
->
-> Cek `metadata.versi` pada `hexagons.geojson`. Kalau isinya `"stub-0.1"`, itu masih palsu.
+Sejak 2026-09-08 berkas di `web/public/data/` berisi **hasil pipeline sungguhan**,
+bukan stub. Cek `metadata.versi` pada `hexagons.geojson`: `"1.0"` berarti asli,
+`"stub-0.x"` berarti palsu.
 
-Koordinat kampus pada stub juga perkiraan kasar, bukan 219 gerbang kampus yang sebenarnya.
+| Berkas | Isi |
+|---|---|
+| `hexagons.geojson` | 2.134 heksagon, skor + 4 subskor + 16 indikator |
+| `kampus.geojson` | 10 kampus dengan jumlah gerbang sebenarnya |
+| `halte.geojson` | 566 halte dengan koridornya |
+| `kos.geojson` | 31 kos survei dengan harga dan label presisi koordinat |
+| `krl.geojson` | 12 stasiun |
+| `c3_per_kampus.json` | keterjangkauan tiap kampus per heksagon |
+
+Sebaran skor: minimum 14,4 · median 45,1 · maksimum 87,5.
+
+**Yang perlu diketahui saat membaca peta:** 1.981 dari 2.134 heksagon tidak punya
+data Affordability sama sekali, jadi dimensi itu dikeluarkan dari skornya dan
+bobot dimensi sisanya dinormalisasi ulang. Lihat
+[`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
 
 ## Mulai dari mana
 

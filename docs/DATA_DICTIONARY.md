@@ -22,10 +22,18 @@ heksagon sejak hari ini.
 
 | Kunci | Definisi | Rumus | Sumber | Bobot |
 |---|---|---|---|---|
-| `A1_harga_kos` | Median harga sewa bulanan | `1 - persentil(median)` | Survei (29 titik) → **model** | 0,60 |
+| `A1_harga_kos` | Median harga sewa bulanan dalam radius 500 m | `1 - persentil(median)` | Survei (30 titik), **tanpa model** | 0,60 |
 | `A2_harga_makan` | Median harga per porsi | `1 - persentil(median)` | Survei / Menu Go | 0,40 |
 
-**Peringatan.** Survei menghasilkan 29 kos berharga di 12 area sampel. Jumlah heksagon
+**Diperbarui 2026-09-08: A1 TIDAK dimodelkan.** Pemodelan diuji dan ditolak
+berdasarkan bukti — validasi silang leave-one-out atas 30 label memberi R² −0,386
+(Ridge) dan −0,152 (RandomForest), keduanya **lebih buruk** daripada menebak
+rata-rata. Sebabnya struktural: 45% ragam harga terjadi antar-kos di jalan yang
+sama, yang tidak bisa dijelaskan variabel spasial apa pun. A1 karena itu hanya
+melaporkan harga di **153 heksagon** yang benar-benar disurvei (radius 500 m),
+sisanya `tidak_tersedia`. Rinciannya di `PIPELINE_LOG.md`.
+
+**Peringatan asli.** Survei menghasilkan 29 kos berharga di 12 area sampel. Jumlah heksagon
 dengan ≥3 kos berharga mendekati nol, jadi ambang "minimal 3 kos" yang ada di PRD tidak
 bisa dipakai apa adanya di resolusi heksagon. `A1` akan sebagian besar bersumber `model`.
 `A2` kemungkinan `tidak_tersedia` di hampir seluruh wilayah kecuali Menu Go menutupinya.

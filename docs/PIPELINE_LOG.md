@@ -1293,3 +1293,81 @@ memakai subskor 0 dan menghasilkan angka yang **berbeda dari GeoJSON** untuk
 - 153 heksagon punya keempat dimensi lengkap.
 - Heksagon terbaik (skor 83,1) masuk akal: 214 m ke halte, rute langsung ke
   kampus, sewa Rp550.000, 99 tempat makan dalam jangkauan jalan kaki.
+
+---
+
+## Fase 6 — Uji dan pemeriksaan akhir (2026-09-09)
+
+### Uji yang ditambahkan
+
+| Berkas | Isi | Hasil |
+|---|---|---|
+| `tests/test_indicators.py` | 26 uji logika penilaian | **26 lulus** |
+| `tests/test_keluaran.py` | 20 uji invarian keluaran | **20 lulus** |
+| `tests/validate_schema.py` | kesesuaian skema (sudah ada) | **LOLOS** |
+
+Uji dipilih untuk hal yang **gagal diam-diam** — menghasilkan angka masuk akal
+yang sebenarnya salah — bukan yang melempar galat. Persentil meleset satu
+peringkat atau bobot yang gagal dinormalisasi ulang akan terlihat seperti data.
+
+`test_keluaran.py` memeriksa yang **lolos skema tapi tetap salah**: himpunan
+heksagon yang bergeser dari indeks beku, skor yang tidak cocok dengan subskornya
+sendiri, `dimensi_kosong` yang tidak konsisten dengan indikatornya,
+`tidak_tersedia` yang bocor jadi angka, dan geometri di luar wilayah studi.
+
+### `run_all.py`
+
+Menjalankan 20 langkah berurutan lalu tiga uji. Tiap langkah memakai cache-nya
+sendiri, jadi menjalankan ulang tanpa `--force` hampir tidak melakukan apa-apa.
+Ada `--from`, `--dry-run`, dan `--skip-tests`.
+
+### Pemeriksaan akhir
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Kunci API di berkas terlacak | **bersih** |
+| `.env` terlacak git | **tidak** (benar) |
+| `.env.example` kosong | **ya**, dan dilengkapi 2 kunci yang sempat hilang |
+| `data/processed/` sama dengan `web/public/data/` | **6 dari 6 identik** |
+| Mesin skor klien vs pipeline | **2.134 dari 2.134 cocok** |
+| Ukuran repo | 13 MB |
+
+### Dokumen yang diperbarui karena sudah usang
+
+- `DATA_DICTIONARY.md` masih menyebut A1 ditaksir **model**. Diperbaiki: A1
+  tidak dimodelkan, dan alasan penolakannya dicantumkan.
+- `README.md` masih menyatakan data di `web/public/data/` **stub**. Diperbaiki
+  jadi versi 1.0 dengan tabel isi dan catatan soal Affordability yang hilang di
+  1.981 heksagon.
+- `CLAUDE.md` aturan 5 masih memperingatkan data palsu. Diperbaiki, tetapi tetap
+  meminta pembaca mengecek `metadata.versi` dan tidak "memperbaiki" skor aneh
+  tanpa menelusuri sumbernya.
+
+### TEMUAN PENTING: pipeline belum reproducible oleh orang lain
+
+Enam layer MAPID yang **dibutuhkan kode** hanya ada di mesin ini, tidak di git:
+
+```
+apotek_2025.geojson           0,27 MB   M4
+bahaya_banjir.geojson         0,42 MB   W4
+makanan_minuman_2025.geojson  1,06 MB   M1, M2
+minimarket_2025.geojson       0,22 MB   M4
+nighttime_light_2023.geojson  0,16 MB   W3
+toko_kelontong_2025.geojson   0,69 MB   M4
+                       total  2,9 MB
+```
+
+Ditambah `data/processed/Hasil_Survei_BERSIH.xlsx` (0,05 MB) yang memuat seluruh
+data survei lapangan.
+
+Semuanya di-.gitignore lewat aturan `/data/`, yang benar untuk dump mentah tetapi
+**membuat pipeline tidak bisa dijalankan ulang oleh siapa pun selain pemilik
+mesin ini**. Layer MAPID ini juga tidak bisa diunduh ulang lewat API karena
+`get_layer` berplafon 200 fitur — harus diekspor manual dari UI.
+
+Totalnya 2,9 MB, lebih kecil daripada PRD (8,7 MB) yang sudah ada di repo.
+
+**Belum diputuskan.** Ini menyentuh aturan 3 CLAUDE.md, jadi perlu keputusan
+pemilik repo. Pilihan: pindahkan keenam layer ke `reference/` (dilacak git,
+seperti berkas gerbang kampus), atau biarkan dan terima bahwa pipeline hanya
+bisa dijalankan ulang di mesin ini.
