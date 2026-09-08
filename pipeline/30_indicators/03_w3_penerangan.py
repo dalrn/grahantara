@@ -35,9 +35,9 @@ import pandas as pd
 
 from pipeline.common.cache import cached, interim
 from pipeline.common.geo import CRS_UTM49S, CRS_WGS84, hex_polygons
-from pipeline.common.paths import DATA_RAW, hex_index
+from pipeline.common.paths import hex_index, masukan
 
-LAYER = DATA_RAW / "mapid" / "nighttime_light_2023.geojson"
+LAYER = masukan("nighttime_light_2023.geojson")
 
 # DN class -> estimated radiance (nW/sr/cm2), the midpoint of each stated range.
 # DN=5 is open-ended (>=20); 30 is a representative value. Only the ordering

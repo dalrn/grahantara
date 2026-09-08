@@ -1371,3 +1371,49 @@ Totalnya 2,9 MB, lebih kecil daripada PRD (8,7 MB) yang sudah ada di repo.
 pemilik repo. Pilihan: pindahkan keenam layer ke `reference/` (dilacak git,
 seperti berkas gerbang kampus), atau biarkan dan terima bahwa pipeline hanya
 bisa dijalankan ulang di mesin ini.
+
+### Reproduksibilitas ditutup (2026-09-09)
+
+Enam layer MAPID (2,9 MB) dan `Hasil_Survei_BERSIH.xlsx` dipindah ke
+`reference/` yang dilacak git. Sebelumnya keduanya hanya ada di `data/` yang
+di-.gitignore, sehingga pipeline tidak bisa dijalankan ulang siapa pun selain
+pemilik mesin ini.
+
+Aturan 3 CLAUDE.md melarang commit `data/` karena isinya dump mentah yang bisa
+diunduh ulang. Keenam layer ini **tidak bisa** diunduh ulang — Open API MAPID
+berplafon 200 fitur sedangkan `makanan_minuman` sendiri berisi 1.712, jadi
+semuanya diekspor manual dari UI. Alasannya sama dengan berkas gerbang kampus
+yang sudah lebih dulu ada di `reference/`.
+
+`pipeline/common/paths.py` mendapat `masukan(nama)` yang mencari berurutan
+`reference/mapid/` → `reference/` → `data/raw/mapid/` → `data/raw/` →
+`data/processed/`. `reference/` menang lebih dulu, jadi salinan yang dilacak git
+selalu dipakai dan suntingan liar di `data/` tidak bisa diam-diam mengubah hasil.
+Kalau berkas hilang, pesannya menyebut semua lokasi yang dicari dan menunjuk ke
+`docs/MAPID_UNDUH.md`, bukan melempar `FileNotFoundError` telanjang.
+
+**Diverifikasi, bukan diklaim.** Seluruh pipeline dibangun ulang dari tahap 10
+dengan `--force` lewat jalur `reference/`: 16 langkah, 18,5 menit, 46 uji lulus.
+Hasilnya **identik pada seluruh 2.134 heksagon** — nol skor berbeda. Satu-satunya
+perbedaan berkas adalah `metadata.dihitung_pada`, yang memang stempel waktu.
+
+### Dokumen usang yang diperbaiki
+
+| Berkas | Sebelumnya | Sekarang |
+|---|---|---|
+| `DATA_DICTIONARY.md` | A1 ditaksir **model** | A1 tanpa model, alasan penolakan dicantumkan |
+| `README.md` | data web/ adalah **stub** | versi 1.0, dengan tabel isi dan catatan Affordability |
+| `CLAUDE.md` aturan 5 | data palsu | data asli, tetap minta cek `metadata.versi` |
+| `web/CLAUDE.md` | "empat file, semuanya stub" | enam berkas asli + penjelasan `dimensi_kosong` |
+| `docs/FRONTEND_TASKS.md` | "jangan simpulkan dari angka stub" | data asli + peringatan `dimensi_kosong` |
+
+`web/CLAUDE.md` sengaja memuat peringatan tegas: kode lain yang menghitung skor
+**wajib** membaca `properties.dimensi_kosong`, karena mengabaikannya membuat
+angka meleset sampai 59 poin pada 1.981 heksagon.
+
+### Catatan deployment
+
+`web/public/data/` **dilacak git**, jadi Vercel akan menerima keenam berkas saat
+deploy. Ini sempat terancam: aturan `.gitignore` bertuliskan `data/` tanpa awalan
+garis miring juga cocok dengan `web/public/data/`, dan kalau tidak ketahuan,
+build Vercel akan terbit tanpa data sama sekali. Sudah diperbaiki jadi `/data/`.

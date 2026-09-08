@@ -38,16 +38,16 @@ import pandas as pd
 
 from pipeline.common.cache import cached, interim
 from pipeline.common.geo import CRS_UTM49S, CRS_WGS84, hex_centroids
-from pipeline.common.paths import DATA_RAW, hex_index
+from pipeline.common.paths import hex_index, masukan
 
-MAPID = DATA_RAW / "mapid"
+# Resolved per file so the committed copy under reference/ wins.
 LAYANAN_RADIUS_M = 800   # docs/DATA_DICTIONARY.md: "kategori layanan <=800 m"
 MAKAN_RADIUS_M = 800     # M1/M2 walking radius; see the note where it is used
 M1_SKALA = 5.0           # 1 - exp(-n/5)
 
 
 def _load(name: str) -> gpd.GeoDataFrame:
-    gdf = gpd.read_file(MAPID / name)
+    gdf = gpd.read_file(masukan(name))
     if gdf.crs is None:
         gdf = gdf.set_crs(CRS_WGS84)
     gdf = gdf.to_crs(CRS_WGS84)

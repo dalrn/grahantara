@@ -33,9 +33,9 @@ import pandas as pd
 
 from pipeline.common.cache import cached, interim
 from pipeline.common.geo import CRS_UTM49S, CRS_WGS84, hex_polygons
-from pipeline.common.paths import DATA_RAW, hex_index
+from pipeline.common.paths import hex_index, masukan
 
-LAYER = DATA_RAW / "mapid" / "bahaya_banjir.geojson"
+LAYER = masukan("bahaya_banjir.geojson")
 
 # Five ordinal classes -> hazard index in [0,1].
 KELAS = {

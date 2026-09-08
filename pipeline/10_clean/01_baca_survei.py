@@ -29,9 +29,9 @@ import math
 import pandas as pd
 
 from pipeline.common.cache import cached, interim
-from pipeline.common.paths import DATA_PROCESSED
+from pipeline.common.paths import masukan
 
-WORKBOOK = DATA_PROCESSED / "Hasil_Survei_BERSIH.xlsx"
+WORKBOOK = masukan("Hasil_Survei_BERSIH.xlsx")
 
 # W-6 component weights, from docs/DATA_DICTIONARY.md.
 W6 = {
