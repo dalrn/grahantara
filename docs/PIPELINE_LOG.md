@@ -843,3 +843,91 @@ menyala. Berdampak pada W-5, bukan W-6.
 
 Ringkasan W-6 setelah empat koreksi: median 0,0000, rata-rata 0,2629,
 lengkap 76 dari 84 ruas.
+
+---
+
+## Fase 4 sebagian — Amenity dan W4 (2026-09-08)
+
+| Skrip | Indikator | Hasil |
+|---|---|---|
+| `01_amenity.py` | M1, M2, M4 | M1/M4 terisi penuh, M2 terisi 1.594 |
+| `02_w4_banjir.py` | W4 | terisi 301, sisanya `tidak_tersedia` |
+
+### Keputusan besar: radius M1/M2 diubah dari heksagon menjadi 800 m
+
+Definisi awal kamus data menghitung tempat makan **di dalam heksagon**.
+Hasilnya **75% heksagon bernilai nol** pada M1, dan M2 hilang di 1.606 heksagon.
+
+Diperiksa: **74,7% heksagon punya tempat makan dalam 800 m** — hampir kebalikan
+persisnya. Heksagon res 9 hanya selebar ~380 m, jadi warung 200 m di seberang
+batas terhitung nol padahal lima menit jalan kaki. Definisi lama mengukur
+**kisi**, bukan kawasan.
+
+Uji sensitivitas:
+
+| Radius | Heksagon > 0 | Median | Nol |
+|---|---|---|---|
+| dalam heksagon | 528 | 0 | 75,3% |
+| 400 m | 1.094 | 1 | 48,7% |
+| 600 m | 1.392 | 2 | 34,8% |
+| **800 m** | **1.594** | **4** | **25,3%** |
+
+**Diputuskan pemilik repo: 800 m**, sama dengan radius M4 dan anggaran jalan
+kaki C3. Dipilih demi konsistensi antarindikator, bukan demi memperbagus
+sebaran. `DATA_DICTIONARY.md` sudah diperbarui.
+
+### Layer mana untuk indikator mana
+
+Diverifikasi dengan pencocokan nama + koordinat, bukan asumsi:
+
+| Indikator | Layer | Alasan |
+|---|---|---|
+| M1, M2 | `makanan_minuman` | **tempat makan**, bukan toko bahan makanan |
+| M4 apotek | `apotek` (425) | seluruhnya subset `kesehatan_pengobatan`; pakai yang spesifik |
+| M4 minimarket | `minimarket` (351) | sudah memuat semua merek |
+| M4 warung | `toko_kelontong` (1.136) | **bukan** subset retail, layer mandiri |
+
+Mahasiswa yang mencari makan siang tidak dilayani toko kelontong, jadi
+`toko_makanan_minuman` sengaja **tidak** masuk M1/M2.
+
+### W4 — 85% wilayah tidak terpetakan, dan itu jujur
+
+Hanya **301 dari 2.134 heksagon (14,1%)** bersinggungan dengan peta bahaya
+banjir. Sisanya `tidak_tersedia`.
+
+Sempat dikira cakupannya kurang, lalu dibandingkan dengan layer satunya:
+
+| Layer | Poligon | Heksagon tersentuh |
+|---|---|---|
+| `bahaya_banjir` | 1.057 | 301 (14,1%) |
+| `risiko_banjir` | 588 | 306 (14,3%) |
+| **gabungan** | — | **320 (15,0%)** |
+
+Keduanya sama-sama ~14%, dan digabung pun hanya 15%. Jadi kelangkaan ini
+**melekat pada datanya**: layer ini memetakan kawasan rawan banjir, bukan
+seluruh kabupaten.
+
+Karena itu heksagon yang tidak tersentuh **tidak diberi nilai bahaya 0**.
+Tidak terpetakan berarti **tidak diketahui**, bukan aman. Memberi 0 akan
+mengklaim seluruh Sleman bebas banjir hanya karena petanya tidak menjangkau ke
+sana. Bobot W4 dinormalisasi ulang di dalam Walkability untuk 1.833 heksagon itu.
+
+Indeks bahaya dihitung **tertimbang luas** saat satu heksagon berpotongan
+dengan beberapa poligon, bukan mengambil poligon yang kebetulan memuat pusatnya.
+
+### Hasil
+
+| Indikator | Terisi | Median | Catatan |
+|---|---|---|---|
+| M1 | 2.134 | 0,551 | median 4 tempat makan dalam 800 m, maks 113 |
+| M2 | 1.594 | 0,688 | 540 kosong: tidak ada tempat makan dalam jangkauan |
+| M4 | 2.134 | 1,000 | 1.075 heksagon punya ketiga kategori |
+| W4 | 301 | 0,577 | 1.833 `tidak_tersedia` |
+
+Korelasi M1–M4 tinggi (0,79), keduanya memang mengukur kepadatan komersial.
+M2 jauh lebih mandiri (0,35–0,50) — keragaman berbeda dari jumlah.
+
+### Koreksi lain di kamus data
+
+Jumlah ruas W-6 yang bisa dihitung diperbarui dari "73 ruas, terkonsentrasi di
+KWS-09" menjadi **76 ruas**, dengan 8 sisanya **tersebar** di lima kawasan.
