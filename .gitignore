@@ -25,3 +25,7 @@ dist/
 
 # os
 .DS_Store
+
+# artefak ingest yang besar (cache, bisa diunduh ulang)
+data/*.tif
+*.osm.pbf
