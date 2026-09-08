@@ -357,3 +357,37 @@ dan pakai MAPID sebagai pembanding kualitas.
 
 **Temuan sampingan yang berguna:** layer KOS berisi 60 titik. Survei lapangan
 hanya punya 31 kos berharga, jadi ini bisa memperkuat model A1 secara berarti.
+
+### Ekspor manual MAPID — daftar dibuat, koreksi soal layer KOS
+
+Ditanyakan apakah pernah ada catatan layer premium mana yang harus diekspor.
+**Tidak ada.** Seluruh dokumen hanya memuat satu kalimat di `DATA_DICTIONARY.md`
+baris 42 tentang "POI premium MAPID yang menutupi seluruh wilayah studi", tanpa
+menyebut satu pun nama layer. Daftar kebutuhan baru dibuat di
+`docs/MAPID_EXPORT_LIST.md`.
+
+Dua berkas ekspor diterima dan dipindah ke `data/raw/mapid/`:
+
+| Berkas | Fitur | Di wilayah studi |
+|---|---|---|
+| `halte_sleman_2025.geojson` | 87 | 74 |
+| `kos_sleman_2025.geojson` | 60 | 51 |
+
+Keduanya cocok persis dengan jumlah dari API (87 dan 60), yang berarti kedua
+layer ini **tidak pernah terpotong** — plafon 200 hanya menggigit layer yang
+memang lebih besar dari itu.
+
+**Koreksi.** Sebelumnya layer KOS disebut "hampir tiga kali lipat sampel A1".
+Itu keliru. Layer KOS **tidak punya field harga sama sekali** — isinya lokasi
+(NAMA, ALAMAT, TELEPON, STATUS), bukan tarif. Jadi ia tidak bisa menjadi label
+pelatihan model A1, hanya kovariat berupa kepadatan kos per heksagon. Label
+harga tetap hanya dari 31 kos survei.
+
+**Katalog MAPID jauh lebih kaya dari isi proyek saat ini.** Pencarian "sleman"
+mengembalikan 254 dataset, dengan etalase Retail 19.980, Sosial 23.254, Makanan
+dan Minuman 2.491, Perumahan 4.063. Yang memblokir Amenity karena itu bukan
+ketiadaan data, melainkan data yang belum diimpor ke proyek.
+
+Struktur `TIPE_1`/`TIPE_2`/`TIPE_3` di berkas ekspor adalah taksonomi kategori
+MAPID, dan itulah yang dibutuhkan M2 untuk menghitung entropi keragaman kuliner.
+Kolom itu **wajib dipertahankan** saat ekspor.
