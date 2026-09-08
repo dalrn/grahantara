@@ -134,3 +134,74 @@ harus menyediakan `metadata.bobot_default` agar asumsi itu hilang.
   Diputuskan saat Fase 3 selesai, ketika bentuk datanya sudah pasti.
 - **`sumber: "krl"`** ada di enum skema tapi kamus data menugaskan C4 ke `osm`.
   Perlu disepakati C4 memancarkan yang mana. Tidak mendesak.
+
+---
+
+## Catatan kredensial (2026-09-08)
+
+### Berkas mana yang diisi
+
+Kunci **wajib** masuk ke `.env` (di-.gitignore). **Bukan** `.env.example`, yang
+dilacak git dan akan terdorong ke GitHub.
+
+Pernah salah sekali: kedua kunci sempat diketik ke `.env.example`. Belum sempat
+ter-commit, jadi tidak ada kebocoran. Nilai sudah dipindah ke `.env` dan templat
+dikosongkan kembali. `EE_PROJECT=` ditambahkan ke templat sebagai placeholder.
+
+| Kunci | Berkas | Dipakai untuk |
+|---|---|---|
+| `MAPID_API_KEY_MISSION` | `.env` (akar) | Activities API — lapisan bukti foto |
+| `EE_PROJECT` | `.env` (akar) | Google Earth Engine — W2 NDVI, W3 VIIRS |
+| `VITE_MAPID_BASEMAP_KEY` | `web/.env` | basemap, wilayah Devon |
+| `DEEPSEEK_API_KEY` | `web/.env` | AI-1/2/4, wilayah Devon |
+
+### Status verifikasi
+
+- **GEE — OK.** Kredensial sudah ada sejak 14 Juli, `earthengine authenticate`
+  tidak perlu diulang. `ee.Initialize(project=EE_PROJECT)` berhasil dan panggilan
+  nyata ke server Google berhasil.
+- **MAPID Mission — OK.** HTTP 200, mengembalikan **158 aktivitas**.
+
+### Bentuk request Activities API yang benar
+
+Dua jebakan, keduanya sudah kena sekali:
+
+1. **`feature` harus geometry Polygon telanjang**, bukan pembungkus Feature.
+   Mengirim Feature menghasilkan HTTP 400 dengan pesan yang menyesatkan
+   ("must be a GeoJSON Polygon, not another type (e.g. MultiPolygon)") padahal
+   geometrinya memang Polygon — yang salah adalah pembungkusnya.
+2. **Respons bersarang di `data.activities`**, bukan array di akar. Menghitung
+   `len(data)` memberi 1, bukan jumlah aktivitas.
+
+Contoh body yang bekerja:
+
+```python
+{"feature": <geometry Polygon>, "start_date": "2026-01-01",
+ "end_date": "2026-12-31", "hashtag": ["cinajawabatak"]}
+```
+
+Field per aktivitas: `_id`, `title`, `description`, `geometry`, `medias`,
+`created_at`, `likes`, `total_comment`, `user_name`, `user_full_name`,
+`community_name`, `community_description`, `community_picture`,
+`user_profile_picture`.
+
+Tidak ada field numerik terstruktur — sesuai ARCHITECTURE.md, Activities adalah
+**lapisan bukti** (foto, provenance untuk narasi AI-2), bukan sumber angka.
+
+**Terbuka:** dokumen menyebut 160 aktivitas, API mengembalikan 158. Selisih dua
+kemungkinan di luar poligon wilayah studi atau di luar rentang tanggal. Dicek di
+Fase 1, jangan ditebak.
+
+### Keputusan: C4 memakai `sumber: "osm"`, bukan `"krl"`
+
+Awalnya dikira murni kosmetik. Salah — `sumber` tampil ke pengguna. `kamus.js`
+memetakan `osm` → "OpenStreetMap" dan `krl` → "Jadwal KRL", dan string itu muncul
+di panel indikator, tabel halaman metodologi, serta prompt AI-2.
+
+C4 mengukur jarak jalan kaki ke stasiun di atas jaringan OSM. Tidak ada jadwal
+yang dibaca — tidak ada waktu keberangkatan, tidak ada frekuensi. Melabelinya
+"Jadwal KRL" akan memberi kesan skor memperhitungkan seberapa sering kereta
+lewat, padahal tidak. Itu klaim berlebih yang akan ketahuan juri, sekaligus
+memberi premis palsu ke narasi AI-2.
+
+Nilai `krl` dibiarkan ada di enum skema tapi tidak dipakai.
