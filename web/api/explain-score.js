@@ -29,14 +29,17 @@ function validasiBentuk(j) {
   };
 }
 
-function fallback(subskor, msLatensi) {
-  const urut = Object.entries(subskor).sort((a, b) => b[1] - a[1]);
-  const duaTertinggi = urut.slice(0, 2);
-  const terendah = urut[urut.length - 1];
+function fallback(subskor, kosong, msLatensi) {
+  const ada = Object.entries(subskor).filter(([k]) => !kosong.has(k));
+  const urut = ada.sort((a, b) => b[1] - a[1]);
+  const kekuatan = urut.slice(0, 2).map(([k, n]) =>
+    `${NAMA_DIMENSI[k]} tergolong tinggi di kawasan ini, skor ${n}.`);
+  const kelemahan = urut.length >= 2
+    ? [`${NAMA_DIMENSI[urut[urut.length - 1][0]]} tergolong rendah, skor ${urut[urut.length - 1][1]}.`]
+    : [];
   return {
-    kekuatan: duaTertinggi.map(([k, n]) =>
-      `${NAMA_DIMENSI[k]} tergolong tinggi di kawasan ini, skor ${n}.`),
-    kelemahan: [`${NAMA_DIMENSI[terendah[0]]} tergolong rendah, skor ${terendah[1]}.`],
+    kekuatan,
+    kelemahan,
     ringkas: "Ringkasan otomatis tanpa AI karena layanan bahasa tidak merespons.",
     sumber: "fallback",
     msLatensi,
@@ -64,6 +67,9 @@ export default async function handler(req, res) {
     res.status(400).json({ galat: "Keempat subskor harus angka 0-100." });
     return;
   }
+  // Dimensi yang seluruh indikatornya tidak tersedia ditulis 0 pada skema,
+  // tapi dikeluarkan dari skor. "0" di sini berarti tidak ada data.
+  const kosong = new Set((Array.isArray(b.dimensiKosong) ? b.dimensiKosong : []).filter((k) => wajibSub.includes(k)));
   if (!Array.isArray(b.indikator) || b.indikator.length < 1 || b.indikator.length > 16) {
     res.status(400).json({ galat: "Indikator wajib 1-16 butir." });
     return;
@@ -83,8 +89,11 @@ export default async function handler(req, res) {
 
   const pengguna = [
     `Skor total: ${b.skor}`,
-    `Subskor: Konektivitas ${sub.connectivity} | Keterjangkauan ${sub.affordability} | Amenitas ${sub.amenity} | Kelayakan Jalan Kaki ${sub.walkability}`,
-    `Bobot: Konektivitas ${b.bobot?.connectivity ?? "-"} | Keterjangkauan ${b.bobot?.affordability ?? "-"} | Amenitas ${b.bobot?.amenity ?? "-"} | Kelayakan Jalan Kaki ${b.bobot?.walkability ?? "-"}`,
+    `Subskor: ${wajibSub.map((k) => kosong.has(k)
+      ? `${NAMA_DIMENSI[k]}: tidak tersedia, dikeluarkan dari perhitungan skor`
+      : `${NAMA_DIMENSI[k]} ${sub[k]}`).join(" | ")}`,
+    `Bobot: ${wajibSub.filter((k) => !kosong.has(k))
+      .map((k) => `${NAMA_DIMENSI[k]} ${b.bobot?.[k] ?? "-"}`).join(" | ") || "-"}`,
     `Indikator:\n${barisIndikator}`,
   ].join("\n");
 
@@ -106,6 +115,9 @@ ATURAN:
   posisi "Rp". Jangan menata ulang format angka atau satuan.
 - DILARANG menyebut indikator yang bertanda "tidak tersedia" sebagai
   kekuatan atau kelemahan. Boleh disebut sebagai keterbatasan data.
+- Dimensi bertanda "tidak tersedia, dikeluarkan dari perhitungan skor"
+  DILARANG dijadikan kekuatan maupun kelemahan. Boleh disebut sekali
+  sebagai keterbatasan data pada kalimat ringkas.
 - DILARANG menyebut nama tempat, jalan, kampus, atau kos tertentu.
   Kamu tidak diberi informasi itu.
 - DILARANG memberi saran finansial atau menyuruh pengguna menyewa.
@@ -119,7 +131,7 @@ ATURAN:
     if (!bentuk) throw new Error("bentuk tidak sah");
     hasil = { ...bentuk, sumber: "llm", msLatensi: Date.now() - mulai };
   } catch {
-    hasil = fallback(sub, Date.now() - mulai);
+    hasil = fallback(sub, kosong, Date.now() - mulai);
   }
   res.status(200).json(hasil);
 }

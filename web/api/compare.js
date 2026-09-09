@@ -81,19 +81,24 @@ function barisData(nama, nilaiA, nilaiB, persentilA, persentilB, sumberA, sumber
          `B = ${teksB} (persentil ${fmtPersentil(persentilB)}) -> ${bandingNilai}, unggul: ${unggul}`;
 }
 
-function arahDimensi(a, b) {
+function arahDimensi(a, b, kosongA, kosongB) {
   const hasil = {};
   for (const d of DIMENSI) {
     const vA = a.subskor[d];
     const vB = b.subskor[d];
-    const r = arahBanding(vA, vB, vA, vB); // angka skala 0-100; persentil=bukan di sini
-    hasil[d] = { ...r, vA, vB };
+    // Nol pada dimensi kosong berarti "tidak ada data", bukan nilai nol:
+    // perbandingannya tidak sah dan tidak boleh dipakai.
+    const kosong = kosongA.has(d) || kosongB.has(d);
+    const r = kosong
+      ? { bandingNilai: "tidak dapat dibandingkan", unggul: "tidak dapat dibandingkan" }
+      : arahBanding(vA, vB, vA, vB); // angka skala 0-100; persentil=bukan di sini
+    hasil[d] = { ...r, vA, vB, kosongA: kosongA.has(d), kosongB: kosongB.has(d) };
   }
   return hasil;
 }
 
-function fallback(a, b, msLatensi) {
-  const perDimensi = arahDimensi(a, b);
+function fallback(a, b, kosongA, kosongB, msLatensi) {
+  const perDimensi = arahDimensi(a, b, kosongA, kosongB);
   const pilih = (sisi) => {
     const menang = DIMENSI.filter((d) => perDimensi[d].unggul === sisi)
       .sort((x, y) => Math.abs(perDimensi[y].vA - perDimensi[y].vB) - Math.abs(perDimensi[x].vA - perDimensi[x].vB));
@@ -102,7 +107,7 @@ function fallback(a, b, msLatensi) {
       hasil.push(`${NAMA_DIMENSI[d]} lebih tinggi di Kawasan ${sisi}, ${perDimensi[d].vA} berbanding ${perDimensi[d].vB}.`);
     }
     if (hasil.length < 2) {
-      const cadangan = DIMENSI.filter((d) => perDimensi[d].unggul !== sisi)
+      const cadangan = DIMENSI.filter((d) => perDimensi[d].unggul !== sisi && perDimensi[d].unggul !== "tidak dapat dibandingkan")
         .sort((x, y) => Math.abs(perDimensi[x].vA - perDimensi[x].vB) - Math.abs(perDimensi[y].vA - perDimensi[y].vB));
       for (const d of cadangan) {
         if (hasil.length >= 2) break;
@@ -147,6 +152,9 @@ export default async function handler(req, res) {
     res.status(400).json({ galat: "Kawasan B tidak sah: skor/subskor harus 0-100 dan indikator 1-16." });
     return;
   }
+  const wajib = Object.keys(NAMA_DIMENSI);
+  const kosongA = new Set((Array.isArray(b.a.dimensiKosong) ? b.a.dimensiKosong : []).filter((d) => wajib.includes(d)));
+  const kosongB = new Set((Array.isArray(b.b.dimensiKosong) ? b.b.dimensiKosong : []).filter((d) => wajib.includes(d)));
 
   const mulai = Date.now();
 
@@ -154,9 +162,12 @@ export default async function handler(req, res) {
   const garis = [];
   const rSkor = arahBanding(b.a.skor, b.b.skor, b.a.skor, b.b.skor);
   garis.push(`Skor total: A = ${b.a.skor}, B = ${b.b.skor} -> ${rSkor.bandingNilai}, unggul: ${rSkor.unggul}`);
+  const perDimensi = arahDimensi(b.a, b.b, kosongA, kosongB);
   for (const d of DIMENSI) {
-    const r = arahBanding(b.a.subskor[d], b.b.subskor[d], b.a.subskor[d], b.b.subskor[d]);
-    garis.push(`${NAMA_DIMENSI[d]} (subskor): A = ${b.a.subskor[d]}, B = ${b.b.subskor[d]} -> ${r.bandingNilai}, unggul: ${r.unggul}`);
+    const r = perDimensi[d];
+    const teksA = r.kosongA ? "tidak tersedia" : b.a.subskor[d];
+    const teksB = r.kosongB ? "tidak tersedia" : b.b.subskor[d];
+    garis.push(`${NAMA_DIMENSI[d]} (subskor): A = ${teksA}, B = ${teksB} -> ${r.bandingNilai}, unggul: ${r.unggul}`);
   }
   const n = Math.min(b.a.indikator.length, b.b.indikator.length);
   for (let i = 0; i < n; i++) {
@@ -194,6 +205,8 @@ ATURAN:
   menyatakan kawasan itu lebih rendah.
 - Indikator bertanda "tidak dapat dibandingkan" atau "tidak tersedia"
   DILARANG dijadikan keunggulan.
+- Dimensi yang bertanda "tidak dapat dibandingkan, unggul: tidak dapat
+  dibandingkan" DILARANG dijadikan keunggulan salah satu kawasan.
 - Salin angka beserta satuannya PERSIS seperti diberikan, termasuk
   posisi "Rp". Jangan menata ulang format.
 - DILARANG menyebut nama tempat, jalan, kampus, atau kos tertentu.
@@ -212,7 +225,7 @@ ATURAN:
     if (!bentuk) throw new Error("bentuk tidak sah");
     hasil = { ...bentuk, sumber: "llm", msLatensi: Date.now() - mulai };
   } catch {
-    hasil = fallback(b.a, b.b, Date.now() - mulai);
+    hasil = fallback(b.a, b.b, kosongA, kosongB, Date.now() - mulai);
   }
   res.status(200).json(hasil);
 }

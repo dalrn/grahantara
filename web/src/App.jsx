@@ -103,6 +103,7 @@ export default function App() {
       h3_index: d.h3_index,
       skor: d.skor,
       subskor: d.subskor,
+      dimensiKosong: d.dimensi_kosong ?? [],
       indikator: KELOMPOK_INDIKATOR.flatMap((kel) =>
         kel.kunci.map((k) => {
           const ik = d.indikator?.[k];
