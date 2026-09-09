@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
 import { formatNilai, formatSkor } from "../lib/format";
@@ -98,13 +98,13 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
         <div className="mt-2 space-y-1.5 text-xs">
           {narasi.kekuatan?.map((k) => (
             <div key={k} className="flex gap-1.5 text-emerald-300">
-              <span className="shrink-0 font-bold">▲</span>
+              <span className="shrink-0 font-bold">â–²</span>
               <span>{k}</span>
             </div>
           ))}
           {narasi.kelemahan?.map((k) => (
             <div key={k} className="flex gap-1.5 text-yellow-300">
-              <span className="shrink-0 font-bold">▼</span>
+              <span className="shrink-0 font-bold">â–¼</span>
               <span>{k}</span>
             </div>
           ))}
@@ -158,7 +158,7 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onT
           ) : (
             <span className="text-sm font-bold text-emerald-400">{formatSkor(nilai)}</span>
           )}
-          <span className="text-xs text-slate-400">{terbuka ? "▴" : "▾"}</span>
+          <span className="text-xs text-slate-400">{terbuka ? "â–´" : "â–¾"}</span>
         </span>
       </button>
       {kosongDimensi ? (
@@ -184,8 +184,15 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onT
   );
 }
 
+function formatTanggal(iso) {
+  if (typeof iso !== "string") return null;
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return null;
+  return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 export default function PanelKawasan({
-  heksagon, versi, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
+  heksagon, versi, dihitungPada, bobotDariMetadata, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
 }) {
   const [terbuka, setTerbuka] = useState(
     () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
@@ -221,7 +228,7 @@ export default function PanelKawasan({
           className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
           aria-label="Tutup panel"
         >
-          ✕
+          âœ•
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
@@ -246,10 +253,12 @@ export default function PanelKawasan({
             </div>
           </>
         )}
-        <div className="text-[10px] text-slate-600">
-          Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
-          metadata.bobot_default.
-        </div>
+        {!bobotDariMetadata && (
+          <div className="text-[10px] text-slate-600">
+            Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
+            metadata.bobot_default.
+          </div>
+        )}
         {catatanKosong && (
           <div className="mt-1 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-300">
             {catatanKosong}
@@ -279,7 +288,11 @@ export default function PanelKawasan({
         </div>
 
         <div className="border-t border-white/10 pt-2 text-[10px] text-slate-600">
-          Data {versi ?? "stub"}. Angka acak, bukan hasil analisis.
+          {typeof versi === "string" && versi.startsWith("stub")
+            ? `Data ${versi ?? "stub"}. Angka acak, bukan hasil analisis.`
+            : versi
+              ? `Data versi ${versi}${formatTanggal(dihitungPada) ? `, dihitung ${formatTanggal(dihitungPada)}.` : "."}`
+              : ""}
         </div>
       </div>
     </div>

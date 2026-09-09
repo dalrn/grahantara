@@ -5,8 +5,9 @@ export const BOBOT_DEFAULT = {
   walkability: 0.15,
 };
 
-// CATATAN: metadata.bobot_default tidak ada di GeoJSON. Nilai ini ASUMSI
-// dari dokumen proyek. Ganti bila pipeline menyediakannya.
+// CADANGAN bila metadata.bobot_default tidak ada di GeoJSON. Bila metadata
+// menyediakannya, App.jsx memakai nilai metadata sebagai bobot bawaan dan
+// acuan "Kembalikan bawaan". Nilai ini identik dengan metadata versi 1.0.
 export const EPS = 0.01;
 
 export const WARNA_KELAS = ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"];
