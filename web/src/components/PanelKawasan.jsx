@@ -1,3 +1,4 @@
+import { PanelMotion, Collapse } from "./Motion";
 import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
@@ -32,18 +33,27 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
     setGalat(null);
     try {
       const bobot = bobotKini
-        ? Object.fromEntries(Object.entries(bobotKini).map(([k, v]) => [k, Math.round(v * 100)]))
-        : Object.fromEntries(Object.entries(BOBOT_DEFAULT).map(([k, v]) => [k, Math.round(v * 100)]));
+        ? Object.fromEntries(
+            Object.entries(bobotKini).map(([k, v]) => [k, Math.round(v * 100)]),
+          )
+        : Object.fromEntries(
+            Object.entries(BOBOT_DEFAULT).map(([k, v]) => [
+              k,
+              Math.round(v * 100),
+            ]),
+          );
       const indikator = [];
       for (const kelompok of KELOMPOK_INDIKATOR) {
         for (const k of kelompok.kunci) {
           const ik = heksagon.indikator?.[k];
           indikator.push({
             nama: NAMA_INDIKATOR[k] ?? k,
-            nilai: ik && ik.nilai !== null && ik.nilai !== undefined
-              ? formatNilai(ik.nilai, ik.satuan)
-              : null,
-            persentil: ik && typeof ik.persentil === "number" ? ik.persentil : null,
+            nilai:
+              ik && ik.nilai !== null && ik.nilai !== undefined
+                ? formatNilai(ik.nilai, ik.satuan)
+                : null,
+            persentil:
+              ik && typeof ik.persentil === "number" ? ik.persentil : null,
             sumber: ik?.sumber ?? null,
           });
         }
@@ -85,7 +95,11 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
           Jelaskan kawasan ini
         </button>
       )}
-      {memuat && <div className="mt-2 text-xs text-slate-400">Menyusun penjelasan...</div>}
+      {memuat && (
+        <div className="mt-2 text-xs text-slate-400">
+          Menyusun penjelasan...
+        </div>
+      )}
       {galat && (
         <div className="mt-2 rounded bg-red-900/60 p-2 text-xs text-red-100">
           {galat}{" "}
@@ -110,11 +124,11 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
           ))}
           <div className="pt-1 italic text-slate-300">{narasi.ringkas}</div>
           {narasi.sumber === "fallback" && (
-            <div className="rounded bg-yellow-700 px-2 py-1 text-[10px] font-semibold text-white">
+            <div className="rounded bg-yellow-700 px-2 py-1 text-xs font-semibold text-white">
               Disusun tanpa AI. Layanan bahasa tidak merespons.
             </div>
           )}
-          <div className="text-[10px] text-slate-600">
+          <div className="text-xs text-slate-500">
             Disusun AI dari angka pada panel ini.
           </div>
         </div>
@@ -123,9 +137,17 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
   );
 }
 
-function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onToggle }) {
+function BlokDimensi({
+  kelompok,
+  subskor,
+  indikator,
+  bobot,
+  kosong,
+  terbuka,
+  onToggle,
+}) {
   const nilai = subskor?.[kelompok.dimensi];
-  const kosongDimensi = kosong.has(kelompok.dimensi);
+  const kosongDimensi = kosong.has(kelompok.dimensi) || !Number.isFinite(nilai);
   const w = bobot ? bobot[kelompok.dimensi] : null;
   // Bobot yang tertera dinormalisasi ulang atas dimensi yang ADA saja,
   // mengikuti aturan mesinSkor (dimensi kosong dikeluarkan dari skor).
@@ -147,23 +169,33 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onT
         <span className="text-sm font-semibold text-white">
           {kelompok.label}
           {wTampil !== null && !kosongDimensi && (
-            <span className="ml-1 text-[10px] font-normal text-slate-500">
-              (bobot {(wTampil * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%)
+            <span className="ml-1 text-xs font-normal text-slate-400">
+              (bobot{" "}
+              {(wTampil * 100).toLocaleString("id-ID", {
+                maximumFractionDigits: 1,
+              })}
+              %)
             </span>
           )}
         </span>
         <span className="flex items-center gap-2">
           {kosongDimensi ? (
-            <Lencana teks="Tidak tersedia" warna="bg-slate-700 text-slate-300" />
+            <Lencana
+              teks="Tidak tersedia"
+              warna="bg-slate-700 text-slate-300"
+            />
           ) : (
-            <span className="text-sm font-bold text-emerald-400">{formatSkor(nilai)}</span>
+            <span className="text-sm font-bold text-emerald-400">
+              {formatSkor(nilai)}
+            </span>
           )}
           <span className="text-xs text-slate-400">{terbuka ? "▴" : "▾"}</span>
         </span>
       </button>
       {kosongDimensi ? (
-        <div className="mt-1 text-[10px] italic text-slate-500">
-          {kelompok.label} tidak punya data dan dikeluarkan dari perhitungan skor
+        <div className="mt-1 text-xs italic text-slate-400">
+          {kelompok.label} tidak punya data dan dikeluarkan dari perhitungan
+          skor
         </div>
       ) : (
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -173,13 +205,13 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onT
           />
         </div>
       )}
-      {terbuka && (
+      <Collapse open={terbuka}>
         <div className="mt-2 divide-y divide-white/5">
           {kelompok.kunci.map((k) => (
             <BarisIndikator key={k} kunci={k} data={indikator?.[k]} />
           ))}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }
@@ -188,16 +220,31 @@ function formatTanggal(iso) {
   if (typeof iso !== "string") return null;
   const t = new Date(iso);
   if (Number.isNaN(t.getTime())) return null;
-  return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  return t.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export default function PanelKawasan({
-  heksagon, versi, dihitungPada, bobotDariMetadata, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
+  heksagon,
+  versi,
+  dihitungPada,
+  bobotDariMetadata,
+  skorKini,
+  bobotKini,
+  onTutup,
+  narasiCache,
+  simpanNarasi,
 }) {
   const [terbuka, setTerbuka] = useState(
     () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
   );
 
+  const [activeTab, setActiveTab] = useState("Ringkasan");
+  useEffect(() => setActiveTab("Ringkasan"), [heksagon?.h3_index]);
   if (!heksagon) return null;
 
   const kosong = daftarKosong(heksagon.dimensi_kosong);
@@ -219,7 +266,7 @@ export default function PanelKawasan({
   const pakaiBobotAnda = skorKini !== null && bobotKini !== null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-20 flex h-[70dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[380px] md:rounded-none">
+    <PanelMotion className="detail-panel absolute inset-x-0 bottom-0 z-20 flex h-[70dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[380px] md:rounded-none">
       <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-white/25 md:hidden" />
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <span className="text-sm font-semibold">Kawasan terpilih</span>
@@ -231,15 +278,33 @@ export default function PanelKawasan({
           ✕
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="select-text pt-2 font-mono text-[10px] text-slate-500">
-          {heksagon.h3_index}
+      <div className="panel-tabs" role="tablist" aria-label="Detail kawasan">
+        {["Ringkasan", "Subskor", "16 Indikator"].map((tab) => (
+          <button
+            key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <div
+        role="tabpanel"
+        aria-label={activeTab}
+        className="flex-1 overflow-y-auto px-4 pb-4"
+      >
+        <div className="select-text pt-2 font-mono text-xs text-slate-400">
+          —
         </div>
         {pakaiBobotAnda ? (
           <>
-            <div className="text-[11px] text-slate-400">Skor dengan bobot Anda</div>
-            <div className="text-4xl font-bold text-emerald-400">{formatSkor(skorKini)}</div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-xs text-slate-400">Skor dengan bobot Anda</div>
+            <div className="text-4xl font-bold text-emerald-400">
+              {formatSkor(skorKini)}
+            </div>
+            <div className="text-xs text-slate-400">
               Skor bawaan: {formatSkor(heksagon.skor)}
             </div>
           </>
@@ -248,46 +313,52 @@ export default function PanelKawasan({
             <div className="text-4xl font-bold text-emerald-400">
               {formatSkor(heksagon.skor)}
             </div>
-            <div className="text-[11px] text-slate-400">
+            <div className="text-xs text-slate-400">
               pada bobot bawaan C 0,40 / A 0,25 / M 0,20 / W 0,15
             </div>
           </>
         )}
         {!bobotDariMetadata && (
-          <div className="text-[10px] text-slate-600">
+          <div className="text-xs text-slate-500">
             Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
             metadata.bobot_default.
           </div>
         )}
         {catatanKosong && (
-          <div className="mt-1 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-300">
+          <div className="mt-1 rounded bg-slate-800 px-2 py-1 text-xs text-slate-300">
             {catatanKosong}
           </div>
         )}
 
-        <BlokInsight
-          heksagon={heksagon}
-          bobotKini={bobotKini}
-          narasi={narasiCache?.[heksagon.h3_index]}
-          padaJelaskan={(h3, hasil) => simpanNarasi(h3, hasil)}
-        />
+        {activeTab === "Ringkasan" && (
+          <BlokInsight
+            heksagon={heksagon}
+            bobotKini={bobotKini}
+            narasi={narasiCache?.[heksagon.h3_index]}
+            padaJelaskan={(h3, hasil) => simpanNarasi(h3, hasil)}
+          />
+        )}
 
-        <div>
-          {KELOMPOK_INDIKATOR.map((kelompok) => (
-            <BlokDimensi
-              key={kelompok.dimensi}
-              kelompok={kelompok}
-              subskor={heksagon.subskor}
-              indikator={heksagon.indikator}
-              bobot={bobotKini}
-              kosong={kosong}
-              terbuka={terbuka.has(kelompok.dimensi)}
-              onToggle={() => toggle(kelompok.dimensi)}
-            />
-          ))}
-        </div>
+        {activeTab !== "Ringkasan" && (
+          <div>
+            {KELOMPOK_INDIKATOR.map((kelompok) => (
+              <BlokDimensi
+                key={kelompok.dimensi}
+                kelompok={kelompok}
+                subskor={heksagon.subskor}
+                indikator={heksagon.indikator}
+                bobot={bobotKini}
+                kosong={kosong}
+                terbuka={
+                  activeTab === "16 Indikator" && terbuka.has(kelompok.dimensi)
+                }
+                onToggle={() => toggle(kelompok.dimensi)}
+              />
+            ))}
+          </div>
+        )}
 
-        <div className="border-t border-white/10 pt-2 text-[10px] text-slate-600">
+        <div className="border-t border-white/10 pt-2 text-xs text-slate-500">
           {typeof versi === "string" && versi.startsWith("stub")
             ? `Data ${versi ?? "stub"}. Angka acak, bukan hasil analisis.`
             : versi
@@ -295,6 +366,6 @@ export default function PanelKawasan({
               : ""}
         </div>
       </div>
-    </div>
+    </PanelMotion>
   );
 }
