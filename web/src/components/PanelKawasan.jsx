@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
 import { formatNilai, formatSkor } from "../lib/format";
@@ -98,13 +98,13 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
         <div className="mt-2 space-y-1.5 text-xs">
           {narasi.kekuatan?.map((k) => (
             <div key={k} className="flex gap-1.5 text-emerald-300">
-              <span className="shrink-0 font-bold">â–²</span>
+              <span className="shrink-0 font-bold">▲</span>
               <span>{k}</span>
             </div>
           ))}
           {narasi.kelemahan?.map((k) => (
             <div key={k} className="flex gap-1.5 text-yellow-300">
-              <span className="shrink-0 font-bold">â–¼</span>
+              <span className="shrink-0 font-bold">▼</span>
               <span>{k}</span>
             </div>
           ))}
@@ -158,7 +158,7 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onT
           ) : (
             <span className="text-sm font-bold text-emerald-400">{formatSkor(nilai)}</span>
           )}
-          <span className="text-xs text-slate-400">{terbuka ? "â–´" : "â–¾"}</span>
+          <span className="text-xs text-slate-400">{terbuka ? "▴" : "▾"}</span>
         </span>
       </button>
       {kosongDimensi ? (
@@ -228,7 +228,7 @@ export default function PanelKawasan({
           className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
           aria-label="Tutup panel"
         >
-          âœ•
+          ✕
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">

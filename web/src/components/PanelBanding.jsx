@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
 import { formatNilai, formatSkor } from "../lib/format";
@@ -74,9 +74,9 @@ export default function PanelBanding({
           ganti
         </button>
       </div>
-      <div className="font-mono text-[9px] text-slate-500">{data?.h3_index ?? "â€”"}</div>
+      <div className="font-mono text-[9px] text-slate-500">{data?.h3_index ?? "—"}</div>
       <div className="text-2xl font-bold" style={{ color: warna }}>
-        {skor !== null && skor !== undefined ? formatSkor(skor) : "â€”"}
+        {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
       </div>
     </div>
   );
@@ -87,10 +87,10 @@ export default function PanelBanding({
       <div className="absolute inset-x-2 bottom-2 z-20 rounded-xl bg-slate-900/95 px-3 py-2 text-white shadow-xl backdrop-blur-sm md:inset-x-auto md:bottom-4 md:right-4 md:w-80">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold text-slate-300">
-            {a ? "Bandingkan kawasan â€” klik kawasan B di peta" : "Bandingkan kawasan â€” klik dua heksagon di peta"}
+            {a ? "Bandingkan kawasan — klik kawasan B di peta" : "Bandingkan kawasan — klik dua heksagon di peta"}
           </span>
           <button onClick={onTutup} className="shrink-0 text-slate-400 hover:text-white" aria-label="Tutup panel banding">
-            âœ•
+            ✕
           </button>
         </div>
         {a && (
@@ -98,7 +98,7 @@ export default function PanelBanding({
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: WARNA_A }} />
             <span className="font-mono text-slate-400">{a.h3_index}</span>
             <span className="ml-auto font-bold text-sky-300">
-              {skorKini?.a !== null && skorKini?.a !== undefined ? formatSkor(skorKini.a) : "â€”"}
+              {skorKini?.a !== null && skorKini?.a !== undefined ? formatSkor(skorKini.a) : "—"}
             </span>
           </div>
         )}
@@ -120,7 +120,7 @@ export default function PanelBanding({
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <span className="text-sm font-semibold">Bandingkan kawasan</span>
         <button onClick={onTutup} className="text-slate-400 hover:text-white" aria-label="Tutup panel banding">
-          âœ•
+          ✕
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
@@ -154,7 +154,7 @@ export default function PanelBanding({
                         kA && kB ? (
                           <div className="text-[10px] italic text-slate-600">tidak dapat dibandingkan</div>
                         ) : (
-                          <div className="text-[10px] italic text-slate-500">tidak dapat dibandingkan â€” data hanya di satu kawasan</div>
+                          <div className="text-[10px] italic text-slate-500">tidak dapat dibandingkan — data hanya di satu kawasan</div>
                         )
                       ) : (
                         <div className="flex h-1.5 gap-0.5">
@@ -166,7 +166,7 @@ export default function PanelBanding({
                     <span className="w-16 text-right text-sky-300">{isiSel(vA, kA)}</span>
                     <span className="w-16 text-right text-orange-300">{isiSel(vB, kB)}</span>
                     <span className="w-5 text-center text-[10px]">
-                      {unggul === "A" ? "â–²" : unggul === "B" ? "â—†" : ""}
+                      {unggul === "A" ? "▲" : unggul === "B" ? "◆" : ""}
                     </span>
                   </div>
                 );
@@ -188,7 +188,7 @@ export default function PanelBanding({
                         {isiIndikator(k, b)}
                       </span>
                       <span className="w-5 shrink-0 text-center">
-                        {unggul === "A" ? "â–²" : unggul === "B" ? "â—†" : ""}
+                        {unggul === "A" ? "▲" : unggul === "B" ? "◆" : ""}
                       </span>
                     </div>
                   );
@@ -217,16 +217,16 @@ export default function PanelBanding({
               <div className="mt-3 space-y-2 text-xs">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-sky-400">Kelebihan kawasan A</div>
                 {hasilBanding.unggulA?.map((s) => (
-                  <div key={s} className="rounded bg-sky-900/40 px-2 py-1 text-sky-200">â–² {s}</div>
+                  <div key={s} className="rounded bg-sky-900/40 px-2 py-1 text-sky-200">▲ {s}</div>
                 ))}
                 <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide text-orange-400">Kelebihan kawasan B</div>
                 {hasilBanding.unggulB?.map((s) => (
-                  <div key={s} className="rounded bg-orange-900/40 px-2 py-1 text-orange-200">â—† {s}</div>
+                  <div key={s} className="rounded bg-orange-900/40 px-2 py-1 text-orange-200">◆ {s}</div>
                 ))}
                 <div className="pt-1 text-xs italic text-slate-300">{hasilBanding.simpulan}</div>
                 {hasilBanding.cocokUntuk && (
                   <div className="text-[11px] text-slate-400">
-                    Cocok untuk: A â€” {hasilBanding.cocokUntuk.A} | B â€” {hasilBanding.cocokUntuk.B}
+                    Cocok untuk: A — {hasilBanding.cocokUntuk.A} | B — {hasilBanding.cocokUntuk.B}
                   </div>
                 )}
                 {hasilBanding.sumber === "fallback" && (
