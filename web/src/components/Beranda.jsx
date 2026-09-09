@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DAFTAR_KAMPUS } from "../kampus.js";
 
@@ -140,7 +140,7 @@ export default function Beranda({ onProfil, onLewati, onMetodologi, profilAwal }
           disabled={!teks.trim() || memuat}
           className="mt-4 w-full rounded-lg bg-emerald-500 py-2.5 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
         >
-          {memuat ? "Memprosesâ€¦" : "Proses"}
+          {memuat ? "Memproses…" : "Proses"}
         </button>
         <div className="mt-2 flex justify-center gap-3">
           <button onClick={onLewati} className="text-xs text-slate-500 underline hover:text-slate-300">
@@ -162,7 +162,7 @@ export default function Beranda({ onProfil, onLewati, onMetodologi, profilAwal }
 
         {profil && (
           <div className="mt-5 rounded-lg bg-slate-900 p-4 ring-1 ring-slate-800">
-            <div className="text-sm text-slate-400">Profil dari permintaanmu â€” koreksi bila salah:</div>
+            <div className="text-sm text-slate-400">Profil dari permintaanmu — koreksi bila salah:</div>
 
             {profil.sumber === "fallback" && (
               <div className="mt-2 rounded bg-yellow-700 px-3 py-1.5 text-xs font-semibold text-white">
