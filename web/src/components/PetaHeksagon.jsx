@@ -30,6 +30,26 @@ function hargaPopup(kos) {
   return { harga: `Rp ${kos.harga_median.toLocaleString("id-ID")} / bulan`, lencana: kos.sumber_harga };
 }
 
+// Pemetaan nilai sumber_harga nyata (metode pengumpulan survei lapangan)
+// ke lencana. Nilai 'model'/'survei' lama dipertahankan untuk kompatibilitas
+// bila pipeline berubah.
+const LENCANA_SUMBER_KOS = {
+  model: { teks: "Estimasi", warna: "bg-yellow-700 text-yellow-100" },
+  survei: { teks: "Survei lapangan", warna: "bg-slate-500 text-slate-100" },
+  "Tanya pengelola": { teks: "Survei lapangan", warna: "bg-slate-500 text-slate-100" },
+  "Tanya penghuni": { teks: "Survei lapangan", warna: "bg-slate-500 text-slate-100" },
+  Spanduk: { teks: "Survei lapangan", warna: "bg-slate-500 text-slate-100" },
+  "Spanduk atau papan": { teks: "Survei lapangan", warna: "bg-slate-500 text-slate-100" },
+  "Sosial media": { teks: "Sosial media", warna: "bg-slate-500 text-slate-100" },
+};
+
+function lencanaKos(sumber) {
+  if (!sumber) return { teks: "Sumber tidak tercatat", warna: "bg-slate-600 text-slate-200", mentah: null };
+  const peta = LENCANA_SUMBER_KOS[sumber];
+  if (peta) return { ...peta, mentah: sumber };
+  return { teks: "Sumber tidak tercatat", warna: "bg-slate-600 text-slate-200", mentah: sumber };
+}
+
 export default function PetaHeksagon({
   onPilih,
   onStatusBasemap,
@@ -168,7 +188,12 @@ export default function PetaHeksagon({
       }
       onJumlahLapisan(jumlah);
 
-      onPetaSiap({ versi: data.metadata?.versi ?? null, labels: labelKelas(ambang, minSkor, maksSkor) });
+      onPetaSiap({
+        versi: data.metadata?.versi ?? null,
+        dihitungPada: data.metadata?.dihitung_pada ?? null,
+        bobotDefault: data.metadata?.bobot_default ?? null,
+        labels: labelKelas(ambang, minSkor, maksSkor),
+      });
       mesin.current = siapkanMesin(data);
       ambangBawaan.current = ambang;
       onDataSiap(mesin.current);
@@ -194,16 +219,24 @@ export default function PetaHeksagon({
           const teksKoridor =
             Array.isArray(koridor) && koridor.length ? koridor.join(", ") : null;
           isi = `<div class="text-sm"><b>${p.nama}</b><br/><span class="text-slate-400">Koridor: ${teksKoridor ?? "tidak tercatat"}</span></div>`;
+        } else if (def.id === "krl") {
+          // berkas KRL hanya memuat nama — jangan mengarang isi lain.
+          isi = `<div class="text-sm"><b>${p.nama}</b></div>`;
         } else {
-          const { harga, lencana } = hargaPopup(p);
+          const { harga } = hargaPopup(p);
+          const lencana = lencanaKos(p.sumber_harga);
           const lencanaHtml =
-            lencana === "model"
-              ? '<span class="ml-1 rounded bg-yellow-700 px-1 text-[10px] text-yellow-100">Estimasi</span>'
-              : lencana === "survei"
-                ? '<span class="ml-1 rounded bg-slate-500 px-1 text-[10px] text-slate-100">Survei lapangan</span>'
-                : "";
-          const jarak = typeof p.jarak_halte_m === "number" ? `<br/><span class="text-slate-400">Jarak ke halte: ${p.jarak_halte_m.toLocaleString("id-ID")} m</span>` : "";
-          isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}</div>`;
+            `<span class="ml-1 rounded px-1 text-[10px] font-medium ${lencana.warna}">${lencana.teks}</span>`;
+          const metodeAsli = lencana.mentah
+            ? `<div class="text-[10px] text-slate-500">metode: ${lencana.mentah}</div>`
+            : "";
+          const jarak = typeof p.jarak_halte_m === "number"
+            ? `<br/><span class="text-slate-400">Jarak ke halte: ${p.jarak_halte_m.toLocaleString("id-ID")} m</span>`
+            : "";
+          const presisi = p.presisi_koordinat
+            ? `<div class="text-[10px] text-slate-600">presisi koordinat: ${p.presisi_koordinat}</div>`
+            : "";
+          isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}${metodeAsli}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}${presisi}</div>`;
         }
         new maplibregl.Popup({ closeButton: false, offset: 12 })
           .setLngLat(e.lngLat)

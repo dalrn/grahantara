@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, LABEL_SUMBER } from "../lib/kamus";
 import { BOBOT_DEFAULT } from "../config";
@@ -66,6 +66,17 @@ export default function Metodologi({ onKembali, versi }) {
   const labelDimensi = (kunci) =>
     KELOMPOK_INDIKATOR.find((k) => k.dimensi === kunci)?.label ?? kunci;
 
+  const formatTanggal = (iso) => {
+    if (typeof iso !== "string") return null;
+    const t = new Date(iso);
+    if (Number.isNaN(t.getTime())) return null;
+    return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  };
+
+  const versiData = data?.metadata?.versi ?? versi;
+  const dihitung = data?.metadata?.dihitung_pada ?? null;
+  const stub = typeof versiData === "string" && versiData.startsWith("stub");
+
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto bg-slate-950">
       <div className="mx-auto w-full max-w-[760px] px-4 py-6">
@@ -73,16 +84,23 @@ export default function Metodologi({ onKembali, versi }) {
           onClick={onKembali}
           className="rounded bg-slate-900 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
         >
-          ← Kembali ke peta
+          â† Kembali ke peta
         </button>
         <h1 className="mt-4 text-3xl font-bold text-emerald-400">Metodologi</h1>
-        <div className="mt-3 rounded bg-red-800 px-4 py-1.5 text-center text-xs font-semibold text-white sm:text-sm">
-          DATA PALSU ({versi ?? "stub-0.1"}) - angka pada peta ini acak, bukan hasil analisis
-        </div>
+        {stub ? (
+          <div className="mt-3 rounded bg-red-800 px-4 py-1.5 text-center text-xs font-semibold text-white sm:text-sm">
+            DATA PALSU ({versiData ?? "stub-0.1"}) - angka pada peta ini acak, bukan hasil analisis
+          </div>
+        ) : versiData ? (
+          <div className="mt-3 rounded bg-slate-800 px-4 py-1.5 text-center text-xs font-semibold text-slate-200 sm:text-sm">
+            Data versi {versiData}
+            {formatTanggal(dihitung) ? `, dihitung ${formatTanggal(dihitung)}.` : "."}
+          </div>
+        ) : null}
 
         <h2 className="mt-6 text-xl font-semibold text-white">Wilayah studi</h2>
         <p className="mt-1 text-sm text-slate-300">
-          {jumlah !== null ? `${jumlah.toLocaleString("id-ID")} heksagon` : "—"} H3 resolusi 9,
+          {jumlah !== null ? `${jumlah.toLocaleString("id-ID")} heksagon` : "â€”"} H3 resolusi 9,
           sabuk kampus Sleman, DIY.
         </p>
 
@@ -150,8 +168,8 @@ export default function Metodologi({ onKembali, versi }) {
                   {kelompok.kunci.map((k) => (
                     <tr key={k} className="border-b border-slate-800">
                       <td className="py-1 pr-3">{NAMA_INDIKATOR[k] ?? k}</td>
-                      <td className="py-1 pr-3">{kolomIndikator[k]?.satuan ?? "…"}</td>
-                      <td className="py-1 pr-3">{kolomIndikator[k]?.sumber ?? "…"}</td>
+                      <td className="py-1 pr-3">{kolomIndikator[k]?.satuan ?? "â€¦"}</td>
+                      <td className="py-1 pr-3">{kolomIndikator[k]?.sumber ?? "â€¦"}</td>
                       <td className="py-1">
                         {data && !tersedia[k] ? (
                           <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-300">
@@ -184,7 +202,7 @@ export default function Metodologi({ onKembali, versi }) {
                 <tr key={kunci} className="border-b border-slate-800">
                   <td className="py-1 pr-3">{label}</td>
                   <td className="py-1 pr-3">
-                    {pemakaianSumber[kunci]?.length ? pemakaianSumber[kunci].join(", ") : "—"}
+                    {pemakaianSumber[kunci]?.length ? pemakaianSumber[kunci].join(", ") : "â€”"}
                   </td>
                   <td className="py-1 text-slate-500">menunggu konfirmasi pipeline</td>
                 </tr>
@@ -195,7 +213,7 @@ export default function Metodologi({ onKembali, versi }) {
 
         <h2 className="mt-6 text-xl font-semibold text-white">Batasan</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
-          <li>Angka pada versi ini adalah data stub, bukan hasil analisis.</li>
+          {stub && <li>Angka pada versi ini adalah data stub, bukan hasil analisis.</li>}
           <li>
             Dua indikator, harga makan dan keramaian kawasan, belum tersedia dan dikeluarkan
             dari perhitungan.
