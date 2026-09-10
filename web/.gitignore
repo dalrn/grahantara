@@ -8,3 +8,6 @@ dev_server.log
 *.log
 
 .vercel
+
+# UI verification artifacts
+test-results/

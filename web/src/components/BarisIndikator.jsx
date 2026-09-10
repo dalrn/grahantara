@@ -3,7 +3,9 @@ import { formatNilai, formatPersentil } from "../lib/format";
 
 export function Lencana({ teks, warna }) {
   return (
-    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${warna}`}>
+    <span
+      className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${warna}`}
+    >
       {teks}
     </span>
   );
@@ -11,7 +13,8 @@ export function Lencana({ teks, warna }) {
 
 export default function BarisIndikator({ kunci, data }) {
   const nama = NAMA_INDIKATOR[kunci] ?? kunci;
-  const tidakTersedia = !data || data.sumber === "tidak_tersedia" || data.nilai === null;
+  const tidakTersedia =
+    !data || data.sumber === "tidak_tersedia" || data.nilai === null;
   const nilai = formatNilai(data?.nilai, data?.satuan);
 
   if (tidakTersedia) {
@@ -45,7 +48,9 @@ export default function BarisIndikator({ kunci, data }) {
       </div>
       <div className="mt-0.5 flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-white">{nilai}</span>
-        <span className="text-[10px] text-slate-400">{formatPersentil(persentil)}</span>
+        <span className="text-xs text-slate-400">
+          {formatPersentil(persentil)}
+        </span>
       </div>
       {typeof persentil === "number" && (
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">

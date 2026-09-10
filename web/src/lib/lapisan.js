@@ -32,7 +32,7 @@ export const DEFINISI_LAPISAN = [
     berkas: "/data/kos.geojson",
     warna: "#f43f5e",
     jari: 3,
-    aktifAwal: false,
+    aktifAwal: true,
     tersedia: true,
   },
 ];
