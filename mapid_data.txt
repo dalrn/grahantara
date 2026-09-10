@@ -13,7 +13,7 @@
 Kategori POI yang disebut PRD halaman 8: Perdagangan dan Retail, Makanan dan
 Minuman, Kesehatan dan Pengobatan, Pendidikan, Layanan atau Jasa. Lima layer
 payung ini yang utama:
-
+    
    97. MAKANAN DAN MINUMAN 2025          <- PALING PENTING. M1 + M2.
   151. PERDAGANGAN DAN RETAIL 2025       <- M4
    67. KESEHATAN DAN PENGOBATAN 2025     <- M4
