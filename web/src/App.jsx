@@ -16,6 +16,7 @@ import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "./lib/kamus";
 import { formatNilai } from "./lib/format";
+import { fokusDariProfil } from "./lib/fokusKampus";
 
 const BAWAAN_MENTAH = {
   connectivity: 40,
@@ -53,6 +54,7 @@ function bobotMetadataKeMentah(meta) {
 export default function App() {
   const [tampilan, setTampilan] = useState("beranda");
   const [profilTerakhir, setProfilTerakhir] = useState(null);
+  const [fokusPeta, setFokusPeta] = useState(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
   const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
@@ -235,11 +237,13 @@ export default function App() {
             onProfil={(profil) => {
               setProfilTerakhir(profil);
               setBobot(skorProfilKeBobot(profil, bobotBawaan));
+              setFokusPeta(fokusDariProfil(profil));
               setTampilan("peta");
             }}
             onLewati={() => {
               setProfilTerakhir(null);
               setBobot(bobotBawaan);
+              setFokusPeta(null);
               setTampilan("peta");
             }}
           />
@@ -363,6 +367,7 @@ export default function App() {
               onAmbangBerubah={({ ambang, minSkor, maksSkor }) => {
                 setLabels(labelKelas(ambang, minSkor, maksSkor));
               }}
+              fokus={fokusPeta}
               lapisanAktif={lapisanAktif}
               onJumlahLapisan={setJumlahLapisan}
               modeBanding={modeBanding}

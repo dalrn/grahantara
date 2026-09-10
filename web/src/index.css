@@ -491,12 +491,17 @@ input[type="checkbox"] {
   }
 }
 @media (min-width: 768px) {
-  .weight-panel {
-    top: 76px !important;
-  }
   .map-nav {
     left: 16px;
     transform: none;
+  }
+  /* Panel bobot duduk di bawah map-nav, bukan menimpanya. Tingginya dibatasi
+     agar tidak menabrak legenda di kiri bawah; isinya menggulir bila panjang. */
+  .weight-panel {
+    top: 60px !important;
+    max-height: calc(100dvh - 260px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .detail-panel {
     top: 66px !important;
@@ -507,6 +512,25 @@ input[type="checkbox"] {
   }
   .detail-panel.md\:w-\[460px\] {
     width: 480px;
+  }
+  /* Panel lapisan bersembunyi di balik panel kawasan yang lebarnya 380-480px.
+     Geser ke kiri hanya saat panel itu terbuka. */
+  body:has(.detail-panel) .layer-panel {
+    right: 404px;
+  }
+  body:has(.detail-panel.md\:w-\[460px\]) .layer-panel {
+    right: 504px;
+  }
+  /* Kontrol banding berada di kolom kanan yang sama dengan panel kawasan;
+     turunkan agar tidak menimpa map-nav. */
+  .comparison-controls {
+    top: 60px;
+  }
+  body:has(.detail-panel) .comparison-controls {
+    right: 404px;
+  }
+  body:has(.detail-panel.md\:w-\[460px\]) .comparison-controls {
+    right: 504px;
   }
 }
 @media (max-width: 1000px) {

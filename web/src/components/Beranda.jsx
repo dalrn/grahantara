@@ -420,7 +420,7 @@ export default function Beranda({
               </p>
 
               <button
-                onClick={() => onProfil(profil)}
+                onClick={() => onProfil({ ...profil, teks: teks.trim() })}
                 className="mt-4 w-full rounded-lg bg-emerald-500 py-2.5 font-semibold text-slate-950 hover:bg-emerald-400"
               >
                 Lihat peta
