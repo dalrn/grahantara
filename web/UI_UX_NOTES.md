@@ -34,7 +34,13 @@ Untuk latar jalan MAPID, isi `VITE_MAPID_BASEMAP_KEY` di `.env.local`. Tanpa kun
 
 Setiap pin memiliki StyleImage canvas kecil. MapLibre 4 tidak mendukung feature-state pada properti layout `icon-image`/`icon-size`, sehingga StyleImage membaca feature-state untuk warna, hover, dan seleksi. Ini memungkinkan bentuk teardrop, rumah kontras, shadow, garis putus-putus untuk satu kos tanpa harga, dan scale 1,1 saat hover. Pixel hanya berubah selama transisi; tidak ada requestAnimationFrame tak berujung saat idle.
 
-Sebaran 31 titik: jarak tetangga terdekat minimum 18,2 m; kuartil pertama 58,8 m; median 222,4 m. Pada lintang -7,75, tile MapLibre 512 px menghasilkan sekitar 4,73 m/px di zoom 14 dan 1,18 m/px di zoom 16. Pin tidak dirender di bawah zoom 14, fade 0–1 pada 14–16 melalui expression zoom, lalu tampil penuh. Pasangan yang sangat rapat mungkin tetap perlu diperbesar lagi untuk dipilih.
+Pin kos kini aktif sejak awal dan terlihat pada zoom jauh. Ukurannya mengikuti zoom melalui expression: 0,65 pada zoom 10, 0,85 pada 14, 1 pada 16, dan 1,3 pada 19. Pasangan yang sangat rapat tetap dapat diperbesar untuk dipilih satu per satu. Palet skor tetap sama.
+
+Kampus memakai bubble singkatan dan ikon topi wisuda. Halte memakai sprite bus kecil; collision detection mengurangi tumpukan halte saat zoom jauh. Semua sprite dan teks singkatan dibuat lokal, tanpa layanan glyph atau gambar internet.
+
+Mode Bandingkan memiliki pilihan Kawasan dan Kos. Perbandingan kos memakai ID listing sehingga dua kos dalam heksagon yang sama tetap dapat dibandingkan. Ctrl+klik (Cmd+klik di Mac), tombol popup, atau tekan lama 550 ms di layar sentuh memulai pemilihan. Setelah mode kos aktif, pilihan berikutnya cukup diklik/diketuk. Gerakan geser lebih dari 10 px, zoom, multi-touch, dan pembatalan sentuhan membatalkan tekan lama. Ketuk dua kali tetap untuk zoom.
+
+Panel kos menampilkan harga/sumber harga, jenis, jarak halte, skor kawasan yang mengikuti bobot, koordinat, dan ketelitian lokasi. Data kosong bukan nol; harga model diberi label Estimasi. Pin A/B diberi garis dan lencana pembeda. Kode heksagon pada tampilan diganti koordinat titik tengah dari poligon asli; H3 tetap menjadi kunci internal dan berkas GeoJSON tidak diubah.
 
 Warna pin mengikuti skor terkini dari heksagon, bukan harga. Warna heksagon berinterpolasi selama 200 ms; perhitungan skor tetap melalui debounce 120 ms yang ada. Animasi hanya mengubah tampilan warna, tidak menghitung skor tambahan.
 
@@ -46,6 +52,7 @@ Warna pin mengikuti skor terkini dari heksagon, bukan harga. Warna heksagon beri
 - Screenshot hasil revisi keterbacaan: `qa-home-desktop.png`, `qa-home-mobile.png`, `qa-map-weights.png`, dan `qa-compare.png` di `test-results/`.
 - `npm run test:ui:edge`: lulus untuk loading, HTTP 503 dan kontrol coba lagi, label Estimasi menggunakan fixture respons kos bersumber model, dan alur reduced motion. Fixture hanya di respons uji, bukan berkas data.
 - Screenshot berada di `test-results/` pada workspace; direktori ini tidak ikut paket sumber.
+- `tests/map-symbols-comparison.mjs` menambah pemeriksaan simbol saat overview, ukuran terhadap zoom, Ctrl+klik, pilihan duplikat, dua kos dalam satu heksagon, ganti slot, data kosong, estimasi, koordinat, popup mobile, tekan lama, serta pembatalan saat geser. Fixture estimasi hanya berlaku di respons uji. Screenshot tambahan: `qa-symbols-overview.png`, `qa-compare-kos-desktop.png`, `qa-compare-kos-mobile.png`, dan `qa-compare-kos-long-press.png`.
 
 Untuk mengulang uji: jalankan dev server di port 5178, lalu `npx playwright install chromium`, `npm run test:ui`, dan `npm run test:ui:edge`. Di Windows dengan Edge tersedia, dapat memakai `$env:PLAYWRIGHT_CHANNEL='msedge'`. `UI_TEST_URL` dapat mengganti alamat server. Uji fallback dijalankan tanpa API key AI.
 

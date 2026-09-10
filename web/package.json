@@ -11,7 +11,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:ui": "node tests/ui-interactions.mjs",
+    "test:ui": "node tests/ui-interactions.mjs && node tests/map-symbols-comparison.mjs",
     "test:ui:edge": "node tests/ui-edge-cases.mjs"
   },
   "dependencies": {

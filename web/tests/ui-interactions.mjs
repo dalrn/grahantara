@@ -49,6 +49,9 @@ assert.match(await page.locator("body").innerText(), /Diproses tanpa AI/);
 const priority = await page.locator("input[type=number]").first().inputValue();
 await page.getByRole("button", { name: "Lihat peta", exact: true }).click();
 await page.waitForFunction(() => window.__qaMap?.getLayer("titik-kos"));
+await page.waitForFunction(
+  () => __qaMap.queryRenderedFeatures({ layers: ["titik-kos"] }).length > 0,
+);
 await page.waitForTimeout(900);
 await page.screenshot({ path: "test-results/qa-map-weights.png" });
 assert.equal(
@@ -58,12 +61,11 @@ assert.equal(
 );
 await page.getByRole("checkbox", { name: "Titik kos" }).check();
 await page.waitForTimeout(300);
-assert.equal(
+assert.ok(
   await page.evaluate(
-    () => __qaMap.queryRenderedFeatures({ layers: ["titik-kos"] }).length,
+    () => __qaMap.queryRenderedFeatures({ layers: ["titik-kos"] }).length > 0,
   ),
-  0,
-  "no pins at overview zoom",
+  "kos pins remain visible at overview zoom",
 );
 const kos = JSON.parse(fs.readFileSync("public/data/kos.geojson"));
 const missing = kos.features.find((f) => f.properties.harga_median === null);
@@ -130,6 +132,10 @@ assert.ok(colorsMatch, "all 31 pin colors match their joined H3");
 await page.getByRole("checkbox", { name: "Titik kos" }).uncheck();
 await page.mouse.click(700, 450);
 await page.getByRole("tab", { name: "Subskor", exact: true }).waitFor();
+assert.match(
+  await page.locator(".detail-panel").innerText(),
+  /Titik tengah: .*LS, .*BT/,
+);
 await page.getByRole("tab", { name: "Subskor", exact: true }).click();
 await page.waitForTimeout(350);
 await page.screenshot({ path: "test-results/qa-panel.png" });

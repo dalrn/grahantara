@@ -7,6 +7,7 @@ import PanelBobot from "./components/PanelBobot";
 import PanelKawasan from "./components/PanelKawasan";
 import PanelLapisan from "./components/PanelLapisan";
 import PanelBanding from "./components/PanelBanding";
+import PanelBandingKos from "./components/PanelBandingKos";
 import PitaPeringatan from "./components/PitaPeringatan";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
@@ -65,6 +66,7 @@ export default function App() {
   const [jumlahLapisan, setJumlahLapisan] = useState({});
   const [narasiCache, setNarasiCache] = useState({});
   const [modeBanding, setModeBanding] = useState(false);
+  const [comparisonType, setComparisonType] = useState("kawasan");
   const [pilihanBanding, setPilihanBanding] = useState({ a: null, b: null });
   const [hasilBanding, setHasilBanding] = useState(null);
   const [cacheBanding, setCacheBanding] = useState({});
@@ -87,6 +89,30 @@ export default function App() {
       }
       return { a: props, b: sebelum.b };
     });
+  };
+
+  const compareKos = (kos) => {
+    setModeBanding(true);
+    setComparisonType("kos");
+    setHeksagonTerpilih(null);
+    setLapisanAktif((layers) => ({ ...layers, kos: true }));
+    setPilihanBanding((previous) => {
+      if ((previous.a || previous.b)?.kind !== "kos")
+        return { a: kos, b: null };
+      if (previous.a?.id === kos.id || previous.b?.id === kos.id)
+        return previous;
+      if (!previous.a) return { ...previous, a: kos };
+      if (!previous.b) return { ...previous, b: kos };
+      return { a: kos, b: previous.b };
+    });
+  };
+
+  const changeComparisonType = (type) => {
+    setComparisonType(type);
+    setPilihanBanding({ a: null, b: null });
+    setHasilBanding(null);
+    setGalatBanding(null);
+    if (type === "kos") setLapisanAktif((layers) => ({ ...layers, kos: true }));
   };
 
   const gantiSlot = (slot) => {
@@ -226,7 +252,9 @@ export default function App() {
         <div className="flex-none">
           <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
         </div>
-        <div className="relative flex-1 overflow-hidden">
+        <div
+          className={`relative flex-1 overflow-hidden ${modeBanding ? "map-comparing" : ""}`}
+        >
           <div className="map-nav absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1.5">
             <button
               onClick={() => setTampilan("beranda")}
@@ -252,6 +280,7 @@ export default function App() {
                 onClick={() => {
                   setHeksagonTerpilih(null);
                   setModeBanding(true);
+                  changeComparisonType("kawasan");
                 }}
                 className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
               >
@@ -260,8 +289,28 @@ export default function App() {
             )}
           </div>
           {modeBanding && (
-            <div className="absolute left-2 top-14 z-10 rounded bg-slate-900/85 px-2 py-1 text-xs text-slate-300 md:left-auto md:right-3">
-              Klik dua heksagon di peta.
+            <div className="comparison-controls absolute left-2 right-2 top-14 z-30 rounded-xl bg-slate-900/95 p-2 text-xs text-slate-200 shadow-lg md:left-auto md:right-14 md:w-80">
+              <div
+                className="flex gap-1"
+                role="group"
+                aria-label="Jenis perbandingan"
+              >
+                {["kawasan", "kos"].map((type) => (
+                  <button
+                    key={type}
+                    aria-pressed={comparisonType === type}
+                    onClick={() => changeComparisonType(type)}
+                    className={`flex-1 rounded-lg px-3 py-2 font-semibold ${comparisonType === type ? "bg-emerald-400 text-slate-950" : "bg-slate-800 text-slate-200"}`}
+                  >
+                    {type === "kos" ? "Kos" : "Kawasan"}
+                  </button>
+                ))}
+              </div>
+              <p className="px-1 pt-2">
+                {comparisonType === "kos"
+                  ? "Pilih dua pin rumah. Pintasan: Ctrl+klik, atau tekan lama di HP."
+                  : "Klik dua heksagon di peta."}
+              </p>
             </div>
           )}
           <PanelBobot
@@ -319,6 +368,8 @@ export default function App() {
               modeBanding={modeBanding}
               pilihanBanding={pilihanBanding}
               onPilihBanding={klikBanding}
+              comparisonType={comparisonType}
+              onCompareKos={compareKos}
             />
           </Suspense>
           <Legenda labels={labels} />
@@ -346,23 +397,39 @@ export default function App() {
                 }
               />
             )}
-            {modeBanding && (pilihanBanding.a || pilihanBanding.b) && (
-              <PanelBanding
-                key="banding"
-                pilihan={pilihanBanding}
-                skorKini={{
-                  a: skorUntuk(pilihanBanding.a),
-                  b: skorUntuk(pilihanBanding.b),
-                }}
-                versi={versi}
-                dihitungPada={dihitungPada}
-                onTutup={keluarBanding}
-                onGanti={gantiSlot}
-                hasilBanding={hasilBanding}
-                galat={galatBanding}
-                padaBanding={mintaBanding}
-              />
-            )}
+            {modeBanding &&
+              comparisonType === "kos" &&
+              (pilihanBanding.a || pilihanBanding.b) && (
+                <PanelBandingKos
+                  key="banding-kos"
+                  pilihan={pilihanBanding}
+                  scores={{
+                    a: skorUntuk(pilihanBanding.a),
+                    b: skorUntuk(pilihanBanding.b),
+                  }}
+                  onClose={keluarBanding}
+                  onReplace={gantiSlot}
+                />
+              )}
+            {modeBanding &&
+              comparisonType === "kawasan" &&
+              (pilihanBanding.a || pilihanBanding.b) && (
+                <PanelBanding
+                  key="banding"
+                  pilihan={pilihanBanding}
+                  skorKini={{
+                    a: skorUntuk(pilihanBanding.a),
+                    b: skorUntuk(pilihanBanding.b),
+                  }}
+                  versi={versi}
+                  dihitungPada={dihitungPada}
+                  onTutup={keluarBanding}
+                  onGanti={gantiSlot}
+                  hasilBanding={hasilBanding}
+                  galat={galatBanding}
+                  padaBanding={mintaBanding}
+                />
+              )}
           </AnimatePresence>
         </div>
       </div>

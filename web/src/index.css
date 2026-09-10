@@ -656,6 +656,10 @@ input[type="checkbox"] {
 }
 
 /* Bright landing page; the photo is illustrative, never a surveyed listing. */
+@media (max-width: 767px) {
+  .map-comparing .weight-panel { top: 174px; }
+}
+
 .home-page {
   color-scheme: light;
   color: #183d32;
