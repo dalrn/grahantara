@@ -8,3 +8,4 @@ dev_server.log
 *.log
 
 .vercel
+.env*
