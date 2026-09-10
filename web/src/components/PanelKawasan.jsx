@@ -2,7 +2,7 @@ import { PanelMotion, Collapse } from "./Motion";
 import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
-import { formatNilai, formatSkor } from "../lib/format";
+import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
 import { BOBOT_DEFAULT } from "../config";
 import BarisIndikator, { Lencana } from "./BarisIndikator";
 
@@ -296,7 +296,7 @@ export default function PanelKawasan({
         className="flex-1 overflow-y-auto px-4 pb-4"
       >
         <div className="select-text pt-2 font-mono text-xs text-slate-400">
-          —
+          Titik tengah: {formatCoordinates(heksagon.coordinates)}
         </div>
         {pakaiBobotAnda ? (
           <>

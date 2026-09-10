@@ -16,5 +16,19 @@ export function formatPersentil(p) {
 
 export function formatSkor(n) {
   if (n === null || n === undefined) return "-";
-  return n.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return n.toLocaleString("id-ID", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+}
+
+export function formatCoordinates(coordinates) {
+  if (
+    !Array.isArray(coordinates) ||
+    coordinates.length < 2 ||
+    !coordinates.slice(0, 2).every(Number.isFinite)
+  )
+    return "Tidak tersedia";
+  const [longitude, latitude] = coordinates;
+  return `${Math.abs(latitude).toFixed(5)}° ${latitude < 0 ? "LS" : "LU"}, ${Math.abs(longitude).toFixed(5)}° ${longitude < 0 ? "BB" : "BT"}`;
 }

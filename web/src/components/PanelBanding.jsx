@@ -1,7 +1,7 @@
 import { PanelMotion } from "./Motion";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
-import { formatNilai, formatSkor } from "../lib/format";
+import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
 
 const WARNA_A = "#38bdf8";
 const WARNA_B = "#f97316";
@@ -93,7 +93,7 @@ export default function PanelBanding({
         </button>
       </div>
       <div className="font-mono text-xs text-slate-400">
-        —
+        {formatCoordinates(data?.coordinates)}
       </div>
       <div className="text-2xl font-bold" style={{ color: warna }}>
         {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
@@ -125,7 +125,9 @@ export default function PanelBanding({
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: WARNA_A }}
             />
-            <span className="font-mono text-slate-400">—</span>
+            <span className="font-mono text-slate-400">
+              {formatCoordinates(a.coordinates)}
+            </span>
             <span className="ml-auto font-bold text-sky-300">
               {skorKini?.a !== null && skorKini?.a !== undefined
                 ? formatSkor(skorKini.a)

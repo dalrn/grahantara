@@ -1,9 +1,4 @@
-import {
-  createPinImage,
-  scoreColor,
-  PIN_ZOOM_START,
-  PIN_ZOOM_FULL,
-} from "../lib/pins";
+import { createPinImage, scoreColor, PIN_SIZE } from "../lib/pins";
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -13,6 +8,8 @@ import { hitungKuintil, ekspresiWarna, labelKelas } from "../lib/kelas";
 import { siapkanMesin } from "../lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 import { prepareBasemap } from "../lib/basemap";
+import { busImage, campusImage, polygonCenter } from "../lib/mapSymbols";
+import { formatCoordinates } from "../lib/format";
 
 const BATAS = [
   [110.334, -7.837],
@@ -102,6 +99,8 @@ export default function PetaHeksagon({
   modeBanding,
   pilihanBanding,
   onPilihBanding,
+  comparisonType,
+  onCompareKos,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -115,6 +114,9 @@ export default function PetaHeksagon({
   const colorRaf = useRef(null);
   const pinHover = useRef(null);
   const pinSelected = useRef(null);
+  const hexCoordinates = useRef(new Map());
+  const comparisonRef = useRef({ comparisonType, onCompareKos });
+  comparisonRef.current = { comparisonType, onCompareKos };
   const [loadState, setLoadState] = useState("loading");
   const layerVisibility = useRef(lapisanAktif);
   layerVisibility.current = lapisanAktif;
@@ -123,7 +125,10 @@ export default function PetaHeksagon({
     if (!wadah.current || peta.current) return;
 
     const kunci = import.meta.env.VITE_MAPID_BASEMAP_KEY;
-    const { style: gaya, configured } = prepareBasemap(kunci, GAYA_BASEMAP_MAPID);
+    const { style: gaya, configured } = prepareBasemap(
+      kunci,
+      GAYA_BASEMAP_MAPID,
+    );
     onStatusBasemap(configured);
 
     const map = new maplibregl.Map({
@@ -136,6 +141,16 @@ export default function PetaHeksagon({
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     let disposed = false;
+    let holdTimer = null;
+    let holdStart = null;
+    let suppressTapUntil = 0;
+    let heldKosId = null;
+    let activePopup = null;
+    const cancelHold = () => {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+      holdStart = null;
+    };
     const controller = new AbortController();
     const fetchGeo = async (url) => {
       const response = await fetch(url, { signal: controller.signal });
@@ -146,6 +161,9 @@ export default function PetaHeksagon({
       try {
         const data = await fetchGeo("/data/hexagons.geojson");
         if (disposed) return;
+        hexCoordinates.current = new Map(
+          data.features.map((f) => [f.properties.h3_index, polygonCenter(f)]),
+        );
         const skorArr = data.features.map((f) => f.properties.skor);
         const minSkor = Math.min(...skorArr);
         const maksSkor = Math.max(...skorArr);
@@ -265,26 +283,59 @@ export default function PetaHeksagon({
               id: "titik-kos",
               type: "symbol",
               source: "titik-kos",
-              minzoom: PIN_ZOOM_START,
               layout: {
                 "icon-image": ["concat", "kos-pin-", ["get", "id"]],
-                "icon-size": 1,
+                "icon-size": PIN_SIZE,
                 "icon-anchor": "bottom",
                 "icon-offset": [0, 3],
                 "icon-allow-overlap": true,
                 "icon-ignore-placement": true,
                 visibility: layerVisibility.current.kos ? "visible" : "none",
               },
-              paint: {
-                "icon-opacity": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  PIN_ZOOM_START,
-                  0,
-                  PIN_ZOOM_FULL,
-                  1,
-                ],
+              paint: { "icon-opacity": 1 },
+            });
+            continue;
+          }
+          if (def.id === "kampus" || def.id === "halte") {
+            const campus = def.id === "kampus";
+            if (campus) {
+              await document.fonts.ready;
+              if (disposed) return;
+              for (const feature of geo.features) {
+                const name = feature.properties.nama;
+                if (!map.hasImage(`campus-${name}`))
+                  map.addImage(`campus-${name}`, campusImage(name), {
+                    pixelRatio: 2,
+                  });
+              }
+            } else map.addImage("bus-stop", busImage(), { pixelRatio: 2 });
+            map.addLayer({
+              id: `titik-${def.id}`,
+              type: "symbol",
+              source: `titik-${def.id}`,
+              layout: {
+                "icon-image": campus
+                  ? ["concat", "campus-", ["get", "nama"]]
+                  : "bus-stop",
+                "icon-size": campus
+                  ? ["interpolate", ["linear"], ["zoom"], 10, 1, 17, 1.15]
+                  : [
+                      "interpolate",
+                      ["linear"],
+                      ["zoom"],
+                      10,
+                      0.6,
+                      14,
+                      0.8,
+                      17,
+                      1,
+                    ],
+                "icon-anchor": "bottom",
+                "icon-padding": campus ? 3 : 5,
+                "icon-allow-overlap": false,
+                visibility: layerVisibility.current[def.id]
+                  ? "visible"
+                  : "none",
               },
             });
             continue;
@@ -332,6 +383,9 @@ export default function PetaHeksagon({
             map.setLayoutProperty(`titik-${def.id}`, "visibility", "none");
           }
         }
+        // Campus labels take priority over dense bus stops; kos remain clickable on top.
+        if (map.getLayer("titik-kampus")) map.moveLayer("titik-kampus");
+        if (map.getLayer("titik-kos")) map.moveLayer("titik-kos");
         onJumlahLapisan(jumlah);
 
         onPetaSiap({
@@ -352,9 +406,72 @@ export default function PetaHeksagon({
     });
 
     // popup titik (handler didaftarkan lebih dulu)
+    map.on("touchstart", "titik-kos", (e) => {
+      cancelHold();
+      if (e.originalEvent.touches.length !== 1 || !e.features?.length) return;
+      const feature = e.features[0];
+      holdStart = e.point;
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        holdStart = null;
+        suppressTapUntil = performance.now() + 1000;
+        heldKosId = feature.properties.id;
+        activePopup?.remove();
+        comparisonRef.current.onCompareKos({
+          ...feature.properties,
+          coordinates: feature.geometry.coordinates,
+          kind: "kos",
+        });
+      }, 550);
+    });
+    map.on("touchstart", (e) => {
+      if (e.originalEvent.touches.length !== 1) cancelHold();
+    });
+    map.on("touchmove", (e) => {
+      if (
+        holdStart &&
+        (e.originalEvent.touches.length !== 1 ||
+          Math.hypot(e.point.x - holdStart.x, e.point.y - holdStart.y) > 10)
+      )
+        cancelHold();
+    });
+    map.on("touchend", cancelHold);
+    map.on("dragstart", cancelHold);
+    map.on("zoomstart", cancelHold);
+    map.getCanvas().addEventListener("touchcancel", cancelHold);
+    map.on("contextmenu", "titik-kos", (e) => {
+      if (holdTimer || performance.now() < suppressTapUntil)
+        e.originalEvent.preventDefault();
+    });
     for (const def of DEFINISI_LAPISAN.filter((d) => d.tersedia)) {
       map.on("click", `titik-${def.id}`, (e) => {
+        if (
+          def.id === "kos" &&
+          e.features?.[0]?.properties.id === heldKosId &&
+          performance.now() < suppressTapUntil
+        )
+          return;
         if (!e.features?.length) return;
+        const top = map.queryRenderedFeatures(e.point, {
+          layers: ID_LAYER_TITIK.filter((id) => map.getLayer(id)),
+        })[0];
+        if (top && top.layer.id !== `titik-${def.id}`) return;
+        const feature = e.features[0];
+        const kosData = {
+          ...feature.properties,
+          coordinates: feature.geometry.coordinates,
+          kind: "kos",
+        };
+        if (
+          def.id === "kos" &&
+          (e.originalEvent?.ctrlKey ||
+            e.originalEvent?.metaKey ||
+            (modeRef.current && comparisonRef.current.comparisonType === "kos"))
+        ) {
+          activePopup?.remove();
+          comparisonRef.current.onCompareKos(kosData);
+          return;
+        }
         const escapeHTML = (value) =>
           value.replace(
             /[&<>"']/g,
@@ -375,6 +492,7 @@ export default function PetaHeksagon({
               : value,
           ]),
         );
+        activePopup?.remove();
         if (def.id === "kos") {
           if (pinSelected.current)
             map.setFeatureState(
@@ -424,7 +542,7 @@ export default function PetaHeksagon({
             : "";
           isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}${metodeAsli}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}${presisi}</div>`;
         }
-        new maplibregl.Popup({ closeButton: true, offset: 24 })
+        const popup = new maplibregl.Popup({ closeButton: true, offset: 24 })
           .setLngLat(e.features[0].geometry.coordinates)
           .setHTML(isi)
           .addTo(map)
@@ -438,6 +556,26 @@ export default function PetaHeksagon({
               map.triggerRepaint();
             }
           });
+        activePopup = popup;
+        if (def.id === "kos") {
+          const content = popup
+            .getElement()
+            .querySelector(".maplibregl-popup-content");
+          const coordinates = document.createElement("p");
+          coordinates.className = "mt-2 text-xs text-slate-300";
+          coordinates.textContent = formatCoordinates(kosData.coordinates);
+          content.append(coordinates);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className =
+            "mt-3 w-full rounded-lg bg-emerald-400 px-3 py-2 text-sm font-bold text-slate-950";
+          button.textContent = "Bandingkan kos ini";
+          button.addEventListener("click", () => {
+            comparisonRef.current.onCompareKos(kosData);
+            popup.remove();
+          });
+          content.append(button);
+        }
       });
       map.on("mousemove", `titik-${def.id}`, (e) => {
         if (def.id === "kos" && e.features?.length) {
@@ -502,6 +640,7 @@ export default function PetaHeksagon({
       if (!e.features?.length) return;
       const id = e.features[0].properties.h3_index;
       if (modeRef.current) {
+        if (comparisonRef.current.comparisonType === "kos") return;
         // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
         const props = { ...e.features[0].properties };
         for (const k of ["subskor", "indikator"]) {
@@ -513,7 +652,11 @@ export default function PetaHeksagon({
             }
           }
         }
-        onPilihBanding({ ...props, h3_index: id });
+        onPilihBanding({
+          ...props,
+          h3_index: id,
+          coordinates: hexCoordinates.current.get(id),
+        });
         return;
       }
       if (terpilihId.current && terpilihId.current !== id) {
@@ -537,11 +680,17 @@ export default function PetaHeksagon({
           }
         }
       }
-      onPilih({ ...props, galatParsing: galat || undefined });
+      onPilih({
+        ...props,
+        coordinates: hexCoordinates.current.get(id),
+        galatParsing: galat || undefined,
+      });
     });
 
     return () => {
       disposed = true;
+      cancelHold();
+      map.getCanvas().removeEventListener("touchcancel", cancelHold);
       controller.abort();
       if (raf.current) cancelAnimationFrame(raf.current);
       if (colorRaf.current) cancelAnimationFrame(colorRaf.current);
@@ -590,7 +739,7 @@ export default function PetaHeksagon({
       }
       ref.current = baru;
     };
-    if (!modeBanding) {
+    if (!modeBanding || comparisonType === "kos") {
       if (bandingAId.current)
         map.setFeatureState(
           { source: "heksagon", id: bandingAId.current },
@@ -618,7 +767,29 @@ export default function PetaHeksagon({
       bandingBId,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modeBanding, pilihanBanding]);
+  }, [modeBanding, pilihanBanding, comparisonType, loadState]);
+
+  useEffect(() => {
+    const map = peta.current;
+    if (!map?.getSource("titik-kos")) return;
+    for (const feature of pinFeatures.current) {
+      const id = feature.properties.id;
+      map.setFeatureState(
+        { source: "titik-kos", id },
+        {
+          bandingA:
+            modeBanding &&
+            comparisonType === "kos" &&
+            pilihanBanding.a?.id === id,
+          bandingB:
+            modeBanding &&
+            comparisonType === "kos" &&
+            pilihanBanding.b?.id === id,
+        },
+      );
+    }
+    map.triggerRepaint();
+  }, [modeBanding, comparisonType, pilihanBanding, loadState]);
 
   // skor hasil hitung klien -> feature-state + ambang + warna (satu rAF per gerakan)
   useEffect(() => {

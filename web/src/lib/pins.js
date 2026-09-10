@@ -1,10 +1,18 @@
 import { scoreColors } from "../design";
 
-export const PIN_ZOOM_START = 14;
-export const PIN_ZOOM_FULL = 16;
-// 31 surveyed points: nearest-neighbour median 222 m, Q1 59 m.
-// MapLibre uses 512 px tiles: at latitude -7.75, zoom 14 = 4.73 m/px,
-// zoom 16 = 1.18 m/px. A 30 px pin needs ~36 m at full visibility.
+export const PIN_SIZE = [
+  "interpolate",
+  ["linear"],
+  ["zoom"],
+  10,
+  0.65,
+  14,
+  0.85,
+  16,
+  1,
+  19,
+  1.3,
+];
 export function scoreColor(score, thresholds) {
   if (!Number.isFinite(score) || !thresholds) return "#769087";
   return scoreColors[thresholds.filter((t) => score >= t).length];
@@ -44,8 +52,9 @@ export function createPinImage(map, id, missingPrice, initialColor) {
     render() {
       const state = map.getFeatureState({ source: "titik-kos", id });
       const color = state.color || initialColor;
-      const scale = state.hover || state.selected ? 1.1 : 1;
-      const signature = `${color}|${scale}`;
+      const comparison = state.bandingA ? "A" : state.bandingB ? "B" : "";
+      const scale = state.hover || state.selected || comparison ? 1.1 : 1;
+      const signature = `${color}|${scale}|${comparison}`;
       const now = performance.now();
       if (signature !== previous) {
         previous = signature;
@@ -76,8 +85,13 @@ export function createPinImage(map, id, missingPrice, initialColor) {
       ctx.fill();
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
-      ctx.strokeStyle = "#eef8eb";
-      ctx.lineWidth = missingPrice ? 2.4 : 1.5;
+      ctx.strokeStyle =
+        comparison === "A"
+          ? "#38bdf8"
+          : comparison === "B"
+            ? "#f97316"
+            : "#eef8eb";
+      ctx.lineWidth = comparison ? 5 : missingPrice ? 2.4 : 1.5;
       ctx.setLineDash(missingPrice ? [5, 4] : []);
       ctx.stroke();
       ctx.setLineDash([]);
@@ -96,6 +110,17 @@ export function createPinImage(map, id, missingPrice, initialColor) {
       ctx.lineTo(-10, -54);
       ctx.closePath();
       ctx.fill();
+      if (comparison) {
+        ctx.fillStyle = comparison === "A" ? "#38bdf8" : "#f97316";
+        ctx.beginPath();
+        ctx.arc(22, -78, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#172925";
+        ctx.font = "800 18px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(comparison, 22, -77);
+      }
       ctx.restore();
       this.data = ctx.getImageData(0, 0, size, size).data;
       if (progress < 1) map.triggerRepaint();

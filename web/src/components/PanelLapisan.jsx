@@ -66,8 +66,9 @@ export default function PanelLapisan({
           })}
           {lapisanAktif.kos && (
             <p className="pt-2 text-xs text-slate-400">
-              Perbesar peta untuk melihat pin kos. Warnanya mengikuti skor
-              kawasan.
+              Pin rumah menandai kos; warnanya mengikuti skor kawasan. Ctrl+klik
+              untuk membandingkan. Di HP, tekan lama pin kos atau gunakan tombol
+              di detail kos.
             </p>
           )}
         </div>
