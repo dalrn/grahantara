@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
-import PetaHeksagon from "./components/PetaHeksagon";
+const PetaHeksagon = lazy(() => import("./components/PetaHeksagon"));
 import Legenda from "./components/Legenda";
 import PanelBobot from "./components/PanelBobot";
 import PanelKawasan from "./components/PanelKawasan";
 import PanelLapisan from "./components/PanelLapisan";
 import PanelBanding from "./components/PanelBanding";
+import PanelBandingKos from "./components/PanelBandingKos";
 import PitaPeringatan from "./components/PitaPeringatan";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
@@ -32,7 +34,8 @@ function skorProfilKeBobot(profil, bawaan) {
   if (!b) return bawaan;
   const salin = { ...bawaan };
   for (const k of ["connectivity", "affordability", "amenity", "walkability"]) {
-    if (typeof b[k] === "number" && Number.isFinite(b[k])) salin[k] = Math.max(0, Math.min(100, b[k]));
+    if (typeof b[k] === "number" && Number.isFinite(b[k]))
+      salin[k] = Math.max(0, Math.min(100, b[k]));
   }
   return salin;
 }
@@ -41,7 +44,8 @@ function skorProfilKeBobot(profil, bawaan) {
 function bobotMetadataKeMentah(meta) {
   const salin = { ...BAWAAN_MENTAH };
   for (const k of ["connectivity", "affordability", "amenity", "walkability"]) {
-    if (typeof meta?.[k] === "number" && Number.isFinite(meta[k])) salin[k] = Math.round(meta[k] * 100);
+    if (typeof meta?.[k] === "number" && Number.isFinite(meta[k]))
+      salin[k] = Math.round(meta[k] * 100);
   }
   return salin;
 }
@@ -58,11 +62,11 @@ export default function App() {
   const [basemapAktif, setBasemapAktif] = useState(false);
   const [labels, setLabels] = useState(null);
   const [skorTerkini, setSkorTerkini] = useState(null);
-  const [ambangInfo, setAmbangInfo] = useState(null);
   const [lapisanAktif, setLapisanAktif] = useState(lapisanAwal);
   const [jumlahLapisan, setJumlahLapisan] = useState({});
   const [narasiCache, setNarasiCache] = useState({});
   const [modeBanding, setModeBanding] = useState(false);
+  const [comparisonType, setComparisonType] = useState("kawasan");
   const [pilihanBanding, setPilihanBanding] = useState({ a: null, b: null });
   const [hasilBanding, setHasilBanding] = useState(null);
   const [cacheBanding, setCacheBanding] = useState({});
@@ -87,6 +91,30 @@ export default function App() {
     });
   };
 
+  const compareKos = (kos) => {
+    setModeBanding(true);
+    setComparisonType("kos");
+    setHeksagonTerpilih(null);
+    setLapisanAktif((layers) => ({ ...layers, kos: true }));
+    setPilihanBanding((previous) => {
+      if ((previous.a || previous.b)?.kind !== "kos")
+        return { a: kos, b: null };
+      if (previous.a?.id === kos.id || previous.b?.id === kos.id)
+        return previous;
+      if (!previous.a) return { ...previous, a: kos };
+      if (!previous.b) return { ...previous, b: kos };
+      return { a: kos, b: previous.b };
+    });
+  };
+
+  const changeComparisonType = (type) => {
+    setComparisonType(type);
+    setPilihanBanding({ a: null, b: null });
+    setHasilBanding(null);
+    setGalatBanding(null);
+    if (type === "kos") setLapisanAktif((layers) => ({ ...layers, kos: true }));
+  };
+
   const gantiSlot = (slot) => {
     setPilihanBanding((s) => ({ ...s, [slot]: null }));
     setHasilBanding(null);
@@ -94,7 +122,8 @@ export default function App() {
   };
 
   const skorUntuk = (props) => {
-    if (!props || !mesin.current || !skorTerkini || !indeksH3.current) return null;
+    if (!props || !mesin.current || !skorTerkini || !indeksH3.current)
+      return null;
     const i = indeksH3.current.get(props.h3_index);
     return i === undefined ? null : skorTerkini[i];
   };
@@ -120,11 +149,16 @@ export default function App() {
           const ik = d.indikator?.[k];
           return {
             nama: NAMA_INDIKATOR[k] ?? k,
-            nilai: ik && ik.nilai !== null && ik.nilai !== undefined ? formatNilai(ik.nilai, ik.satuan) : null,
-            persentil: ik && typeof ik.persentil === "number" ? ik.persentil : null,
+            nilai:
+              ik && ik.nilai !== null && ik.nilai !== undefined
+                ? formatNilai(ik.nilai, ik.satuan)
+                : null,
+            persentil:
+              ik && typeof ik.persentil === "number" ? ik.persentil : null,
             sumber: ik?.sumber ?? null,
           };
-        })),
+        }),
+      ),
     });
     fetch("/api/compare", {
       method: "POST",
@@ -139,7 +173,9 @@ export default function App() {
         setCacheBanding((c) => ({ ...c, [kunci]: j }));
         setHasilBanding(j);
       })
-      .catch(() => setGalatBanding("Tidak dapat menghubungi server. Coba lagi."))
+      .catch(() =>
+        setGalatBanding("Tidak dapat menghubungi server. Coba lagi."),
+      )
       .finally(() => {
         memuatBanding.current = false;
       });
@@ -162,7 +198,8 @@ export default function App() {
     }, 120);
   }, [bobot]);
 
-  const ubahBobot = (kunci, nilai) => setBobot((b) => ({ ...b, [kunci]: nilai }));
+  const ubahBobot = (kunci, nilai) =>
+    setBobot((b) => ({ ...b, [kunci]: nilai }));
   const kembalikanBawaan = () => setBobot(bobotBawaan);
   const toggleLapisan = (id) =>
     setLapisanAktif((l) => ({ ...l, [id]: !l[id] }));
@@ -180,157 +217,236 @@ export default function App() {
     return i === undefined ? null : skorTerkini[i];
   })();
 
-  if (tampilan === "metodologi") {
-    return (
-      <div className="h-screen w-screen overflow-hidden bg-slate-950">
-        <Metodologi onKembali={() => setTampilan("peta")} versi={versi} />
-      </div>
-    );
-  }
+  const renderView = () => {
+    if (tampilan === "metodologi") {
+      return (
+        <div className="h-screen w-screen overflow-hidden bg-slate-950">
+          <Metodologi onKembali={() => setTampilan("peta")} versi={versi} />
+        </div>
+      );
+    }
 
-  if (tampilan === "beranda") {
-    return (
-      <div className="h-screen w-screen overflow-hidden bg-slate-950">
-        <Beranda
-          profilAwal={profilTerakhir}
-          onMetodologi={() => setTampilan("metodologi")}
-          onProfil={(profil) => {
-            setProfilTerakhir(profil);
-            setBobot(skorProfilKeBobot(profil, bobotBawaan));
-            setTampilan("peta");
-          }}
-          onLewati={() => {
-            setProfilTerakhir(null);
-            setBobot(bobotBawaan);
-            setTampilan("peta");
-          }}
-        />
-      </div>
-    );
-  }
+    if (tampilan === "beranda") {
+      return (
+        <div className="h-screen w-screen overflow-hidden bg-slate-950">
+          <Beranda
+            profilAwal={profilTerakhir}
+            onMetodologi={() => setTampilan("metodologi")}
+            onProfil={(profil) => {
+              setProfilTerakhir(profil);
+              setBobot(skorProfilKeBobot(profil, bobotBawaan));
+              setTampilan("peta");
+            }}
+            onLewati={() => {
+              setProfilTerakhir(null);
+              setBobot(bobotBawaan);
+              setTampilan("peta");
+            }}
+          />
+        </div>
+      );
+    }
 
-  return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-900">
-      <div className="flex-none">
-        <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
-      </div>
-      <div className="relative flex-1 overflow-hidden">
-        <div className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1.5">
-          <button
-            onClick={() => setTampilan("beranda")}
-            className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
-          >
-            ← Beranda
-          </button>
-          <button
-            onClick={() => setTampilan("metodologi")}
-            className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
-          >
-            Metodologi
-          </button>
-          {modeBanding ? (
+    return (
+      <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-900">
+        <div className="flex-none">
+          <PitaPeringatan versi={versi} basemapAktif={basemapAktif} />
+        </div>
+        <div
+          className={`relative flex-1 overflow-hidden ${modeBanding ? "map-comparing" : ""}`}
+        >
+          <div className="map-nav absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1.5">
             <button
-              onClick={keluarBanding}
-              className="rounded bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-500"
-            >
-              Selesai banding
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setHeksagonTerpilih(null);
-                setModeBanding(true);
-              }}
+              onClick={() => setTampilan("beranda")}
               className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
             >
-              Bandingkan
+              ← Beranda
             </button>
-          )}
-        </div>
-        {modeBanding && (
-          <div className="absolute left-2 top-14 z-10 rounded bg-slate-900/85 px-2 py-1 text-[10px] text-slate-300 md:left-auto md:right-3">
-            Klik dua heksagon di peta.
+            <button
+              onClick={() => setTampilan("metodologi")}
+              className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+            >
+              Metodologi
+            </button>
+            {modeBanding ? (
+              <button
+                onClick={keluarBanding}
+                className="rounded bg-orange-600 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-500"
+              >
+                Selesai banding
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setHeksagonTerpilih(null);
+                  setModeBanding(true);
+                  changeComparisonType("kawasan");
+                }}
+                className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+              >
+                Bandingkan
+              </button>
+            )}
           </div>
-        )}
-        <PanelBobot
-          bobot={bobot}
-          onBobotBerubah={ubahBobot}
-          onKembalikanBawaan={kembalikanBawaan}
-        />
-        <PetaHeksagon
-        onPilih={setHeksagonTerpilih}
-        onStatusBasemap={setBasemapAktif}
-        onPetaSiap={({ versi: v, dihitungPada: t, bobotDefault: m, labels: l }) => {
-          setVersi(v);
-          if (t) setDihitungPada(t);
-          setLabels(l);
-          if (m) {
-            // metadata menyediakan bobot bawaan: pakai sebagai nilai awal
-            // slider dan acuan "Kembalikan bawaan".
-            const b = bobotMetadataKeMentah(m);
-            setBobotBawaan(b);
-            setBobot(b);
-            setBobotDariMetadata(true);
-          } else {
-            setBobotDariMetadata(false);
-            console.warn("metadata.bobot_default tidak ada; memakai BOBOT_DEFAULT cadangan dari config.");
-          }
-        }}
-        skorTerkini={skorTerkini}
-        onDataSiap={(m) => {
-          mesin.current = m;
-          indeksH3.current = new Map(m.h3.map((id, i) => [id, i]));
-          const { bobot: ternormalisasi } = normalisasiBobot(BAWAAN_MENTAH);
-          setSkorTerkini(hitungSemua(m, ternormalisasi));
-        }}
-        onAmbangBerubah={({ ambang, minSkor, maksSkor }) => {
-          setAmbangInfo({ ambang, minSkor, maksSkor });
-          setLabels(labelKelas(ambang, minSkor, maksSkor));
-        }}
-        lapisanAktif={lapisanAktif}
-        onJumlahLapisan={setJumlahLapisan}
-        modeBanding={modeBanding}
-        pilihanBanding={pilihanBanding}
-        onPilihBanding={klikBanding}
-      />
-      <Legenda labels={labels} />
-      <PanelLapisan
-        lapisanAktif={lapisanAktif}
-        onToggle={toggleLapisan}
-        jumlahLapisan={jumlahLapisan}
-      />
-      {!modeBanding && heksagonTerpilih && (
-        <PanelKawasan
-          heksagon={heksagonTerpilih}
-          versi={versi}
-          dihitungPada={dihitungPada}
-          bobotDariMetadata={bobotDariMetadata}
-          skorKini={skorTerpilih}
-          bobotKini={bedaDariBawaan ? normalisasiBobot(bobot).bobot : null}
-          onTutup={() => setHeksagonTerpilih(null)}
-          narasiCache={narasiCache}
-          simpanNarasi={(h3, hasil) =>
-            setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
-          }
-        />
-      )}
-      {modeBanding && (pilihanBanding.a || pilihanBanding.b) && (
-        <PanelBanding
-          pilihan={pilihanBanding}
-          skorKini={{
-            a: skorUntuk(pilihanBanding.a),
-            b: skorUntuk(pilihanBanding.b),
-          }}
-          versi={versi}
-          dihitungPada={dihitungPada}
-          onTutup={keluarBanding}
-          onGanti={gantiSlot}
-          hasilBanding={hasilBanding}
-          galat={galatBanding}
-          padaBanding={mintaBanding}
-        />
-      )}
+          {modeBanding && (
+            <div className="comparison-controls absolute left-2 right-2 top-14 z-30 rounded-xl bg-slate-900/95 p-2 text-xs text-slate-200 shadow-lg md:left-auto md:right-14 md:w-80">
+              <div
+                className="flex gap-1"
+                role="group"
+                aria-label="Jenis perbandingan"
+              >
+                {["kawasan", "kos"].map((type) => (
+                  <button
+                    key={type}
+                    aria-pressed={comparisonType === type}
+                    onClick={() => changeComparisonType(type)}
+                    className={`flex-1 rounded-lg px-3 py-2 font-semibold ${comparisonType === type ? "bg-emerald-400 text-slate-950" : "bg-slate-800 text-slate-200"}`}
+                  >
+                    {type === "kos" ? "Kos" : "Kawasan"}
+                  </button>
+                ))}
+              </div>
+              <p className="px-1 pt-2">
+                {comparisonType === "kos"
+                  ? "Pilih dua pin rumah. Pintasan: Ctrl+klik, atau tekan lama di HP."
+                  : "Klik dua heksagon di peta."}
+              </p>
+            </div>
+          )}
+          <PanelBobot
+            bobot={bobot}
+            onBobotBerubah={ubahBobot}
+            onKembalikanBawaan={kembalikanBawaan}
+          />
+          <Suspense
+            fallback={
+              <div className="loading-map" role="status">
+                <p className="animate-pulse text-sm text-emerald-400">
+                  Menyiapkan peta kawasan…
+                </p>
+              </div>
+            }
+          >
+            <PetaHeksagon
+              onPilih={setHeksagonTerpilih}
+              onStatusBasemap={setBasemapAktif}
+              onPetaSiap={({
+                versi: v,
+                dihitungPada: t,
+                bobotDefault: m,
+                labels: l,
+              }) => {
+                setVersi(v);
+                if (t) setDihitungPada(t);
+                setLabels(l);
+                if (m) {
+                  // metadata menyediakan bobot bawaan: pakai sebagai nilai awal
+                  // slider dan acuan "Kembalikan bawaan".
+                  const b = bobotMetadataKeMentah(m);
+                  setBobotBawaan(b);
+                  if (!bobotDariMetadata && !profilTerakhir) setBobot(b);
+                  setBobotDariMetadata(true);
+                } else {
+                  setBobotDariMetadata(false);
+                  console.warn(
+                    "metadata.bobot_default tidak ada; memakai BOBOT_DEFAULT cadangan dari config.",
+                  );
+                }
+              }}
+              skorTerkini={skorTerkini}
+              onDataSiap={(m) => {
+                mesin.current = m;
+                indeksH3.current = new Map(m.h3.map((id, i) => [id, i]));
+                const { bobot: ternormalisasi } = normalisasiBobot(bobot);
+                setSkorTerkini(hitungSemua(m, ternormalisasi));
+              }}
+              onAmbangBerubah={({ ambang, minSkor, maksSkor }) => {
+                setLabels(labelKelas(ambang, minSkor, maksSkor));
+              }}
+              lapisanAktif={lapisanAktif}
+              onJumlahLapisan={setJumlahLapisan}
+              modeBanding={modeBanding}
+              pilihanBanding={pilihanBanding}
+              onPilihBanding={klikBanding}
+              comparisonType={comparisonType}
+              onCompareKos={compareKos}
+            />
+          </Suspense>
+          <Legenda labels={labels} />
+          <PanelLapisan
+            lapisanAktif={lapisanAktif}
+            onToggle={toggleLapisan}
+            jumlahLapisan={jumlahLapisan}
+          />
+          <AnimatePresence>
+            {!modeBanding && heksagonTerpilih && (
+              <PanelKawasan
+                key="kawasan"
+                heksagon={heksagonTerpilih}
+                versi={versi}
+                dihitungPada={dihitungPada}
+                bobotDariMetadata={bobotDariMetadata}
+                skorKini={skorTerpilih}
+                bobotKini={
+                  bedaDariBawaan ? normalisasiBobot(bobot).bobot : null
+                }
+                onTutup={() => setHeksagonTerpilih(null)}
+                narasiCache={narasiCache}
+                simpanNarasi={(h3, hasil) =>
+                  setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
+                }
+              />
+            )}
+            {modeBanding &&
+              comparisonType === "kos" &&
+              (pilihanBanding.a || pilihanBanding.b) && (
+                <PanelBandingKos
+                  key="banding-kos"
+                  pilihan={pilihanBanding}
+                  scores={{
+                    a: skorUntuk(pilihanBanding.a),
+                    b: skorUntuk(pilihanBanding.b),
+                  }}
+                  onClose={keluarBanding}
+                  onReplace={gantiSlot}
+                />
+              )}
+            {modeBanding &&
+              comparisonType === "kawasan" &&
+              (pilihanBanding.a || pilihanBanding.b) && (
+                <PanelBanding
+                  key="banding"
+                  pilihan={pilihanBanding}
+                  skorKini={{
+                    a: skorUntuk(pilihanBanding.a),
+                    b: skorUntuk(pilihanBanding.b),
+                  }}
+                  versi={versi}
+                  dihitungPada={dihitungPada}
+                  onTutup={keluarBanding}
+                  onGanti={gantiSlot}
+                  hasilBanding={hasilBanding}
+                  galat={galatBanding}
+                  padaBanding={mintaBanding}
+                />
+              )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    );
+  };
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={tampilan}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.3 }}
+        className="h-dvh"
+      >
+        {renderView()}
+      </motion.div>
+    </AnimatePresence>
   );
 }
