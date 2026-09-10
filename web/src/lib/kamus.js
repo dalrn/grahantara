@@ -1,7 +1,7 @@
 export const KELOMPOK_INDIKATOR = [
   {
     dimensi: "connectivity",
-    label: "Konektivitas",
+    label: "Akses transportasi",
     kunci: ["C1_jarak_halte", "C2_rute_unik", "C3_keterjangkauan_kampus", "C4_jarak_krl"],
   },
   {
@@ -11,12 +11,12 @@ export const KELOMPOK_INDIKATOR = [
   },
   {
     dimensi: "amenity",
-    label: "Amenitas",
+    label: "Kenyamanan",
     kunci: ["M1_kepadatan_makan", "M2_keragaman", "M3_keramaian", "M4_layanan_harian"],
   },
   {
     dimensi: "walkability",
-    label: "Kelayakan Jalan Kaki",
+    label: "Kenyamanan berjalan kaki",
     kunci: [
       "W1_kerapatan_simpang",
       "W2_keteduhan",
@@ -60,8 +60,8 @@ export const LABEL_SUMBER = {
 };
 
 export const NAMA_DIMENSI = {
-  connectivity: "Konektivitas",
+  connectivity: "Akses transportasi",
   affordability: "Keterjangkauan",
-  amenity: "Amenitas",
-  walkability: "Kelayakan Jalan Kaki",
+  amenity: "Kenyamanan",
+  walkability: "Kenyamanan berjalan kaki",
 };

@@ -1,11 +1,14 @@
 node_modules/
 dist/
 .vercel/
-.env
-.env.*
-!.env.example
 dev_server.log
 *.log
 
-.vercel
+# Semua berkas env lokal. .env.example sengaja DIKECUALIKAN karena ia
+# dokumentasi: satu-satunya tempat yang menyebut kunci apa saja yang
+# dibutuhkan proyek ini.
 .env*
+!.env.example
+
+# Artefak verifikasi UI (web/tests/)
+test-results/

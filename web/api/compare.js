@@ -1,10 +1,10 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
 
 const NAMA_DIMENSI = {
-  connectivity: "Konektivitas",
+  connectivity: "Akses transportasi",
   affordability: "Keterjangkauan",
-  amenity: "Amenitas",
-  walkability: "Kelayakan Jalan Kaki",
+  amenity: "Kenyamanan",
+  walkability: "Kenyamanan berjalan kaki",
 };
 const DIMENSI = Object.keys(NAMA_DIMENSI);
 const AMBANG_SETARA = 0.02;
