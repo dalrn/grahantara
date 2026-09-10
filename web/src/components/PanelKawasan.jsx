@@ -3,7 +3,20 @@ import { useEffect, useState } from "react";
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
 import { formatNilai, formatSkor } from "../lib/format";
 import { BOBOT_DEFAULT } from "../config";
-import BarisIndikator from "./BarisIndikator";
+import BarisIndikator, { Lencana } from "./BarisIndikator";
+
+// MapLibre menyerikan array/objek bersarang jadi string JSON; pulihkan.
+function daftarKosong(x) {
+  if (Array.isArray(x)) return new Set(x);
+  if (typeof x === "string") {
+    try {
+      return new Set(JSON.parse(x));
+    } catch {
+      return new Set();
+    }
+  }
+  return new Set();
+}
 
 function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
   const [memuat, setMemuat] = useState(false);
@@ -42,6 +55,7 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
           h3_index: heksagon.h3_index,
           skor: heksagon.skor,
           subskor: heksagon.subskor,
+          dimensiKosong: heksagon.dimensi_kosong ?? [],
           bobot,
           indikator,
         }),
@@ -109,9 +123,20 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
   );
 }
 
-function BlokDimensi({ kelompok, subskor, indikator, bobot, terbuka, onToggle }) {
+function BlokDimensi({ kelompok, subskor, indikator, bobot, kosong, terbuka, onToggle }) {
   const nilai = subskor?.[kelompok.dimensi];
+  const kosongDimensi = kosong.has(kelompok.dimensi);
   const w = bobot ? bobot[kelompok.dimensi] : null;
+  // Bobot yang tertera dinormalisasi ulang atas dimensi yang ADA saja,
+  // mengikuti aturan mesinSkor (dimensi kosong dikeluarkan dari skor).
+  let wTampil = w;
+  if (w !== null && kosong.size > 0) {
+    const totalAda = KELOMPOK_INDIKATOR.reduce(
+      (t, k) => (kosong.has(k.dimensi) ? t : t + (bobot[k.dimensi] ?? 0)),
+      0,
+    );
+    if (totalAda > 0) wTampil = w / totalAda;
+  }
   return (
     <div className="border-t border-white/10 py-3">
       <button
@@ -121,23 +146,33 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, terbuka, onToggle })
       >
         <span className="text-sm font-semibold text-white">
           {kelompok.label}
-          {w !== null && (
+          {wTampil !== null && !kosongDimensi && (
             <span className="ml-1 text-[10px] font-normal text-slate-500">
-              (bobot {(w * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%)
+              (bobot {(wTampil * 100).toLocaleString("id-ID", { maximumFractionDigits: 1 })}%)
             </span>
           )}
         </span>
         <span className="flex items-center gap-2">
-          <span className="text-sm font-bold text-emerald-400">{formatSkor(nilai)}</span>
+          {kosongDimensi ? (
+            <Lencana teks="Tidak tersedia" warna="bg-slate-700 text-slate-300" />
+          ) : (
+            <span className="text-sm font-bold text-emerald-400">{formatSkor(nilai)}</span>
+          )}
           <span className="text-xs text-slate-400">{terbuka ? "▴" : "▾"}</span>
         </span>
       </button>
-      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-emerald-400"
-          style={{ width: `${Math.max(0, Math.min(100, nilai ?? 0))}%` }}
-        />
-      </div>
+      {kosongDimensi ? (
+        <div className="mt-1 text-[10px] italic text-slate-500">
+          {kelompok.label} tidak punya data dan dikeluarkan dari perhitungan skor
+        </div>
+      ) : (
+        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-emerald-400"
+            style={{ width: `${Math.max(0, Math.min(100, nilai ?? 0))}%` }}
+          />
+        </div>
+      )}
       {terbuka && (
         <div className="mt-2 divide-y divide-white/5">
           {kelompok.kunci.map((k) => (
@@ -149,14 +184,28 @@ function BlokDimensi({ kelompok, subskor, indikator, bobot, terbuka, onToggle })
   );
 }
 
+function formatTanggal(iso) {
+  if (typeof iso !== "string") return null;
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return null;
+  return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 export default function PanelKawasan({
-  heksagon, versi, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
+  heksagon, versi, dihitungPada, bobotDariMetadata, skorKini, bobotKini, onTutup, narasiCache, simpanNarasi,
 }) {
   const [terbuka, setTerbuka] = useState(
     () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
   );
 
   if (!heksagon) return null;
+
+  const kosong = daftarKosong(heksagon.dimensi_kosong);
+  const KATA_DIMENSI = ["", "Satu", "Dua", "Tiga", "Empat"];
+  const catatanKosong =
+    kosong.size > 0
+      ? `${KATA_DIMENSI[kosong.size] ?? kosong.size} dimensi tidak punya data dan dikeluarkan dari perhitungan. Bobotnya dibagi ke dimensi lain.`
+      : null;
 
   const toggle = (dimensi) => {
     setTerbuka((sebelum) => {
@@ -204,10 +253,17 @@ export default function PanelKawasan({
             </div>
           </>
         )}
-        <div className="text-[10px] text-slate-600">
-          Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
-          metadata.bobot_default.
-        </div>
+        {!bobotDariMetadata && (
+          <div className="text-[10px] text-slate-600">
+            Bobot bawaan diasumsikan dari dokumen proyek. GeoJSON belum memuat
+            metadata.bobot_default.
+          </div>
+        )}
+        {catatanKosong && (
+          <div className="mt-1 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-300">
+            {catatanKosong}
+          </div>
+        )}
 
         <BlokInsight
           heksagon={heksagon}
@@ -224,6 +280,7 @@ export default function PanelKawasan({
               subskor={heksagon.subskor}
               indikator={heksagon.indikator}
               bobot={bobotKini}
+              kosong={kosong}
               terbuka={terbuka.has(kelompok.dimensi)}
               onToggle={() => toggle(kelompok.dimensi)}
             />
@@ -231,7 +288,11 @@ export default function PanelKawasan({
         </div>
 
         <div className="border-t border-white/10 pt-2 text-[10px] text-slate-600">
-          Data {versi ?? "stub"}. Angka acak, bukan hasil analisis.
+          {typeof versi === "string" && versi.startsWith("stub")
+            ? `Data ${versi ?? "stub"}. Angka acak, bukan hasil analisis.`
+            : versi
+              ? `Data versi ${versi}${formatTanggal(dihitungPada) ? `, dihitung ${formatTanggal(dihitungPada)}.` : "."}`
+              : ""}
         </div>
       </div>
     </div>
