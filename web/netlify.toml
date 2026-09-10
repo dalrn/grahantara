@@ -1,0 +1,29 @@
+# Netlify build settings.
+#
+# Base directory is web/, but Netlify resolves `publish` from the REPO ROOT,
+# which is why it reads "web/dist" and not "dist".
+#
+# NOTE: the serverless functions in web/api/ are written for VERCEL's runtime
+# signature. Netlify uses a different one, so AI-1 (parse-preference), AI-2
+# (explain-score) and AI-4 (compare) will NOT work here without porting them to
+# netlify/functions/. The map, scores, sliders and methodology page all work,
+# because they read static files only.
+
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "web/dist"
+
+# Single-page app: every non-file path must fall through to index.html, or a
+# refresh on a sub-route returns 404. Equivalent to the rewrite in vercel.json.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# The GeoJSON files are large and change only when the pipeline reruns, so let
+# the CDN hold them but revalidate, matching how Vercel served them.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
