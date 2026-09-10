@@ -1,6 +1,4 @@
 import { WARNA_KELAS } from "../config";
-import { Collapse } from "./Motion";
-import { useState } from "react";
 
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 
@@ -9,22 +7,10 @@ export default function PanelLapisan({
   onToggle,
   jumlahLapisan,
 }) {
-  // terlipat bawaan di mobile (< md), terbuka di desktop
-  const [terbuka, setTerbuka] = useState(
-    () => window.matchMedia("(min-width: 768px)").matches,
-  );
   return (
-    <div className="layer-panel absolute bottom-2 right-2 z-20 w-56 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm md:bottom-4 md:right-4 md:w-64">
-      <button
-        onClick={() => setTerbuka((t) => !t)}
-        aria-expanded={terbuka}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <span className="text-sm font-semibold">Lapisan</span>
-        <span className="text-xs text-slate-400">{terbuka ? "▾" : "▴"}</span>
-      </button>
-      <Collapse open={terbuka}>
-        <div className="mt-2 space-y-1.5">
+    <div className="layer-panel">
+      <div>
+        <div className="space-y-1.5">
           {DEFINISI_LAPISAN.map((def) => {
             const aktif = lapisanAktif[def.id] ?? false;
             const jumlah = jumlahLapisan[def.id];
@@ -72,7 +58,7 @@ export default function PanelLapisan({
             </p>
           )}
         </div>
-      </Collapse>
+      </div>
     </div>
   );
 }

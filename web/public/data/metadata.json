@@ -1,0 +1,13 @@
+{
+ "versi": "1.0",
+ "h3_resolution": 9,
+ "jumlah": 2134,
+ "dihitung_pada": "2026-09-08T18:12:34+00:00",
+ "bobot_default": {
+  "connectivity": 0.4,
+  "affordability": 0.25,
+  "amenity": 0.2,
+  "walkability": 0.15
+ },
+ "aturan_dimensi_kosong": "Dimensi yang seluruh indikatornya tidak_tersedia DIKELUARKAN dari rata-rata geometrik dan bobot dimensi sisanya dinormalisasi ulang. Dimensi itu ditulis 0 pada subskor demi kesesuaian skema, dan didaftar di properties.dimensi_kosong. Klien yang menghitung ulang skor WAJIB membaca field itu."
+}

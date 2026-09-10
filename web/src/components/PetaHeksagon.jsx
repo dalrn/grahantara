@@ -27,6 +27,36 @@ function paddingPeta() {
   return { top: 76, bottom: 40, left: 320, right: 60 };
 }
 
+const escapeHTML = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char],
+  );
+
+// MapLibre kadang menyerahkan geometri sebagai string JSON, dan geometri
+// bisa absen pada beberapa sumber. Selalu kembalikan [lon, lat] berupa angka.
+function koordinatFitur(e) {
+  let g = e.features?.[0]?.geometry;
+  if (typeof g === "string") {
+    try {
+      g = JSON.parse(g);
+    } catch {
+      g = null;
+    }
+  }
+  const c = g?.coordinates;
+  if (Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1]))
+    return [c[0], c[1]];
+  return [e.lngLat.lng, e.lngLat.lat];
+}
+
 function ekspresiWarnaTerkini(ambang) {
   // Skor hasil hitung klien (feature-state) bila ada, fallback skor bawaan.
   return [
@@ -110,6 +140,9 @@ export default function PetaHeksagon({
   comparisonType,
   onCompareKos,
   fokus,
+  onMintaRute,
+  onPilihGerbang,
+  rute,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -124,8 +157,12 @@ export default function PetaHeksagon({
   const pinHover = useRef(null);
   const pinSelected = useRef(null);
   const hexCoordinates = useRef(new Map());
+  const indikatorPerH3 = useRef(new Map());
+  const popupGerbang = useRef(null);
   const comparisonRef = useRef({ comparisonType, onCompareKos });
   comparisonRef.current = { comparisonType, onCompareKos };
+  const ruteRef = useRef({ onMintaRute, onPilihGerbang, adaRute: false });
+  ruteRef.current = { onMintaRute, onPilihGerbang, adaRute: Boolean(rute) };
   const fokusRef = useRef(fokus);
   fokusRef.current = fokus;
   const [loadState, setLoadState] = useState("loading");
@@ -168,7 +205,7 @@ export default function PetaHeksagon({
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     };
-    map.on("load", async () => {
+    const muatData = async () => {
       try {
         const data = await fetchGeo("/data/hexagons.geojson");
         if (disposed) return;
@@ -176,8 +213,14 @@ export default function PetaHeksagon({
           data.features.map((f) => [f.properties.h3_index, polygonCenter(f)]),
         );
         const skorArr = data.features.map((f) => f.properties.skor);
-        const minSkor = Math.min(...skorArr);
-        const maksSkor = Math.max(...skorArr);
+        // Math.min(...arr) menyebar 2.134 argumen; reduce lebih murah dan
+        // tidak berisiko melewati batas argumen.
+        let minSkor = Infinity;
+        let maksSkor = -Infinity;
+        for (const v of skorArr) {
+          if (v < minSkor) minSkor = v;
+          if (v > maksSkor) maksSkor = v;
+        }
         const ambang = hitungKuintil(skorArr);
         renderedColors.current = new Map(
           data.features.map((f) => [
@@ -186,9 +229,27 @@ export default function PetaHeksagon({
           ]),
         );
 
+        // Indikator (16 per heksagon, ~3,3 MB) hanya dipakai panel detail
+        // untuk SATU heksagon. Simpan terpisah dan jangan diserahkan ke
+        // MapLibre, supaya sumber peta tidak menyalin dan menyerikannya.
+        indikatorPerH3.current = new Map(
+          data.features.map((f) => [
+            f.properties.h3_index,
+            f.properties.indikator,
+          ]),
+        );
+        const dataPeta = {
+          ...data,
+          features: data.features.map((f) => {
+            // eslint-disable-next-line no-unused-vars
+            const { indikator, ...sisa } = f.properties;
+            return { ...f, properties: sisa };
+          }),
+        };
+
         map.addSource("heksagon", {
           type: "geojson",
-          data,
+          data: dataPeta,
           promoteId: "h3_index",
         });
         map.addLayer({
@@ -416,7 +477,13 @@ export default function PetaHeksagon({
       } catch (error) {
         if (!disposed && error.name !== "AbortError") setLoadState("error");
       }
-    });
+    };
+    // MapLibre tidak memicu "load" lagi bila gaya sudah selesai dimuat saat
+    // handler didaftarkan (terjadi pada mount kedua React StrictMode, dan
+    // saat gaya terlayani dari cache). Tanpa cabang ini, peta berhenti di
+    // kartu "Menyiapkan peta" selamanya.
+    if (map.isStyleLoaded()) muatData();
+    else map.once("load", muatData);
 
     // popup titik (handler didaftarkan lebih dulu)
     map.on("touchstart", "titik-kos", (e) => {
@@ -485,18 +552,6 @@ export default function PetaHeksagon({
           comparisonRef.current.onCompareKos(kosData);
           return;
         }
-        const escapeHTML = (value) =>
-          value.replace(
-            /[&<>"']/g,
-            (char) =>
-              ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;",
-              })[char],
-          );
         const p = Object.fromEntries(
           Object.entries(e.features[0].properties).map(([key, value]) => [
             key,
@@ -536,6 +591,9 @@ export default function PetaHeksagon({
               ? escapeHTML(koridor.join(", "))
               : null;
           isi = `<div class="text-sm"><b>${p.nama}</b><br/><span class="text-slate-400">Koridor: ${teksKoridor ?? "tidak tercatat"}</span></div>`;
+        } else if (def.id === "gerbang") {
+          // Label sudah memuat kampus + jalan terdekat; tidak perlu diulang.
+          isi = `<div class="text-sm"><b>${escapeHTML(String(p.label ?? `Gerbang ${p.kampus}`))}</b></div>`;
         } else if (def.id === "krl") {
           // berkas KRL hanya memuat nama — jangan mengarang isi lain.
           isi = `<div class="text-sm"><b>${p.nama}</b></div>`;
@@ -543,17 +601,11 @@ export default function PetaHeksagon({
           const { harga } = hargaPopup(p);
           const lencana = lencanaKos(p.sumber_harga);
           const lencanaHtml = `<span class="ml-1 rounded px-1 text-xs font-medium ${lencana.warna}">${lencana.teks}</span>`;
-          const metodeAsli = lencana.mentah
-            ? `<div class="text-xs text-slate-400">metode: ${lencana.mentah}</div>`
-            : "";
           const jarak =
             typeof p.jarak_halte_m === "number"
               ? `<br/><span class="text-slate-400">Jarak ke halte: ${p.jarak_halte_m.toLocaleString("id-ID")} m</span>`
               : "";
-          const presisi = p.presisi_koordinat
-            ? `<div class="text-xs text-slate-500">presisi koordinat: ${p.presisi_koordinat}</div>`
-            : "";
-          isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}${metodeAsli}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}${presisi}</div>`;
+          isi = `<div class="text-sm"><b>${p.nama}</b>${lencanaHtml}<br/><span class="text-slate-300">${p.jenis}</span><br/><b>${harga}</b>${jarak}</div>`;
         }
         const popup = new maplibregl.Popup({ closeButton: true, offset: 24 })
           .setLngLat(e.features[0].geometry.coordinates)
@@ -578,10 +630,20 @@ export default function PetaHeksagon({
           coordinates.className = "mt-2 text-xs text-slate-300";
           coordinates.textContent = formatCoordinates(kosData.coordinates);
           content.append(coordinates);
+          const tombolRute = document.createElement("button");
+          tombolRute.type = "button";
+          tombolRute.className =
+            "mt-3 w-full rounded-lg bg-sky-500 px-3 py-2 text-sm font-bold text-white";
+          tombolRute.textContent = "Rute ke kampus";
+          tombolRute.addEventListener("click", () => {
+            ruteRef.current.onMintaRute(kosData);
+            popup.remove();
+          });
+          content.append(tombolRute);
           const button = document.createElement("button");
           button.type = "button";
           button.className =
-            "mt-3 w-full rounded-lg bg-emerald-400 px-3 py-2 text-sm font-bold text-slate-950";
+            "mt-2 w-full rounded-lg bg-emerald-400 px-3 py-2 text-sm font-bold text-slate-950";
           button.textContent = "Bandingkan kos ini";
           button.addEventListener("click", () => {
             comparisonRef.current.onCompareKos(kosData);
@@ -589,8 +651,52 @@ export default function PetaHeksagon({
           });
           content.append(button);
         }
+        if (def.id === "gerbang") {
+          const content = popup
+            .getElement()
+            .querySelector(".maplibregl-popup-content");
+          const aktif = ruteRef.current.adaRute;
+          const tombol = document.createElement("button");
+          tombol.type = "button";
+          tombol.className = aktif
+            ? "mt-3 w-full rounded-lg bg-sky-500 px-3 py-2 text-sm font-bold text-white"
+            : "mt-3 w-full cursor-not-allowed rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-400";
+          tombol.textContent = aktif
+            ? "Rute ke gerbang ini"
+            : "Pilih kos dulu untuk rute";
+          tombol.disabled = !aktif;
+          if (aktif)
+            tombol.addEventListener("click", () => {
+              ruteRef.current.onPilihGerbang({
+                kampus: p.kampus,
+                label: p.label ?? `Gerbang ${p.kampus}`,
+                coordinates: koordinatFitur(e),
+              });
+              popup.remove();
+            });
+          content.append(tombol);
+        }
       });
       map.on("mousemove", `titik-${def.id}`, (e) => {
+        if (def.id === "gerbang" && e.features?.length) {
+          // Nama gerbang muncul saat hover, tanpa perlu diklik.
+          const g = e.features[0].properties;
+          const teks = String(g.label ?? `Gerbang ${g.kampus}`);
+          if (!popupGerbang.current) {
+            popupGerbang.current = new maplibregl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              offset: 12,
+              className: "popup-gerbang",
+            });
+          }
+          popupGerbang.current
+            .setLngLat(koordinatFitur(e))
+            .setHTML(
+              `<div class="text-xs font-semibold">${escapeHTML(teks)}</div>`,
+            )
+            .addTo(map);
+        }
         if (def.id === "kos" && e.features?.length) {
           const id = e.features[0].properties.id;
           if (pinHover.current && pinHover.current !== id)
@@ -605,6 +711,7 @@ export default function PetaHeksagon({
         map.getCanvas().style.cursor = "pointer";
       });
       map.on("mouseleave", `titik-${def.id}`, () => {
+        if (def.id === "gerbang") popupGerbang.current?.remove();
         if (def.id === "kos" && pinHover.current) {
           map.setFeatureState(
             { source: "titik-kos", id: pinHover.current },
@@ -656,15 +763,15 @@ export default function PetaHeksagon({
         if (comparisonRef.current.comparisonType === "kos") return;
         // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
         const props = { ...e.features[0].properties };
-        for (const k of ["subskor", "indikator"]) {
-          if (typeof props[k] === "string") {
-            try {
-              props[k] = JSON.parse(props[k]);
-            } catch {
-              props[k] = null;
-            }
+        if (typeof props.subskor === "string") {
+          try {
+            props.subskor = JSON.parse(props.subskor);
+          } catch {
+            props.subskor = null;
           }
         }
+        // indikator disimpan di luar sumber peta.
+        props.indikator = indikatorPerH3.current.get(id) ?? null;
         onPilihBanding({
           ...props,
           h3_index: id,
@@ -683,16 +790,15 @@ export default function PetaHeksagon({
       // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
       const props = { ...e.features[0].properties };
       let galat = false;
-      for (const k of ["subskor", "indikator"]) {
-        if (typeof props[k] === "string") {
-          try {
-            props[k] = JSON.parse(props[k]);
-          } catch {
-            galat = true;
-            props[k] = null;
-          }
+      if (typeof props.subskor === "string") {
+        try {
+          props.subskor = JSON.parse(props.subskor);
+        } catch {
+          galat = true;
+          props.subskor = null;
         }
       }
+      props.indikator = indikatorPerH3.current.get(id) ?? null;
       onPilih({
         ...props,
         coordinates: hexCoordinates.current.get(id),
@@ -730,6 +836,94 @@ export default function PetaHeksagon({
       duration: 600,
     });
   }, [fokus, loadState]);
+
+  // Gambar rute kos -> kampus. Sumber dibuat sekali lalu datanya diganti,
+  // supaya tidak menambah/menghapus layer setiap kali rute berubah.
+  useEffect(() => {
+    const map = peta.current;
+    if (!map || loadState === "loading" || loadState === "error") return;
+
+    const kosong = { type: "FeatureCollection", features: [] };
+    if (!map.getSource("rute")) {
+      map.addSource("rute", { type: "geojson", data: kosong });
+      // line-dasharray tidak menerima ekspresi data, jadi ruas bus dan ruas
+      // jalan kaki dipisah menjadi dua layer dengan filter.
+      map.addLayer({
+        id: "rute-garis-bus",
+        type: "line",
+        source: "rute",
+        filter: ["==", ["get", "mode"], "bus"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#38bdf8",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 11, 3, 16, 6],
+          "line-opacity": 0.95,
+        },
+      });
+      map.addLayer({
+        id: "rute-garis-jalan",
+        type: "line",
+        source: "rute",
+        filter: ["!=", ["get", "mode"], "bus"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#facc15",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 11, 3, 16, 6],
+          "line-dasharray": [2, 1.4],
+          "line-opacity": 0.95,
+        },
+      });
+    }
+
+    if (!rute?.ruas?.length) {
+      map.getSource("rute").setData(kosong);
+      return;
+    }
+
+    const features = rute.ruas
+      .filter((r) => Array.isArray(r.geometri) && r.geometri.length >= 2)
+      .map((r) => ({
+        type: "Feature",
+        properties: { mode: r.mode },
+        geometry: { type: "LineString", coordinates: r.geometri },
+      }));
+    map.getSource("rute").setData({
+      type: "FeatureCollection",
+      features,
+    });
+
+    // Perlihatkan seluruh rute.
+    // Hanya koordinat yang benar-benar berupa angka; satu NaN saja membuat
+    // fitBounds melempar dan menjatuhkan seluruh aplikasi.
+    const semua = features
+      .flatMap((f) => f.geometry.coordinates)
+      .filter(
+        (c) =>
+          Array.isArray(c) &&
+          Number.isFinite(c[0]) &&
+          Number.isFinite(c[1]),
+      );
+    if (semua.length >= 2) {
+      const b = semua.reduce(
+        (acc, c) => [
+          Math.min(acc[0], c[0]),
+          Math.min(acc[1], c[1]),
+          Math.max(acc[2], c[2]),
+          Math.max(acc[3], c[3]),
+        ],
+        [Infinity, Infinity, -Infinity, -Infinity],
+      );
+      if (b.every(Number.isFinite)) {
+        map.fitBounds(
+          [
+            [b[0], b[1]],
+            [b[2], b[3]],
+          ],
+          { padding: paddingPeta(), duration: 600, maxZoom: 16 },
+        );
+      }
+    }
+  }, [rute, loadState]);
 
   // visibilitas layer titik mengikuti lapisanAktif
   useEffect(() => {
