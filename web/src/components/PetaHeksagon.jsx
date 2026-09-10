@@ -19,6 +19,14 @@ const ID_LAYER_TITIK = DEFINISI_LAPISAN.filter((d) => d.tersedia).map(
   (d) => `titik-${d.id}`,
 );
 
+// Ruang yang ditempati panel melayang, agar isi peta tidak tersembunyi di
+// bawah panel bobot (kiri) dan panel kawasan (kanan).
+function paddingPeta() {
+  const lebar = window.innerWidth;
+  if (lebar < 768) return { top: 70, bottom: 120, left: 20, right: 20 };
+  return { top: 76, bottom: 40, left: 320, right: 60 };
+}
+
 function ekspresiWarnaTerkini(ambang) {
   // Skor hasil hitung klien (feature-state) bila ada, fallback skor bawaan.
   return [
@@ -101,6 +109,7 @@ export default function PetaHeksagon({
   onPilihBanding,
   comparisonType,
   onCompareKos,
+  fokus,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -117,6 +126,8 @@ export default function PetaHeksagon({
   const hexCoordinates = useRef(new Map());
   const comparisonRef = useRef({ comparisonType, onCompareKos });
   comparisonRef.current = { comparisonType, onCompareKos };
+  const fokusRef = useRef(fokus);
+  fokusRef.current = fokus;
   const [loadState, setLoadState] = useState("loading");
   const layerVisibility = useRef(lapisanAktif);
   layerVisibility.current = lapisanAktif;
@@ -134,8 +145,8 @@ export default function PetaHeksagon({
     const map = new maplibregl.Map({
       container: wadah.current,
       style: gaya,
-      center: [110.403, -7.75],
-      zoom: 12,
+      center: fokusRef.current?.pusat ?? [110.403, -7.75],
+      zoom: fokusRef.current?.zoom ?? 12,
     });
     peta.current = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
@@ -191,10 +202,10 @@ export default function PetaHeksagon({
             "fill-opacity": [
               "case",
               ["boolean", ["feature-state", "terpilih"], false],
-              0.95,
+              0.72,
               ["boolean", ["feature-state", "hover"], false],
-              0.85,
-              0.7,
+              0.58,
+              0.38,
             ],
           },
         });
@@ -229,15 +240,17 @@ export default function PetaHeksagon({
             ],
           },
         });
-        map.fitBounds(BATAS, {
-          padding: {
-            top: 70,
-            bottom: 65,
-            left: window.innerWidth >= 768 ? 330 : 30,
-            right: 55,
-          },
-          duration: 0,
-        });
+        if (fokusRef.current) {
+          // Kampus disebut di beranda: langsung perlihatkan kawasan
+          // sekitarnya, bukan seluruh wilayah studi.
+          map.jumpTo({
+            center: fokusRef.current.pusat,
+            zoom: fokusRef.current.zoom,
+            padding: paddingPeta(),
+          });
+        } else {
+          map.fitBounds(BATAS, { padding: paddingPeta(), duration: 0 });
+        }
 
         // --- layer titik (fetch paralel) ---
         const jumlah = {};
@@ -699,6 +712,24 @@ export default function PetaHeksagon({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Beranda mengirim kampus baru: geser kamera ke kawasan sekitarnya.
+  // Efek inisialisasi peta hanya berjalan sekali, jadi perpindahan dari
+  // beranda ke peta pada sesi yang sama ditangani di sini.
+  const fokusTerakhir = useRef(null);
+  useEffect(() => {
+    const map = peta.current;
+    if (!map || !fokus) return;
+    if (loadState !== "ready" && loadState !== "partial") return;
+    if (fokusTerakhir.current === fokus.nama) return;
+    fokusTerakhir.current = fokus.nama;
+    map.easeTo({
+      center: fokus.pusat,
+      zoom: fokus.zoom,
+      padding: paddingPeta(),
+      duration: 600,
+    });
+  }, [fokus, loadState]);
 
   // visibilitas layer titik mengikuti lapisanAktif
   useEffect(() => {
