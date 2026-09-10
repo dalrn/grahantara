@@ -9,7 +9,6 @@ import PanelBanding from "./components/PanelBanding";
 import PitaPeringatan from "./components/PitaPeringatan";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
-import { BOBOT_DEFAULT } from "./config";
 import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
@@ -27,13 +26,22 @@ function lapisanAwal() {
   return Object.fromEntries(DEFINISI_LAPISAN.map((d) => [d.id, d.aktifAwal]));
 }
 
-function skorProfilKeBobot(profil) {
+function skorProfilKeBobot(profil, bawaan) {
   // bobot dari chip berangka 0-100 (mentah), sama dengan state bobot
   const b = profil?.bobot;
-  if (!b) return BAWAAN_MENTAH;
-  const salin = { ...BAWAAN_MENTAH };
+  if (!b) return bawaan;
+  const salin = { ...bawaan };
   for (const k of ["connectivity", "affordability", "amenity", "walkability"]) {
     if (typeof b[k] === "number" && Number.isFinite(b[k])) salin[k] = Math.max(0, Math.min(100, b[k]));
+  }
+  return salin;
+}
+
+// metadata.bobot_default datang sebagai pecahan 0-1; ubah ke skala 0-100.
+function bobotMetadataKeMentah(meta) {
+  const salin = { ...BAWAAN_MENTAH };
+  for (const k of ["connectivity", "affordability", "amenity", "walkability"]) {
+    if (typeof meta?.[k] === "number" && Number.isFinite(meta[k])) salin[k] = Math.round(meta[k] * 100);
   }
   return salin;
 }
@@ -42,8 +50,11 @@ export default function App() {
   const [tampilan, setTampilan] = useState("beranda");
   const [profilTerakhir, setProfilTerakhir] = useState(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
+  const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
+  const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
   const [heksagonTerpilih, setHeksagonTerpilih] = useState(null);
   const [versi, setVersi] = useState(null);
+  const [dihitungPada, setDihitungPada] = useState(null);
   const [basemapAktif, setBasemapAktif] = useState(false);
   const [labels, setLabels] = useState(null);
   const [skorTerkini, setSkorTerkini] = useState(null);
@@ -103,6 +114,7 @@ export default function App() {
       h3_index: d.h3_index,
       skor: d.skor,
       subskor: d.subskor,
+      dimensiKosong: d.dimensi_kosong ?? [],
       indikator: KELOMPOK_INDIKATOR.flatMap((kel) =>
         kel.kunci.map((k) => {
           const ik = d.indikator?.[k];
@@ -151,15 +163,15 @@ export default function App() {
   }, [bobot]);
 
   const ubahBobot = (kunci, nilai) => setBobot((b) => ({ ...b, [kunci]: nilai }));
-  const kembalikanBawaan = () => setBobot(BAWAAN_MENTAH);
+  const kembalikanBawaan = () => setBobot(bobotBawaan);
   const toggleLapisan = (id) =>
     setLapisanAktif((l) => ({ ...l, [id]: !l[id] }));
 
   const bedaDariBawaan =
-    Math.abs(bobot.connectivity - BOBOT_DEFAULT.connectivity * 100) > 0.5 ||
-    Math.abs(bobot.affordability - BOBOT_DEFAULT.affordability * 100) > 0.5 ||
-    Math.abs(bobot.amenity - BOBOT_DEFAULT.amenity * 100) > 0.5 ||
-    Math.abs(bobot.walkability - BOBOT_DEFAULT.walkability * 100) > 0.5;
+    Math.abs(bobot.connectivity - bobotBawaan.connectivity) > 0.5 ||
+    Math.abs(bobot.affordability - bobotBawaan.affordability) > 0.5 ||
+    Math.abs(bobot.amenity - bobotBawaan.amenity) > 0.5 ||
+    Math.abs(bobot.walkability - bobotBawaan.walkability) > 0.5;
 
   const skorTerpilih = (() => {
     if (!heksagonTerpilih || !mesin.current || !skorTerkini) return null;
@@ -184,12 +196,12 @@ export default function App() {
           onMetodologi={() => setTampilan("metodologi")}
           onProfil={(profil) => {
             setProfilTerakhir(profil);
-            setBobot(skorProfilKeBobot(profil));
+            setBobot(skorProfilKeBobot(profil, bobotBawaan));
             setTampilan("peta");
           }}
           onLewati={() => {
             setProfilTerakhir(null);
-            setBobot(BAWAAN_MENTAH);
+            setBobot(bobotBawaan);
             setTampilan("peta");
           }}
         />
@@ -248,9 +260,21 @@ export default function App() {
         <PetaHeksagon
         onPilih={setHeksagonTerpilih}
         onStatusBasemap={setBasemapAktif}
-        onPetaSiap={({ versi: v, labels: l }) => {
+        onPetaSiap={({ versi: v, dihitungPada: t, bobotDefault: m, labels: l }) => {
           setVersi(v);
+          if (t) setDihitungPada(t);
           setLabels(l);
+          if (m) {
+            // metadata menyediakan bobot bawaan: pakai sebagai nilai awal
+            // slider dan acuan "Kembalikan bawaan".
+            const b = bobotMetadataKeMentah(m);
+            setBobotBawaan(b);
+            setBobot(b);
+            setBobotDariMetadata(true);
+          } else {
+            setBobotDariMetadata(false);
+            console.warn("metadata.bobot_default tidak ada; memakai BOBOT_DEFAULT cadangan dari config.");
+          }
         }}
         skorTerkini={skorTerkini}
         onDataSiap={(m) => {
@@ -279,6 +303,8 @@ export default function App() {
         <PanelKawasan
           heksagon={heksagonTerpilih}
           versi={versi}
+          dihitungPada={dihitungPada}
+          bobotDariMetadata={bobotDariMetadata}
           skorKini={skorTerpilih}
           bobotKini={bedaDariBawaan ? normalisasiBobot(bobot).bobot : null}
           onTutup={() => setHeksagonTerpilih(null)}
@@ -296,6 +322,7 @@ export default function App() {
             b: skorUntuk(pilihanBanding.b),
           }}
           versi={versi}
+          dihitungPada={dihitungPada}
           onTutup={keluarBanding}
           onGanti={gantiSlot}
           hasilBanding={hasilBanding}

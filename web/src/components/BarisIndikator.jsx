@@ -1,7 +1,7 @@
 import { NAMA_INDIKATOR, LABEL_SUMBER } from "../lib/kamus";
 import { formatNilai, formatPersentil } from "../lib/format";
 
-function Lencana({ teks, warna }) {
+export function Lencana({ teks, warna }) {
   return (
     <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${warna}`}>
       {teks}

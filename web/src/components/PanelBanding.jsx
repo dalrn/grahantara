@@ -11,8 +11,28 @@ const fmtAngka = (v) =>
     ? v.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
     : "-";
 
+// MapLibre menyerikan array/objek bersarang jadi string JSON; pulihkan.
+function daftarKosong(x) {
+  if (Array.isArray(x)) return new Set(x);
+  if (typeof x === "string") {
+    try {
+      return new Set(JSON.parse(x));
+    } catch {
+      return new Set();
+    }
+  }
+  return new Set();
+}
+
+function formatTanggal(iso) {
+  if (typeof iso !== "string") return null;
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return null;
+  return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 export default function PanelBanding({
-  pilihan, skorKini, versi, onTutup, onGanti, hasilBanding, galat, padaBanding,
+  pilihan, skorKini, versi, dihitungPada, onTutup, onGanti, hasilBanding, galat, padaBanding,
 }) {
   const [galatLokal, setGalatLokal] = useState(null);
   const a = pilihan.a;
@@ -23,6 +43,9 @@ export default function PanelBanding({
   }, [a?.h3_index, b?.h3_index]);
 
   const memuat = hasilBanding === "memuat";
+
+  const kosongA = daftarKosong(a?.dimensi_kosong);
+  const kosongB = daftarKosong(b?.dimensi_kosong);
 
   const kirim = () => {
     if (!a || !b || memuat) return;
@@ -113,18 +136,35 @@ export default function PanelBanding({
               {KELOMPOK_INDIKATOR.map((kel) => {
                 const vA = a.subskor?.[kel.dimensi];
                 const vB = b.subskor?.[kel.dimensi];
-                const unggul = vA > vB ? "A" : vB > vA ? "B" : null;
+                const kA = kosongA.has(kel.dimensi);
+                const kB = kosongB.has(kel.dimensi);
+                const takSah = kA || kB;
+                const unggul = takSah ? null : vA > vB ? "A" : vB > vA ? "B" : null;
+                const isiSel = (v, kosong) =>
+                  kosong ? (
+                    <span className="italic text-slate-500">tidak tersedia</span>
+                  ) : (
+                    fmtAngka(v)
+                  );
                 return (
                   <div key={kel.dimensi} className="flex items-center gap-2 border-b border-white/5 px-2 py-1.5 text-xs last:border-0">
                     <span className="w-36 shrink-0 text-slate-300">{kel.label}</span>
                     <div className="flex-1">
-                      <div className="flex h-1.5 gap-0.5">
-                        <div className="h-full rounded-l bg-sky-400" style={{ width: `${Math.min(100, vA ?? 0)}%` }} />
-                        <div className="h-full flex-1 rounded-r bg-orange-400" style={{ opacity: Math.min(1, (vB ?? 0) / 100) }} />
-                      </div>
+                      {takSah ? (
+                        kA && kB ? (
+                          <div className="text-[10px] italic text-slate-600">tidak dapat dibandingkan</div>
+                        ) : (
+                          <div className="text-[10px] italic text-slate-500">tidak dapat dibandingkan — data hanya di satu kawasan</div>
+                        )
+                      ) : (
+                        <div className="flex h-1.5 gap-0.5">
+                          <div className="h-full rounded-l bg-sky-400" style={{ width: `${Math.min(100, vA ?? 0)}%` }} />
+                          <div className="h-full flex-1 rounded-r bg-orange-400" style={{ opacity: Math.min(1, (vB ?? 0) / 100) }} />
+                        </div>
+                      )}
                     </div>
-                    <span className="w-16 text-right text-sky-300">{fmtAngka(vA)}</span>
-                    <span className="w-16 text-right text-orange-300">{fmtAngka(vB)}</span>
+                    <span className="w-16 text-right text-sky-300">{isiSel(vA, kA)}</span>
+                    <span className="w-16 text-right text-orange-300">{isiSel(vB, kB)}</span>
                     <span className="w-5 text-center text-[10px]">
                       {unggul === "A" ? "▲" : unggul === "B" ? "◆" : ""}
                     </span>
@@ -201,7 +241,11 @@ export default function PanelBanding({
         )}
 
         <div className="mt-3 border-t border-white/10 pt-2 text-[10px] text-slate-600">
-          Data {versi ?? "stub"}. Angka acak, bukan hasil analisis.
+          {typeof versi === "string" && versi.startsWith("stub")
+            ? `Data ${versi ?? "stub"}. Angka acak, bukan hasil analisis.`
+            : versi
+              ? `Data versi ${versi}${formatTanggal(dihitungPada) ? `, dihitung ${formatTanggal(dihitungPada)}.` : "."}`
+              : ""}
         </div>
       </div>
     </div>

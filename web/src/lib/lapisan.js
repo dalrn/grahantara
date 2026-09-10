@@ -20,11 +20,11 @@ export const DEFINISI_LAPISAN = [
   {
     id: "krl",
     label: "Stasiun KRL",
-    berkas: null,
+    berkas: "/data/krl.geojson",
     warna: "#a78bfa",
     jari: 5,
     aktifAwal: false,
-    tersedia: false,
+    tersedia: true,
   },
   {
     id: "kos",

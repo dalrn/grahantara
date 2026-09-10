@@ -40,10 +40,25 @@ export default function Beranda({ onProfil, onLewati, onMetodologi, profilAwal }
   const [memuat, setMemuat] = useState(false);
   const [galat, setGalat] = useState(null);
   const [profil, setProfil] = useState(profilAwal ?? null);
+  const [meta, setMeta] = useState(null);
 
   useEffect(() => {
-    // profil terakhir bertahan selama komponen hidup
+    // metadata versi data untuk pita; berkas sama dengan yang dipakai peta
+    // (di-serve dari cache HTTP setelah muat pertama).
+    fetch("/data/hexagons.geojson")
+      .then((r) => r.json())
+      .then((d) => setMeta(d.metadata ?? null))
+      .catch(() => setMeta(null));
   }, []);
+
+  const formatTanggal = (iso) => {
+    if (typeof iso !== "string") return null;
+    const t = new Date(iso);
+    if (Number.isNaN(t.getTime())) return null;
+    return t.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  };
+
+  const stub = meta && typeof meta.versi === "string" && meta.versi.startsWith("stub");
 
   const total = DIMENSI.reduce((a, [, k]) => a + (profil?.bobot?.[k] ?? 0), 0);
   const pct = (k) => (total > 0 ? Math.round(((profil?.bobot?.[k] ?? 0) / total) * 100) : 0);
@@ -85,9 +100,18 @@ export default function Beranda({ onProfil, onLewati, onMetodologi, profilAwal }
         <p className="mt-2 text-center text-slate-400">
           Cari kawasan kos di Sleman yang cocok dengan cara kamu bergerak.
         </p>
-        <div className="mt-4 rounded bg-red-800 px-4 py-1.5 text-center text-sm font-semibold text-white">
-          DATA PALSU (stub-0.1) - angka pada peta ini acak, bukan hasil analisis
-        </div>
+        {stub ? (
+          <div className="mt-4 rounded bg-red-800 px-4 py-1.5 text-center text-sm font-semibold text-white">
+            DATA PALSU ({meta.versi}) - angka pada peta ini acak, bukan hasil analisis
+          </div>
+        ) : meta?.versi ? (
+          <div className="mt-4 rounded bg-slate-800 px-4 py-1.5 text-center text-sm font-semibold text-slate-200">
+            Data versi {meta.versi}
+            {formatTanggal(meta.dihitung_pada)
+              ? `, dihitung ${formatTanggal(meta.dihitung_pada)}.`
+              : "."}
+          </div>
+        ) : null}
 
         <textarea
           rows={4}
