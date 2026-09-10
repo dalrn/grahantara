@@ -2,13 +2,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 const PetaHeksagon = lazy(() => import("./components/PetaHeksagon"));
-import Legenda from "./components/Legenda";
-import PanelBobot from "./components/PanelBobot";
+import PanelKontrol from "./components/PanelKontrol";
 import PanelKawasan from "./components/PanelKawasan";
-import PanelLapisan from "./components/PanelLapisan";
 import PanelBanding from "./components/PanelBanding";
 import PanelBandingKos from "./components/PanelBandingKos";
 import PitaPeringatan from "./components/PitaPeringatan";
+import PanelRute from "./components/PanelRute";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
 import { labelKelas } from "./lib/kelas";
@@ -55,6 +54,9 @@ export default function App() {
   const [tampilan, setTampilan] = useState("beranda");
   const [profilTerakhir, setProfilTerakhir] = useState(null);
   const [fokusPeta, setFokusPeta] = useState(null);
+  const [kosRute, setKosRute] = useState(null);
+  const [rute, setRute] = useState(null);
+  const [gerbangRute, setGerbangRute] = useState(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
   const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
@@ -182,6 +184,23 @@ export default function App() {
         memuatBanding.current = false;
       });
   };
+
+  const tutupRute = () => {
+    setKosRute(null);
+    setRute(null);
+    setGerbangRute(null);
+  };
+
+  const mintaRute = (kos) => {
+    setHeksagonTerpilih(null);
+    setModeBanding(false);
+    setRute(null);
+    setGerbangRute(null);
+    setKosRute(kos);
+  };
+
+  // Gerbang dipilih di peta: rute diarahkan ke pintu itu, bukan titik tengah.
+  const pilihGerbang = (g) => setGerbangRute(g);
 
   const keluarBanding = () => {
     setModeBanding(false);
@@ -317,10 +336,15 @@ export default function App() {
               </p>
             </div>
           )}
-          <PanelBobot
+          <PanelKontrol
             bobot={bobot}
             onBobotBerubah={ubahBobot}
             onKembalikanBawaan={kembalikanBawaan}
+            lapisanAktif={lapisanAktif}
+            onToggleLapisan={toggleLapisan}
+            jumlahLapisan={jumlahLapisan}
+            labels={labels}
+            modeRute={Boolean(kosRute)}
           />
           <Suspense
             fallback={
@@ -368,6 +392,9 @@ export default function App() {
                 setLabels(labelKelas(ambang, minSkor, maksSkor));
               }}
               fokus={fokusPeta}
+              onMintaRute={mintaRute}
+              onPilihGerbang={pilihGerbang}
+              rute={rute}
               lapisanAktif={lapisanAktif}
               onJumlahLapisan={setJumlahLapisan}
               modeBanding={modeBanding}
@@ -377,12 +404,16 @@ export default function App() {
               onCompareKos={compareKos}
             />
           </Suspense>
-          <Legenda labels={labels} />
-          <PanelLapisan
-            lapisanAktif={lapisanAktif}
-            onToggle={toggleLapisan}
-            jumlahLapisan={jumlahLapisan}
-          />
+          {kosRute && (
+            <PanelRute
+              kos={kosRute}
+              kampusAwal={fokusPeta?.nama}
+              gerbang={gerbangRute}
+              onGerbangReset={() => setGerbangRute(null)}
+              onRute={setRute}
+              onTutup={tutupRute}
+            />
+          )}
           <AnimatePresence>
             {!modeBanding && heksagonTerpilih && (
               <PanelKawasan

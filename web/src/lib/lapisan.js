@@ -9,6 +9,15 @@ export const DEFINISI_LAPISAN = [
     tersedia: true,
   },
   {
+    id: "gerbang",
+    label: "Gerbang kampus",
+    berkas: "/data/kampus_gerbang.geojson",
+    warna: "#fbbf24",
+    jari: 4,
+    aktifAwal: false,
+    tersedia: true,
+  },
+  {
     id: "halte",
     label: "Halte Trans Jogja",
     berkas: "/data/halte.geojson",

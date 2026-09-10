@@ -1,6 +1,3 @@
-import { Collapse } from "./Motion";
-import { useState } from "react";
-
 import { BOBOT_DEFAULT } from "../config";
 
 const DIMENSI = [
@@ -15,10 +12,6 @@ export default function PanelBobot({
   onBobotBerubah,
   onKembalikanBawaan,
 }) {
-  // terlipat bawaan di mobile (< md), terbuka di desktop
-  const [terbuka, setTerbuka] = useState(
-    () => window.matchMedia("(min-width: 768px)").matches,
-  );
   const total = DIMENSI.reduce((a, [k]) => a + (bobot[k] ?? 0), 0);
   const bedaDariBawaan =
     Math.abs(bobot.connectivity - BOBOT_DEFAULT.connectivity * 100) > 0.5 ||
@@ -37,26 +30,15 @@ export default function PanelBobot({
   };
 
   return (
-    <div className="weight-panel absolute left-2 top-14 z-20 w-48 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg backdrop-blur-sm md:left-4 md:top-3 md:w-72">
-      <button
-        onClick={() => setTerbuka((t) => !t)}
-        aria-expanded={terbuka}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <span className="text-sm font-semibold">Bobot prioritas</span>
-        <span className="text-xs text-slate-400">{terbuka ? "▴" : "▾"}</span>
-      </button>
-      <Collapse open={terbuka}>
-        <div className="mt-2 space-y-3">
-          <p className="text-xs text-slate-400">
-            Geser prioritas. Lihat kawasan mana yang lebih sesuai.
-          </p>
+    <div className="weight-panel">
+      <div>
+        <div className="space-y-3">
           {DIMENSI.map(([kunci, nama]) => (
             <label key={kunci} className="block text-xs">
               <div className="flex justify-between">
                 <span>{nama}</span>
                 <span className="font-semibold text-emerald-400">
-                  {pct(kunci)}%
+                  {bobot[kunci]}
                 </span>
               </div>
               <input
@@ -66,16 +48,11 @@ export default function PanelBobot({
                 step={1}
                 value={bobot[kunci]}
                 onChange={(e) => onBobotBerubah(kunci, Number(e.target.value))}
-                aria-valuetext={`${pct(kunci)} persen prioritas`}
+                aria-valuetext={`${bobot[kunci]} dari 100, setara ${pct(kunci)} persen prioritas`}
                 className="mt-1 w-full accent-emerald-400"
               />
               <div className="text-xs text-slate-400">
-                {impact[kunci]} ·{" "}
-                {pct(kunci) >= 35
-                  ? "Prioritas utama"
-                  : pct(kunci) === 0
-                    ? "Tidak diprioritaskan"
-                    : "Ikut dipertimbangkan"}
+                {impact[kunci]} ({pct(kunci)}%)
               </div>
             </label>
           ))}
@@ -98,7 +75,7 @@ export default function PanelBobot({
             </div>
           )}
         </div>
-      </Collapse>
+      </div>
     </div>
   );
 }

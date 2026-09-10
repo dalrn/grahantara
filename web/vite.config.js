@@ -4,7 +4,12 @@ import { defineConfig, loadEnv } from "vite";
 // Run the existing serverless handlers locally, with the same fallback behaviour.
 // This plugin is development-only; no server module or private key enters the client bundle.
 function localApi() {
-  const endpoints = new Set(["parse-preference", "explain-score", "compare"]);
+  const endpoints = new Set([
+    "parse-preference",
+    "explain-score",
+    "compare",
+    "route",
+  ]);
   return {
     name: "grahantara-local-api",
     apply: "serve",
@@ -22,15 +27,22 @@ function localApi() {
           res.end(JSON.stringify(value));
         };
         try {
-          let body = "";
-          for await (const chunk of req) {
-            body += chunk;
-            if (body.length > 100000) {
-              res.status(413).json({ galat: "Permintaan terlalu besar." });
-              return;
+          req.query = Object.fromEntries(
+            new URL(req.url, "http://localhost").searchParams,
+          );
+          if (req.method === "GET" || req.method === "HEAD") {
+            req.body = {};
+          } else {
+            let body = "";
+            for await (const chunk of req) {
+              body += chunk;
+              if (body.length > 100000) {
+                res.status(413).json({ galat: "Permintaan terlalu besar." });
+                return;
+              }
             }
+            req.body = body ? JSON.parse(body) : {};
           }
-          req.body = body ? JSON.parse(body) : {};
           const { default: handler } = await server.ssrLoadModule(
             `/api/${endpoint}.js`,
           );

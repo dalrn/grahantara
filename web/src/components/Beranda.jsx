@@ -49,12 +49,24 @@ export default function Beranda({
   const [meta, setMeta] = useState(null);
 
   useEffect(() => {
-    // metadata versi data untuk pita; berkas sama dengan yang dipakai peta
-    // (di-serve dari cache HTTP setelah muat pertama).
-    fetch("/data/hexagons.geojson")
-      .then((r) => r.json())
-      .then((d) => setMeta(d.metadata ?? null))
-      .catch(() => setMeta(null));
+    // Metadata saja (ratusan byte). Sebelumnya berkas heksagon 4,5 MB ikut
+    // diunduh di beranda hanya untuk membaca metadata; berkas itu kini
+    // ditinggalkan untuk halaman peta.
+    let batal = false;
+    fetch("/data/metadata.json")
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        if (!batal) setMeta(d ?? null);
+      })
+      .catch(() => {
+        if (!batal) setMeta(null);
+      });
+    return () => {
+      batal = true;
+    };
   }, []);
 
   const formatTanggal = (iso) => {
