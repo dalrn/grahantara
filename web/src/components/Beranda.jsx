@@ -7,6 +7,7 @@ import { TEKS } from "../content/landing.js";
 // MapLibre + hexagons.geojson berat; jangan masuk bundel awal beranda.
 const PetaHero = lazy(() => import("./PetaHero.jsx"));
 const SebaranDimensi = lazy(() => import("./SebaranDimensi.jsx"));
+const TeksturJalan = lazy(() => import("./TeksturJalan.jsx"));
 
 // Label dan urutan dari DIMENSI_UI (dipakai bersama slider /peta), kalimat
 // penjelasnya dari modul teks.
@@ -262,19 +263,23 @@ export default function Beranda({
         </nav>
       </header>
 
-      {/* Bagian 1-2: hero dan kartu form, dimaksudkan muat dalam satu layar. */}
-      <div className="home-layout">
-        <section className="home-intro">
-          <h1>{TEKS.hero.judul}</h1>
-          <p className="intro-lead">{TEKS.hero.pembuka(jumlahKawasan)}</p>
+      {/* Bagian 1-2: judul melebar di atas, peta selebar konten di bawahnya,
+          kartu form melayang di sisi kanan peta pada layar lebar. Di layar
+          sempit kartu turun ke bawah peta (lihat .home-layout di index.css). */}
+      <section className="home-intro">
+        <h1>{TEKS.hero.judul}</h1>
+        <p className="intro-lead">{TEKS.hero.pembuka(jumlahKawasan)}</p>
+      </section>
 
+      <div className="home-layout">
+        <div className="hero-peta-wadah">
           <Suspense
             fallback={<div className="hero-peta-cadangan" aria-hidden="true" />}
           >
             <PetaHero onBuka={onLewati} />
           </Suspense>
           <p className="hero-peta-keterangan">{TEKS.hero.keteranganPeta}</p>
-        </section>
+        </div>
 
         <section
           className="preference-card"
@@ -488,48 +493,58 @@ export default function Beranda({
         </section>
       </div>
 
-      {/* Bagian 3: dua kolom selebar konten. Kiri menjelaskan APA yang dinilai,
+      {/* Tekstur jaringan jalan hanya di bagian bawah halaman. Sengaja TIDAK
+          dipasang di belakang peta hero: akan bertabrakan dengan basemap. */}
+      <div className="home-bawah">
+        <Suspense fallback={null}>
+          <TeksturJalan />
+        </Suspense>
+
+        {/* Bagian 3: dua kolom selebar konten. Kiri menjelaskan APA yang dinilai,
           kanan menjelaskan BAGAIMANA menafsirkan angkanya. Tingginya memang
           berbeda dan tidak dipaksa sama. */}
-      <div className="home-penjelasan">
-        <section className="dimensi-bagian" aria-labelledby="judul-dimensi">
-          <h2 id="judul-dimensi">{TEKS.dimensi.judul}</h2>
-          <Suspense fallback={<div className="dimensi-cadangan" />}>
-            <SebaranDimensi dimensi={DIMENSI} />
-          </Suspense>
-          <p className="dimensi-catatan">
-            {TEKS.dimensi.catatan(jumlahKawasan)}
-          </p>
-        </section>
+        <div className="home-penjelasan">
+          <section className="dimensi-bagian" aria-labelledby="judul-dimensi">
+            <h2 id="judul-dimensi">{TEKS.dimensi.judul}</h2>
+            <Suspense fallback={<div className="dimensi-cadangan" />}>
+              <SebaranDimensi dimensi={DIMENSI} />
+            </Suspense>
+            <p className="dimensi-catatan">
+              {TEKS.dimensi.catatan(jumlahKawasan)}
+            </p>
+          </section>
 
-        <section className="home-data" aria-labelledby="judul-data">
-          <h2 id="judul-data">{TEKS.data.judul}</h2>
-          <div className="data-catatan">
-            {TEKS.data.catatan.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
-          </div>
-          <div className="data-grid">
-            <div>
-              <strong>{jumlahKawasan}</strong>
-              <span>{TEKS.data.angka.kawasan}</span>
+          <section className="home-data" aria-labelledby="judul-data">
+            <h2 id="judul-data">{TEKS.data.judul}</h2>
+            <div className="data-catatan">
+              {TEKS.data.catatan.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
             </div>
-            <div>
-              {/* Dihitung dari daftar kampus, bukan ditulis tangan, supaya
+            <div className="data-grid">
+              <div>
+                <strong>{jumlahKawasan}</strong>
+                <span>{TEKS.data.angka.kawasan}</span>
+              </div>
+              <div>
+                {/* Dihitung dari daftar kampus, bukan ditulis tangan, supaya
                   tidak pernah berbeda dari penanda di peta. */}
-              <strong>{DAFTAR_KAMPUS.length}</strong>
-              <span>{TEKS.data.angka.kampus}</span>
+                <strong>{DAFTAR_KAMPUS.length}</strong>
+                <span>{TEKS.data.angka.kampus}</span>
+              </div>
+              <div>
+                <strong>16</strong>
+                <span>{TEKS.data.angka.indikator}</span>
+              </div>
             </div>
-            <div>
-              <strong>16</strong>
-              <span>{TEKS.data.angka.indikator}</span>
-            </div>
-          </div>
-          <p className="data-versi">
-            {TEKS.data.versi(meta?.versi ?? "—", tanggalData)}{" "}
-            <button onClick={onMetodologi}>{TEKS.data.tautanMetodologi}</button>
-          </p>
-        </section>
+            <p className="data-versi">
+              {TEKS.data.versi(meta?.versi ?? "—", tanggalData)}{" "}
+              <button onClick={onMetodologi}>
+                {TEKS.data.tautanMetodologi}
+              </button>
+            </p>
+          </section>
+        </div>
       </div>
 
       <footer className="home-footer">
