@@ -346,7 +346,7 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
                 </tr>
                 <tr className="border-b border-slate-800">
                   <td className="py-1 pr-3">Satu dimensi dipilih</td>
-                  <td className="py-1">57% · 14% · 14% · 14%</td>
+                  <td className="py-1">55% · 15% · 15% · 15%</td>
                 </tr>
                 <tr className="border-b border-slate-800">
                   <td className="py-1 pr-3">
@@ -358,9 +358,9 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
             </table>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            Angka mentahnya 40 untuk dimensi terpilih dan 10 untuk sisanya,
-            lalu dinormalisasi. Di halaman peta, bobot ini menjadi posisi awal
-            slider dan masih bisa disetel bebas.
+            Total ketiganya selalu 100, sama dengan jatah poin di panel bobot
+            halaman peta: bobot dari beranda menjadi posisi awal slider di
+            sana, lalu poinnya bisa dibagi ulang sesuka pengguna.
           </p>
         </StorySection>
         <StorySection className="story-section">

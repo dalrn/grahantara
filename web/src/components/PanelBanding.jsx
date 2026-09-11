@@ -1,10 +1,23 @@
+import { useEffect, useState } from "react";
+
 import { PanelMotion } from "./Motion";
 
-import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
+import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "../lib/kamus";
 import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
+import { warnaTeksSkor } from "../lib/kelas";
+import { bandingColors } from "../design";
+import {
+  labelKualitatif,
+  kalimatKonteks,
+  satuanAbstrak,
+} from "../lib/bahasaIndikator";
 
-const WARNA_A = "#38bdf8";
-const WARNA_B = "#f97316";
+// Warna A/B dari satu sumber (design.js), sama persis dengan garis heksagon
+// di peta dan pin kos — supaya kartu di panel bisa langsung dicocokkan dengan
+// heksagon yang disorot. Keduanya di luar skala skor agar tidak tertukar
+// artinya dengan warna heksagon.
+const WARNA_A = bandingColors.a;
+const WARNA_B = bandingColors.b;
 
 const fmtAngka = (v) =>
   typeof v === "number"
@@ -39,11 +52,20 @@ function formatTanggal(iso) {
   });
 }
 
+// Label band dari legenda, supaya skor tidak tampil sebagai angka telanjang.
+function bandSkor(skor, ambang) {
+  if (!Number.isFinite(skor)) return null;
+  const batas = ambang ?? [20, 40, 60, 80];
+  const i = batas.filter((t) => skor >= t).length;
+  return ["Rendah", "Rendah", "Menengah", "Tinggi", "Tinggi"][i];
+}
+
 export default function PanelBanding({
   pilihan,
   skorKini,
   versi,
   dihitungPada,
+  ambangSkor,
   onTutup,
   onGanti,
   hasilBanding,
@@ -52,16 +74,52 @@ export default function PanelBanding({
 }) {
   const a = pilihan.a;
   const b = pilihan.b;
+  const [detailTerbuka, setDetailTerbuka] = useState(false);
+  const [angkaMentah, setAngkaMentah] = useState(false);
+  const [kosongTerbuka, setKosongTerbuka] = useState(false);
 
   const memuat = hasilBanding === "memuat";
+  const hasil = memuat ? null : hasilBanding;
 
   const kosongA = daftarKosong(a?.dimensi_kosong);
   const kosongB = daftarKosong(b?.dimensi_kosong);
 
-  const kirim = () => {
-    if (!a || !b || memuat) return;
-    padaBanding();
-  };
+  const skorA = skorKini?.a;
+  const skorB = skorKini?.b;
+
+  // Vonis non-AI dihitung langsung dari selisih skor, jadi panel tidak pernah
+  // kosong sambil menunggu AI. Begitu hasil AI datang, ringkasannya dipakai
+  // untuk memperkaya bagian ini.
+  const selisih =
+    Number.isFinite(skorA) && Number.isFinite(skorB) ? skorA - skorB : null;
+  const pemenang =
+    selisih === null ? null : selisih > 0.05 ? "A" : selisih < -0.05 ? "B" : null;
+
+  // Tiga selisih dimensi terbesar, jadi kalimat alasan.
+  const alasan = (() => {
+    if (!a || !b) return [];
+    const keluar = [];
+    for (const { kunci, label } of DIMENSI_UI) {
+      const vA = a.subskor?.[kunci];
+      const vB = b.subskor?.[kunci];
+      if (kosongA.has(kunci) || kosongB.has(kunci)) continue;
+      if (!Number.isFinite(vA) || !Number.isFinite(vB)) continue;
+      const d = vA - vB;
+      if (Math.abs(d) < 1) continue;
+      keluar.push({ kunci, label, beda: d });
+    }
+    return keluar
+      .sort((x, y) => Math.abs(y.beda) - Math.abs(x.beda))
+      .slice(0, 3);
+  })();
+
+  // AI dipanggil otomatis begitu dua kawasan lengkap; vonis non-AI sudah
+  // tampil lebih dulu sehingga tidak ada layar kosong.
+  useEffect(() => {
+    if (a && b && hasilBanding === null) padaBanding();
+    // padaBanding stabil dari App; sengaja hanya bergantung pada pasangan.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [a?.h3_index, b?.h3_index]);
 
   const dimUnggul = (k, dX, dY) => {
     const ix = dX?.indikator?.[k];
@@ -76,30 +134,45 @@ export default function PanelBanding({
     return null;
   };
 
-  const Kartu = ({ data, warna, label, skor, ganti }) => (
-    <div
-      className="min-w-0 flex-1 rounded-lg bg-slate-800/70 p-3"
-      style={{ borderTop: `3px solid ${warna}` }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold" style={{ color: warna }}>
-          Kawasan {label}
-        </span>
-        <button
-          onClick={ganti}
-          className="text-xs text-slate-400 underline hover:text-white"
+  const Kartu = ({ data, warna, label, skor, ganti }) => {
+    const band = bandSkor(skor, ambangSkor);
+    return (
+      <div
+        className="kartu-banding min-w-0 flex-1"
+        data-huruf={label}
+        style={{
+          "--warna-banding": warna,
+          // Latar bersemu warna A/B supaya kartunya langsung terbaca sebagai
+          // pasangan heksagon yang disorot di peta.
+          background: `color-mix(in srgb, ${warna} 7%, #111c2e)`,
+          borderColor: warna,
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="kartu-banding-judul" style={{ color: warna }}>
+            Kawasan {label}
+          </span>
+          <button
+            onClick={ganti}
+            className="text-xs text-slate-400 underline hover:text-white"
+          >
+            ganti
+          </button>
+        </div>
+        {/* Nama desa dari basemap; koordinat turun ke detail. */}
+        <div className="truncate text-xs text-slate-300">
+          {data?.namaTempat ?? "Kawasan terpilih"}
+        </div>
+        <div
+          className="text-2xl font-bold"
+          style={{ color: warnaTeksSkor(skor, ambangSkor) ?? undefined }}
         >
-          ganti
-        </button>
+          {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
+        </div>
+        {band && <div className="text-xs text-slate-400">{band}</div>}
       </div>
-      <div className="font-mono text-xs text-slate-400">
-        {formatCoordinates(data?.coordinates)}
-      </div>
-      <div className="text-2xl font-bold" style={{ color: warna }}>
-        {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
-      </div>
-    </div>
-  );
+    );
+  };
 
   if (!a || !b) {
     // Bar kompak: jangan menutupi peta saat satu slot masih kosong.
@@ -125,10 +198,13 @@ export default function PanelBanding({
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: WARNA_A }}
             />
-            <span className="font-mono text-slate-400">
-              {formatCoordinates(a.coordinates)}
+            <span className="truncate text-slate-400">
+              {a.namaTempat ?? formatCoordinates(a.coordinates)}
             </span>
-            <span className="ml-auto font-bold text-sky-300">
+            <span
+              className="ml-auto font-bold"
+              style={{ color: warnaTeksSkor(skorKini?.a, ambangSkor) }}
+            >
               {skorKini?.a !== null && skorKini?.a !== undefined
                 ? formatSkor(skorKini.a)
                 : "—"}
@@ -139,13 +215,39 @@ export default function PanelBanding({
     );
   }
 
-  const isiIndikator = (k, dX) => {
+  // Indikator dipisah: yang punya data masuk tabel, yang kosong diringkas
+  // jadi satu baris supaya panel tidak terlihat rusak.
+  const semuaKunci = KELOMPOK_INDIKATOR.flatMap((kel) => kel.kunci);
+  const adaData = (k) => {
+    const ik = a?.indikator?.[k];
+    const iy = b?.indikator?.[k];
+    const kosong = (i) =>
+      !i || i.sumber === "tidak_tersedia" || i.nilai === null;
+    return !(kosong(ik) && kosong(iy));
+  };
+  const kunciAda = semuaKunci.filter(adaData);
+  const kunciKosong = semuaKunci.filter((k) => !adaData(k));
+
+  const selIndikator = (k, dX) => {
     const ik = dX?.indikator?.[k];
     if (!ik || ik.sumber === "tidak_tersedia" || ik.nilai === null)
-      return "tidak tersedia";
-    const teks = formatNilai(ik.nilai, ik.satuan) ?? "tidak tersedia";
-    if (ik.sumber === "model") return `${teks} (estimasi)`;
-    return teks;
+      return <span className="italic text-slate-500">tidak ada data</span>;
+    const label = labelKualitatif(k, ik);
+    const mentah = formatNilai(ik.nilai, ik.satuan);
+    // Satuan yang sudah jelas (meter, rupiah, jumlah) tetap ditampilkan apa
+    // adanya; yang abstrak (indeks, NDVI, nW/sr/cm2) diganti label kualitatif.
+    const utama = satuanAbstrak(ik.satuan) ? (label ?? mentah) : mentah;
+    return (
+      <>
+        <span>{utama}</span>
+        {ik.sumber === "model" && (
+          <span className="ml-1 text-[11px] text-yellow-300">(estimasi)</span>
+        )}
+        {angkaMentah && satuanAbstrak(ik.satuan) && mentah && (
+          <span className="ml-1 text-[11px] text-slate-500">{mentah}</span>
+        )}
+      </>
+    );
   };
 
   return (
@@ -162,29 +264,99 @@ export default function PanelBanding({
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="flex gap-2">
+        {/* 1a. VONIS lebih dulu, bukan tabel angka. */}
+        <div className="vonis">
+          <p className="vonis-kalimat">
+            {pemenang === null
+              ? "Kedua kawasan hampir setara dengan bobot yang kamu pakai."
+              : `Kawasan ${pemenang} lebih cocok secara keseluruhan${
+                  alasan[0]
+                    ? `, terutama kalau kamu mengutamakan ${alasan[0].label.toLowerCase()}`
+                    : ""
+                }.`}
+          </p>
+          {hasil?.simpulan && <p className="vonis-ai">{hasil.simpulan}</p>}
+          {memuat && (
+            <p className="vonis-tunggu">Menyusun ringkasan AI&hellip;</p>
+          )}
+        </div>
+
+        <div className="mt-3 flex gap-2">
           <Kartu
             data={a}
             warna={WARNA_A}
             label="A"
-            skor={skorKini?.a}
+            skor={skorA}
             ganti={() => onGanti("a")}
           />
           <Kartu
             data={b}
             warna={WARNA_B}
             label="B"
-            skor={skorKini?.b}
+            skor={skorB}
             ganti={() => onGanti("b")}
           />
         </div>
 
-        {a && b && (
+        {/* 1b. ALASAN: maksimal tiga, sebagai kalimat. */}
+        {alasan.length > 0 && (
+          <ul className="alasan-daftar">
+            {alasan.map((x) => (
+              <li key={x.kunci}>
+                <strong>Kawasan {x.beda > 0 ? "A" : "B"}</strong> unggul di{" "}
+                {x.label.toLowerCase()} (selisih {fmtAngka(Math.abs(x.beda))}{" "}
+                poin).
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {hasil?.cocokUntuk && (
+          <div className="cocok-untuk">
+            <div>
+              <strong>A</strong> {hasil.cocokUntuk.A}
+            </div>
+            <div>
+              <strong>B</strong> {hasil.cocokUntuk.B}
+            </div>
+          </div>
+        )}
+
+        {hasil?.sumber === "fallback" && (
+          <div className="mt-2 rounded bg-yellow-700 px-2 py-1 text-xs font-semibold text-white">
+            Disusun tanpa AI. Layanan bahasa tidak merespons.
+          </div>
+        )}
+        {hasil && (
+          <div className="mt-1 text-xs text-slate-500">
+            Ringkasan disusun AI dari angka pada panel ini.
+          </div>
+        )}
+        {galat && (
+          <div className="mt-2 rounded bg-red-900/60 p-2 text-xs text-red-100">
+            {galat}{" "}
+            <button onClick={padaBanding} className="underline">
+              Coba lagi
+            </button>
+          </div>
+        )}
+
+        {/* 1c. Tombol detail; tabel tertutup secara bawaan. */}
+        <button
+          type="button"
+          className="tombol-detail"
+          aria-expanded={detailTerbuka}
+          onClick={() => setDetailTerbuka((v) => !v)}
+        >
+          {detailTerbuka ? "Sembunyikan detail" : "Lihat detail"}
+        </button>
+
+        {detailTerbuka && (
           <>
             <div className="compare-header">
               <span>Subskor dimensi</span>
-              <span>Kawasan A</span>
-              <span>Kawasan B</span>
+              <span>A</span>
+              <span>B</span>
             </div>
             <div className="mt-1 overflow-hidden rounded border border-white/10">
               {KELOMPOK_INDIKATOR.map((kel) => {
@@ -203,136 +375,112 @@ export default function PanelBanding({
                 const isiSel = (v, kosong) =>
                   kosong ? (
                     <span className="italic text-slate-500">
-                      tidak tersedia
+                      tidak ada data
                     </span>
                   ) : (
                     fmtAngka(v)
                   );
                 return (
-                  <div
-                    key={kel.dimensi}
-                    className="compare-row"
-                    style={{
-                      borderLeft: `3px solid ${unggul === "A" ? WARNA_A : unggul === "B" ? WARNA_B : "transparent"}`,
-                    }}
-                  >
+                  <div key={kel.dimensi} className="compare-row">
                     <span className="w-36 shrink-0 text-slate-300">
                       {kel.label}
                     </span>
-                    <span className="w-16 text-right text-sky-300">
+                    {/* Sel unggul ditebalkan dan diberi latar tipis, bukan
+                        ditandai simbol tanpa legenda. */}
+                    <span
+                      className={`w-16 text-right ${unggul === "A" ? "sel-unggul" : "text-slate-400"}`}
+                    >
                       {isiSel(vA, kA)}
                     </span>
-                    <span className="w-16 text-right text-orange-300">
+                    <span
+                      className={`w-16 text-right ${unggul === "B" ? "sel-unggul" : "text-slate-400"}`}
+                    >
                       {isiSel(vB, kB)}
-                    </span>
-                    <span className="w-5 text-center text-xs">
-                      {unggul === "A" ? "▲" : unggul === "B" ? "◆" : ""}
                     </span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="mt-4 text-xs font-semibold text-slate-300">
-              Indikator
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-300">
+                Indikator
+              </span>
+              <label className="toggle-mentah">
+                <input
+                  type="checkbox"
+                  checked={angkaMentah}
+                  onChange={(e) => setAngkaMentah(e.target.checked)}
+                />
+                Tampilkan angka mentah
+              </label>
             </div>
             <div className="mt-1 overflow-hidden rounded border border-white/10">
-              {KELOMPOK_INDIKATOR.flatMap((kel) =>
-                kel.kunci.map((k) => {
-                  const unggul = dimUnggul(k, a, b);
-                  return (
-                    <div key={k} className="compare-row indicator-row">
+              {kunciAda.map((k) => {
+                const unggul = dimUnggul(k, a, b);
+                const konteks =
+                  kalimatKonteks(k, a?.indikator?.[k]) ?? null;
+                return (
+                  <div key={k} className="indicator-row">
+                    <div className="compare-row">
                       <span className="flex-1 text-slate-300">
                         {NAMA_INDIKATOR[k] ?? k}
                       </span>
                       <span
-                        className={`w-28 shrink-0 text-right ${unggul === "A" ? "text-sky-300" : "text-slate-400"}`}
+                        className={`w-28 shrink-0 text-right ${unggul === "A" ? "sel-unggul" : "text-slate-400"}`}
                       >
-                        {isiIndikator(k, a)}
+                        {selIndikator(k, a)}
                       </span>
                       <span
-                        className={`w-28 shrink-0 text-right ${unggul === "B" ? "text-orange-300" : "text-slate-400"}`}
+                        className={`w-28 shrink-0 text-right ${unggul === "B" ? "sel-unggul" : "text-slate-400"}`}
                       >
-                        {isiIndikator(k, b)}
-                      </span>
-                      <span className="w-5 shrink-0 text-center">
-                        {unggul === "A" ? "▲" : unggul === "B" ? "◆" : ""}
+                        {selIndikator(k, b)}
                       </span>
                     </div>
-                  );
-                }),
-              )}
+                    {konteks && <div className="indicator-konteks">{konteks}</div>}
+                  </div>
+                );
+              })}
             </div>
 
-            <button
-              onClick={kirim}
-              disabled={memuat}
-              className="mt-4 w-full rounded-lg bg-sky-600 py-2.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-400"
-            >
-              {memuat ? "Menyusun perbandingan..." : "Bandingkan dengan AI"}
-            </button>
-
-            {galat && (
-              <div className="mt-2 rounded bg-red-900/60 p-2 text-xs text-red-100">
-                {galat}{" "}
-                <button onClick={kirim} className="underline">
-                  Coba lagi
+            {/* 5. Baris kosong diringkas jadi satu, bukan memenuhi tabel. */}
+            {kunciKosong.length > 0 && (
+              <div className="ringkas-kosong">
+                <button
+                  type="button"
+                  onClick={() => setKosongTerbuka((v) => !v)}
+                  aria-expanded={kosongTerbuka}
+                >
+                  {kunciKosong.length} indikator belum punya data untuk kedua
+                  kawasan ini
                 </button>
+                {kosongTerbuka && (
+                  <ul>
+                    {kunciKosong.map((k) => (
+                      <li key={k}>{NAMA_INDIKATOR[k] ?? k}</li>
+                    ))}
+                  </ul>
+                )}
+                <p>
+                  Indikator tanpa data dikeluarkan dari perhitungan, tidak
+                  dihitung sebagai nol.
+                </p>
               </div>
             )}
 
-            {hasilBanding && !memuat && (
-              <div className="mt-3 space-y-2 text-xs">
-                <div className="text-xs font-semibold uppercase tracking-wide text-sky-400">
-                  Kelebihan kawasan A
-                </div>
-                {hasilBanding.unggulA?.map((s) => (
-                  <div
-                    key={s}
-                    className="rounded bg-sky-900/40 px-2 py-1 text-sky-200"
-                  >
-                    ▲ {s}
-                  </div>
-                ))}
-                <div className="pt-1 text-xs font-semibold uppercase tracking-wide text-orange-400">
-                  Kelebihan kawasan B
-                </div>
-                {hasilBanding.unggulB?.map((s) => (
-                  <div
-                    key={s}
-                    className="rounded bg-orange-900/40 px-2 py-1 text-orange-200"
-                  >
-                    ◆ {s}
-                  </div>
-                ))}
-                <div className="pt-1 text-xs italic text-slate-300">
-                  {hasilBanding.simpulan}
-                </div>
-                {hasilBanding.cocokUntuk && (
-                  <div className="text-xs text-slate-400">
-                    Cocok untuk: (A) {hasilBanding.cocokUntuk.A} | (B){" "}
-                    {hasilBanding.cocokUntuk.B}
-                  </div>
-                )}
-                {hasilBanding.sumber === "fallback" && (
-                  <div className="rounded bg-yellow-700 px-2 py-1 text-xs font-semibold text-white">
-                    Disusun tanpa AI. Layanan bahasa tidak merespons.
-                  </div>
-                )}
-                <div className="text-xs text-slate-500">
-                  Disusun AI dari angka pada panel ini.
-                </div>
-              </div>
-            )}
+            <div className="mt-3 text-xs text-slate-500">
+              <div>A: {formatCoordinates(a.coordinates)}</div>
+              <div>B: {formatCoordinates(b.coordinates)}</div>
+            </div>
           </>
         )}
 
         <div className="mt-3 border-t border-white/10 pt-2 text-xs text-slate-500">
-          {typeof versi === "string" && versi.startsWith("stub")
-            ? `Data ${versi ?? "stub"}. Angka acak, bukan hasil analisis.`
-            : versi
-              ? `Data versi ${versi}${formatTanggal(dihitungPada) ? `, dihitung ${formatTanggal(dihitungPada)}.` : "."}`
-              : ""}
+          Data versi {versi ?? "—"}
+          {formatTanggal(dihitungPada)
+            ? `, dihitung ${formatTanggal(dihitungPada)}`
+            : ""}
+          .
         </div>
       </div>
     </PanelMotion>

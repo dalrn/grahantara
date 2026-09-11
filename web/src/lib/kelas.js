@@ -47,3 +47,29 @@ export function labelKelas(ambang, min, maks) {
   }
   return label;
 }
+
+// Warna TEKS untuk angka skor, sejajar dengan skala isian heksagon tapi lebih
+// terang supaya terbaca di panel gelap (>= 4,68:1 terhadap #20332e).
+// Dipakai agar pembaca langsung tahu 10 itu buruk dan 90 itu bagus tanpa
+// membandingkan dengan legenda.
+const WARNA_TEKS_SKOR = [
+  "#f0736a",
+  "#f0a662",
+  "#f0d45e",
+  "#b5d97a",
+  "#7fc98a",
+];
+
+/**
+ * Warna teks untuk sebuah skor 0-100.
+ *
+ * `ambang` adalah empat ambang kuintil dari data nyata (hitungKuintil), sama
+ * dengan yang dipakai mewarnai heksagon, sehingga warna angka dan warna
+ * heksagon selalu sepakat. Kalau ambang belum ada, dipakai pembagian rata
+ * 20/40/60/80 sebagai cadangan.
+ */
+export function warnaTeksSkor(skor, ambang) {
+  if (!Number.isFinite(skor)) return null;
+  const batas = ambang ?? [20, 40, 60, 80];
+  return WARNA_TEKS_SKOR[batas.filter((t) => skor >= t).length];
+}

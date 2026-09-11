@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { DAFTAR_KAMPUS } from "../kampus.js";
 import { DIMENSI_UI } from "../lib/kamus";
 import { TEKS } from "../content/landing.js";
+import AngkaNaik from "./AngkaNaik.jsx";
 
 // MapLibre + hexagons.geojson berat; jangan masuk bundel awal beranda.
 const PetaHero = lazy(() => import("./PetaHero.jsx"));
@@ -26,10 +27,11 @@ const DIMENSI = DIMENSI_UI.map((d) => [
 // tidak mengisi apa pun. Pengguna merasa sudah menyetel padahal hasilnya sama
 // dengan bawaan. Batas dua pilihan membuat perbedaan bobot selalu nyata.
 //
-// Angka final (didokumentasikan di halaman Metodologi):
-//   dua terpilih  -> 40/40/10/10 = 40% 40% 10% 10%
-//   satu terpilih -> 40/10/10/10 = 57% 14% 14% 14%
-//   "semuanya sama" -> 25 merata = 25% masing-masing
+// Angka final (didokumentasikan di halaman Metodologi). Total SELALU 100,
+// sama dengan jatah poin di panel bobot halaman peta:
+//   dua terpilih  -> 40/40/10/10
+//   satu terpilih -> 55/15/15/15
+//   "semuanya sama" -> 25 merata
 const BOBOT_DIPILIH = 40;
 const BOBOT_SISA = 10;
 const BOBOT_SETARA = 25;
@@ -37,9 +39,19 @@ const MAKS_PILIH = 2;
 
 function bobotDariPilihan(pilihan, setara) {
   const b = {};
+  if (setara || pilihan.length === 0) {
+    for (const { kunci } of DIMENSI_UI) b[kunci] = BOBOT_SETARA;
+    return b;
+  }
+  // Satu pilihan saja: sisanya dibagi rata agar totalnya tetap 100.
+  if (pilihan.length === 1) {
+    for (const { kunci } of DIMENSI_UI) {
+      b[kunci] = pilihan.includes(kunci) ? 55 : 15;
+    }
+    return b;
+  }
   for (const { kunci } of DIMENSI_UI) {
-    if (setara) b[kunci] = BOBOT_SETARA;
-    else b[kunci] = pilihan.includes(kunci) ? BOBOT_DIPILIH : BOBOT_SISA;
+    b[kunci] = pilihan.includes(kunci) ? BOBOT_DIPILIH : BOBOT_SISA;
   }
   return b;
 }
@@ -207,6 +219,8 @@ export default function Beranda({
 
   const bobotFinal = () =>
     bobotDariPilihan(pilihan, setara || pilihan.length === 0);
+  const kuotaPenuh = !setara && pilihan.length >= MAKS_PILIH;
+  const persen = persenBobot(bobotFinal());
 
   const kePeta = () => {
     onProfil({
@@ -223,14 +237,7 @@ export default function Beranda({
 
   const jumlahKawasan = meta?.jumlah?.toLocaleString("id-ID") ?? "2.134";
   const tanggalData = formatTanggal(meta?.dihitung_pada);
-  const kuotaPenuh = !setara && pilihan.length >= MAKS_PILIH;
-  const persen = persenBobot(bobotFinal());
   const belum = (k) => tidakTerbaca.includes(k);
-
-  const tandaBelum = (k) =>
-    belum(k) ? (
-      <span className="tanda-belum">{TEKS.form.konfirmasi.tandaBelum}</span>
-    ) : null;
 
   const ikonCentang = (
     <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
@@ -245,276 +252,319 @@ export default function Beranda({
     </svg>
   );
 
+  const tandaBelum = (k) =>
+    belum(k) ? (
+      <span className="tanda-belum">{TEKS.form.konfirmasi.tandaBelum}</span>
+    ) : null;
+
   return (
     <div className="home-page h-full overflow-y-auto">
-      <header className="home-nav">
-        <a href="#" className="brand" aria-label={TEKS.nav.labelBeranda}>
-          <span className="brand-mark" aria-hidden="true">
-            <img src="/grahantara-mark.svg" alt="" width="40" height="47" />
-          </span>
-          grahantara
-        </a>
-        <nav>
-          <span className="nav-active" aria-current="page">
-            {TEKS.nav.beranda}
-          </span>
-          <button onClick={onLewati}>{TEKS.nav.peta}</button>
-          <button onClick={onMetodologi}>{TEKS.nav.metodologi}</button>
-        </nav>
-      </header>
-
-      {/* Bagian 1-2: judul melebar di atas, peta selebar konten di bawahnya,
-          kartu form melayang di sisi kanan peta pada layar lebar. Di layar
-          sempit kartu turun ke bawah peta (lihat .home-layout di index.css). */}
-      <section className="home-intro">
-        <h1>{TEKS.hero.judul}</h1>
-        <p className="intro-lead">{TEKS.hero.pembuka(jumlahKawasan)}</p>
-      </section>
-
-      <div className="home-layout">
-        <div className="hero-peta-wadah">
-          <Suspense
-            fallback={<div className="hero-peta-cadangan" aria-hidden="true" />}
-          >
-            <PetaHero onBuka={onLewati} />
-          </Suspense>
-          <p className="hero-peta-keterangan">{TEKS.hero.keteranganPeta}</p>
-        </div>
-
-        <section
-          className="preference-card"
-          aria-labelledby="judul-form"
-          ref={kartuRef}
-          tabIndex={-1}
-        >
-          {stub ? (
-            <div className="peringatan-stub">{TEKS.form.stub(meta.versi)}</div>
-          ) : null}
-
-          {tahap === "tulis" ? (
-            <>
-              <h2 id="judul-form">{TEKS.form.tulis.judul}</h2>
-
-              <label htmlFor="needs" className="label-tersembunyi">
-                {TEKS.form.tulis.labelTextarea}
-              </label>
-              <textarea
-                id="needs"
-                rows={4}
-                value={teks}
-                maxLength={500}
-                onChange={(e) => setTeks(e.target.value)}
-                placeholder={TEKS.form.tulis.placeholder}
-                className="textarea-utama"
-              />
-
-              <div className="contoh-baris">
-                {TEKS.form.tulis.contoh.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="contoh-chip"
-                    onClick={() => setTeks(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                className="tombol-primer"
-                onClick={baca}
-                disabled={memuat}
-              >
-                {memuat
-                  ? TEKS.form.tulis.sedangMembaca
-                  : TEKS.form.tulis.lanjut}
-              </button>
-
-              <button
-                type="button"
-                onClick={onLewati}
-                className="tombol-sekunder"
-              >
-                {TEKS.form.tulis.lewatiKePeta}
-              </button>
-
-              <button
-                type="button"
-                className="tautan-lewati"
-                onClick={() => keKonfirmasi(null, null)}
-              >
-                {TEKS.form.tulis.lewatiKePilihan}
-              </button>
-            </>
-          ) : (
-            <>
-              <h2 id="judul-form">{TEKS.form.konfirmasi.judul}</h2>
-              <p className="card-description">
-                {pesanBaca ??
-                  (teks.trim()
-                    ? TEKS.form.konfirmasi.dariCatatan
-                    : TEKS.form.konfirmasi.tanpaCatatan)}
-              </p>
-
-              <div className="kolom-form">
-                <label className="bidang">
-                  <span className="bidang-label">
-                    {TEKS.form.konfirmasi.kampus} {tandaBelum("kampus")}
-                  </span>
-                  <select
-                    value={kampus}
-                    onChange={(e) => setKampus(e.target.value)}
-                  >
-                    <option value="">
-                      {TEKS.form.konfirmasi.kampusKosong}
-                    </option>
-                    {DAFTAR_KAMPUS.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="bidang">
-                  <div className="bidang-kepala">
-                    <span className="bidang-label" id="label-anggaran">
-                      {TEKS.form.konfirmasi.anggaran} {tandaBelum("anggaran")}
-                    </span>
-                    <span className="bidang-nilai">
-                      {adaAnggaran
-                        ? formatRupiah(anggaran)
-                        : TEKS.form.konfirmasi.anggaranTidakTahu}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={ANGGARAN_MIN}
-                    max={ANGGARAN_MAKS}
-                    step={ANGGARAN_LANGKAH}
-                    value={anggaran}
-                    aria-labelledby="label-anggaran"
-                    onChange={(e) => {
-                      setAnggaran(Number(e.target.value));
-                      setAdaAnggaran(true);
-                    }}
-                  />
-                  <div className="bidang-kaki">
-                    <span>
-                      {formatRupiah(ANGGARAN_MIN)} –{" "}
-                      {formatRupiah(ANGGARAN_MAKS)}
-                    </span>
-                    <label className="kotak-centang">
-                      <input
-                        type="checkbox"
-                        checked={!adaAnggaran}
-                        onChange={(e) => setAdaAnggaran(!e.target.checked)}
-                      />
-                      {TEKS.form.konfirmasi.anggaranCentang}
-                    </label>
-                  </div>
-                </div>
-
-                <fieldset className="bidang bidang-prioritas">
-                  <legend className="bidang-label">
-                    {TEKS.form.konfirmasi.prioritas} {tandaBelum("prioritas")}
-                  </legend>
-                  {/* Batas dua pilihan dikomunikasikan lewat kontrolnya:
-                      begitu kuota penuh, opsi sisanya benar-benar disabled.
-                      Tidak ada kalimat bantuan yang menjelaskan batas itu. */}
-                  <div className="pilih-daftar">
-                    {DIMENSI_UI.map(({ kunci, label }) => {
-                      const aktif = !setara && pilihan.includes(kunci);
-                      const nonaktif = kuotaPenuh && !aktif;
-                      return (
-                        <button
-                          key={kunci}
-                          type="button"
-                          className={`pilih-opsi${aktif ? " is-aktif" : ""}`}
-                          aria-pressed={aktif}
-                          disabled={nonaktif}
-                          onClick={() => kePilih(kunci)}
-                        >
-                          <span className="pilih-kotak">
-                            {aktif ? ikonCentang : null}
-                          </span>
-                          <span className="pilih-nama">{label}</span>
-                          <span className="pilih-persen">{persen[kunci]}%</span>
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      className={`pilih-opsi pilih-setara${
-                        setara ? " is-aktif" : ""
-                      }`}
-                      aria-pressed={setara}
-                      disabled={kuotaPenuh}
-                      onClick={() => {
-                        setSetara(true);
-                        setPilihan([]);
-                      }}
-                    >
-                      <span className="pilih-kotak">
-                        {setara ? ikonCentang : null}
-                      </span>
-                      <span className="pilih-nama">
-                        {TEKS.form.konfirmasi.prioritasSetara}
-                      </span>
-                    </button>
-                  </div>
-                </fieldset>
-
-                {teks.trim() && (
-                  <div className="bidang">
-                    <span className="bidang-label">
-                      {TEKS.form.konfirmasi.catatanmu}
-                    </span>
-                    <p className="catatan-asli">{teks.trim()}</p>
-                  </div>
-                )}
-              </div>
-
-              <button type="button" className="tombol-primer" onClick={kePeta}>
-                {TEKS.form.konfirmasi.lihatPeta}
-              </button>
-
-              <button
-                type="button"
-                className="tombol-sekunder"
-                onClick={() => setTahap("tulis")}
-              >
-                {TEKS.form.konfirmasi.kembali}
-              </button>
-            </>
-          )}
-        </section>
-      </div>
-
-      {/* Tekstur jaringan jalan hanya di bagian bawah halaman. Sengaja TIDAK
-          dipasang di belakang peta hero: akan bertabrakan dengan basemap. */}
-      <div className="home-bawah">
+      <div className="home-isi">
+        {/* SATU lapisan tekstur untuk seluruh halaman, bukan satu per seksi.
+          Tingginya mengikuti tinggi dokumen dan ikut menggulir bersama
+          konten (bukan position: fixed). */}
         <Suspense fallback={null}>
           <TeksturJalan />
         </Suspense>
 
-        {/* Bagian 3: dua kolom selebar konten. Kiri menjelaskan APA yang dinilai,
-          kanan menjelaskan BAGAIMANA menafsirkan angkanya. Tingginya memang
-          berbeda dan tidak dipaksa sama. */}
-        <div className="home-penjelasan">
-          <section className="dimensi-bagian" aria-labelledby="judul-dimensi">
-            <h2 id="judul-dimensi">{TEKS.dimensi.judul}</h2>
-            <Suspense fallback={<div className="dimensi-cadangan" />}>
-              <SebaranDimensi dimensi={DIMENSI} />
+        <header className="home-nav">
+          <a href="#" className="brand" aria-label={TEKS.nav.labelBeranda}>
+            <span className="brand-mark" aria-hidden="true">
+              <img src="/grahantara-mark.svg" alt="" width="40" height="47" />
+            </span>
+            grahantara
+          </a>
+          <nav>
+            <span className="nav-active" aria-current="page">
+              {TEKS.nav.beranda}
+            </span>
+            <button onClick={onLewati}>{TEKS.nav.peta}</button>
+            <button onClick={onMetodologi}>{TEKS.nav.metodologi}</button>
+          </nav>
+        </header>
+
+        {/* Bagian 1-2: dua kolom. Kiri judul, paragraf, lalu peta. Kanan kartu
+          form yang berdiri sendiri, tidak melayang di atas peta. */}
+        <div className="home-layout">
+          <section className="home-intro">
+            {/* <span> pembungkus: alas teksnya diulang per baris sehingga
+                tepinya mengikuti panjang tiap baris, bukan satu kotak. */}
+            <h1>
+              <span className="alas-teks">{TEKS.hero.judul}</span>
+            </h1>
+            <p className="intro-lead">
+              <span className="alas-teks">
+                {TEKS.hero.pembuka(jumlahKawasan)}
+              </span>
+            </p>
+
+            <Suspense
+              fallback={
+                <div className="hero-peta-cadangan" aria-hidden="true" />
+              }
+            >
+              <PetaHero onBuka={onLewati} />
             </Suspense>
-            <p className="dimensi-catatan">
-              {TEKS.dimensi.catatan(jumlahKawasan)}
+            <p className="hero-peta-keterangan">
+              <span className="alas-teks">{TEKS.hero.keteranganPeta}</span>
             </p>
           </section>
 
-          <section className="home-data" aria-labelledby="judul-data">
+          <section
+            className="preference-card"
+            aria-labelledby="judul-form"
+            ref={kartuRef}
+            tabIndex={-1}
+          >
+            {stub ? (
+              <div className="peringatan-stub">
+                {TEKS.form.stub(meta.versi)}
+              </div>
+            ) : null}
+
+            {tahap === "tulis" ? (
+              <>
+                <h2 id="judul-form">{TEKS.form.tulis.judul}</h2>
+
+                <label htmlFor="needs" className="label-tersembunyi">
+                  {TEKS.form.tulis.labelTextarea}
+                </label>
+                <textarea
+                  id="needs"
+                  rows={4}
+                  value={teks}
+                  maxLength={500}
+                  onChange={(e) => setTeks(e.target.value)}
+                  placeholder={TEKS.form.tulis.placeholder}
+                  className="textarea-utama"
+                />
+
+                <div className="contoh-baris">
+                  {TEKS.form.tulis.contoh.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className="contoh-chip"
+                      onClick={() => setTeks(c)}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="tombol-primer"
+                  onClick={baca}
+                  disabled={memuat}
+                >
+                  {memuat
+                    ? TEKS.form.tulis.sedangMembaca
+                    : TEKS.form.tulis.lanjut}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onLewati}
+                  className="tombol-sekunder"
+                >
+                  {TEKS.form.tulis.lewatiKePeta}
+                </button>
+
+                <button
+                  type="button"
+                  className="tautan-lewati"
+                  onClick={() => keKonfirmasi(null, null)}
+                >
+                  {TEKS.form.tulis.lewatiKePilihan}
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 id="judul-form">{TEKS.form.konfirmasi.judul}</h2>
+                <p className="card-description">
+                  {pesanBaca ??
+                    (teks.trim()
+                      ? TEKS.form.konfirmasi.dariCatatan
+                      : TEKS.form.konfirmasi.tanpaCatatan)}
+                </p>
+
+                <div className="kolom-form">
+                  <label className="bidang">
+                    <span className="bidang-label">
+                      {TEKS.form.konfirmasi.kampus} {tandaBelum("kampus")}
+                    </span>
+                    <select
+                      value={kampus}
+                      onChange={(e) => setKampus(e.target.value)}
+                    >
+                      <option value="">
+                        {TEKS.form.konfirmasi.kampusKosong}
+                      </option>
+                      {DAFTAR_KAMPUS.map((k) => (
+                        <option key={k} value={k}>
+                          {k}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="bidang">
+                    <div className="bidang-kepala">
+                      <span className="bidang-label" id="label-anggaran">
+                        {TEKS.form.konfirmasi.anggaran} {tandaBelum("anggaran")}
+                      </span>
+                      <span className="bidang-nilai">
+                        {adaAnggaran
+                          ? formatRupiah(anggaran)
+                          : TEKS.form.konfirmasi.anggaranTidakTahu}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={ANGGARAN_MIN}
+                      max={ANGGARAN_MAKS}
+                      step={ANGGARAN_LANGKAH}
+                      value={anggaran}
+                      aria-labelledby="label-anggaran"
+                      onChange={(e) => {
+                        setAnggaran(Number(e.target.value));
+                        setAdaAnggaran(true);
+                      }}
+                    />
+                    <div className="bidang-kaki">
+                      <span>
+                        {formatRupiah(ANGGARAN_MIN)} –{" "}
+                        {formatRupiah(ANGGARAN_MAKS)}
+                      </span>
+                      <label className="kotak-centang">
+                        <input
+                          type="checkbox"
+                          checked={!adaAnggaran}
+                          onChange={(e) => setAdaAnggaran(!e.target.checked)}
+                        />
+                        {TEKS.form.konfirmasi.anggaranCentang}
+                      </label>
+                    </div>
+                  </div>
+
+                  <fieldset className="bidang bidang-prioritas">
+                    <legend className="bidang-label">
+                      {TEKS.form.konfirmasi.prioritas} {tandaBelum("prioritas")}
+                    </legend>
+                    {/* Batas dua pilihan dikomunikasikan lewat kontrolnya:
+                      begitu kuota penuh, opsi sisanya benar-benar disabled.
+                      Tidak ada kalimat bantuan yang menjelaskan batas itu. */}
+                    <div className="pilih-daftar">
+                      {DIMENSI_UI.map(({ kunci, label }) => {
+                        const aktif = !setara && pilihan.includes(kunci);
+                        const nonaktif = kuotaPenuh && !aktif;
+                        return (
+                          <button
+                            key={kunci}
+                            type="button"
+                            className={`pilih-opsi${aktif ? " is-aktif" : ""}`}
+                            aria-pressed={aktif}
+                            disabled={nonaktif}
+                            onClick={() => kePilih(kunci)}
+                          >
+                            <span className="pilih-kotak">
+                              {aktif ? ikonCentang : null}
+                            </span>
+                            <span className="pilih-nama">{label}</span>
+                            <span className="pilih-persen">
+                              {persen[kunci]}%
+                            </span>
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        className={`pilih-opsi pilih-setara${
+                          setara ? " is-aktif" : ""
+                        }`}
+                        aria-pressed={setara}
+                        disabled={kuotaPenuh}
+                        onClick={() => {
+                          // Bisa dibatalkan seperti opsi lain. Sebelumnya
+                          // hanya bisa dinyalakan, sehingga sekali aktif
+                          // tombolnya tidak pernah bisa dilepas lagi.
+                          setSetara((v) => !v);
+                          setPilihan([]);
+                        }}
+                      >
+                        <span className="pilih-kotak">
+                          {setara ? ikonCentang : null}
+                        </span>
+                        <span className="pilih-nama">
+                          {TEKS.form.konfirmasi.prioritasSetara}
+                        </span>
+                      </button>
+                    </div>
+                  </fieldset>
+
+                  {teks.trim() && (
+                    <div className="bidang">
+                      <span className="bidang-label">
+                        {TEKS.form.konfirmasi.catatanmu}
+                      </span>
+                      <p className="catatan-asli">{teks.trim()}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Nonaktif selama masih ada poin tersisa. Penjelasannya
+                    sudah ada di penghitung sisa; tidak perlu pesan validasi
+                    tersendiri. */}
+                <button
+                  type="button"
+                  className="tombol-primer"
+                  onClick={kePeta}
+                >
+                  {TEKS.form.konfirmasi.lihatPeta}
+                </button>
+
+                <button
+                  type="button"
+                  className="tombol-sekunder"
+                  onClick={() => setTahap("tulis")}
+                >
+                  {TEKS.form.konfirmasi.kembali}
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+
+        <div className="home-bawah">
+          {/* Bagian 3: dua kolom selebar konten. Kiri menjelaskan APA yang dinilai,
+          kanan menjelaskan BAGAIMANA menafsirkan angkanya. Tingginya memang
+          berbeda dan tidak dipaksa sama. */}
+          <div className="home-penjelasan">
+            <section className="dimensi-bagian" aria-labelledby="judul-dimensi">
+              <h2 id="judul-dimensi">{TEKS.dimensi.judul}</h2>
+              <Suspense fallback={<div className="dimensi-cadangan" />}>
+                <SebaranDimensi dimensi={DIMENSI} />
+              </Suspense>
+              <p className="dimensi-catatan">
+                {TEKS.dimensi.catatan(jumlahKawasan)}
+              </p>
+            </section>
+          </div>
+        </div>
+
+        {/* Seksi gelap selebar layar (full-bleed), memakai warna gelap yang sama
+          dengan basemap peta. Pergantian terang-gelap ini yang memberi ritme
+          halaman. Tekstur jalan tetap tampil di sini, versi terang di atas
+          gelap. */}
+        <section className="home-data" aria-labelledby="judul-data">
+          {/* Pita gelap ini menutupi lapisan tekstur di level halaman, jadi ia
+            membawa salinannya sendiri: versi terang di atas gelap, opasitas
+            lebih tinggi. */}
+          <Suspense fallback={null}>
+            <TeksturJalan />
+          </Suspense>
+          <div className="data-isi">
             <h2 id="judul-data">{TEKS.data.judul}</h2>
             <div className="data-catatan">
               {TEKS.data.catatan.map((p) => (
@@ -523,17 +573,17 @@ export default function Beranda({
             </div>
             <div className="data-grid">
               <div>
-                <strong>{jumlahKawasan}</strong>
+                <AngkaNaik nilai={meta?.jumlah ?? 2134} id="kawasan" />
                 <span>{TEKS.data.angka.kawasan}</span>
               </div>
               <div>
                 {/* Dihitung dari daftar kampus, bukan ditulis tangan, supaya
                   tidak pernah berbeda dari penanda di peta. */}
-                <strong>{DAFTAR_KAMPUS.length}</strong>
+                <AngkaNaik nilai={DAFTAR_KAMPUS.length} id="kampus" />
                 <span>{TEKS.data.angka.kampus}</span>
               </div>
               <div>
-                <strong>16</strong>
+                <AngkaNaik nilai={16} id="indikator" />
                 <span>{TEKS.data.angka.indikator}</span>
               </div>
             </div>
@@ -543,28 +593,28 @@ export default function Beranda({
                 {TEKS.data.tautanMetodologi}
               </button>
             </p>
-          </section>
-        </div>
-      </div>
+          </div>
+        </section>
 
-      <footer className="home-footer">
-        <div className="footer-brand">
-          <strong>{TEKS.footer.nama}</strong>
-          <span>{TEKS.footer.deskripsi}</span>
-        </div>
-        <nav className="footer-nav">
-          <button onClick={onLewati}>{TEKS.footer.peta}</button>
-          <button onClick={onMetodologi}>{TEKS.footer.metodologi}</button>
-        </nav>
-        <div className="footer-meta">
-          <span>
-            {tanggalData
-              ? TEKS.footer.diperbarui(tanggalData)
-              : TEKS.footer.versiCadangan(meta?.versi ?? "—")}
-          </span>
-          <span>{TEKS.footer.tim}</span>
-        </div>
-      </footer>
+        <footer className="home-footer">
+          <div className="footer-brand">
+            <strong>{TEKS.footer.nama}</strong>
+            <span>{TEKS.footer.deskripsi}</span>
+          </div>
+          <nav className="footer-nav">
+            <button onClick={onLewati}>{TEKS.footer.peta}</button>
+            <button onClick={onMetodologi}>{TEKS.footer.metodologi}</button>
+          </nav>
+          <div className="footer-meta">
+            <span>
+              {tanggalData
+                ? TEKS.footer.diperbarui(tanggalData)
+                : TEKS.footer.versiCadangan(meta?.versi ?? "—")}
+            </span>
+            <span>{TEKS.footer.tim}</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

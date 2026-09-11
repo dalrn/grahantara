@@ -137,7 +137,7 @@ export const TEKS = {
     metodologi: "Metodologi",
     diperbarui: (tanggal) => `Data diperbarui ${tanggal}`,
     versiCadangan: (versi) => `Data versi ${versi}`,
-    tim: "Tim cinajawabatak — kompetisi MAPID",
+    tim: "cinajawabatak",
   },
 };
 

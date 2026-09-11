@@ -9,11 +9,14 @@ Sumbernya graf jalan kaki OSM yang sudah dipakai pipeline
 `web/public/tekstur-jalan.svg`, hanya garis, tanpa isian, label, atau penanda.
 
 Graf dibaca dengan iterparse, bukan networkx: yang dibutuhkan cuma koordinat
-simpul dan pasangan ujung tiap sisi, sehingga tidak perlu membangun objek graf
-lengkap di memori.
+simpul, pasangan ujung tiap sisi, dan tag `highway` — tidak perlu membangun
+objek graf lengkap di memori.
 
-Warnanya TIDAK ditulis di sini. SVG memakai `stroke="currentColor"` supaya
-warna garis diwarisi dari CSS, yang mengambilnya dari token di design.js.
+Keluarannya TIGA <path>, satu per kelas jalan (utama / menengah / kecil),
+masing-masing dengan `class` sendiri. Ketebalan dan warnanya ditentukan CSS,
+bukan di sini, supaya bisa diubah tanpa membangkitkan ulang berkas 70 MB.
+Tiap path juga membawa `pathLength="1"` agar animasi stroke-dashoffset bisa
+memakai angka 0..1 tanpa perlu mengukur panjang nyata di runtime.
 """
 
 import xml.etree.ElementTree as ET
@@ -31,27 +34,64 @@ LON_MIN, LAT_MIN = 110.334, -7.837
 LON_MAKS, LAT_MAKS = 110.473, -7.643
 
 LEBAR = 1600  # satuan viewBox; rasio mengikuti bentang wilayah studi
-# Segmen lebih pendek dari ini (dalam satuan viewBox) dibuang. Pada opasitas
-# sangat rendah detail sehalus itu tidak terlihat, tapi sangat menaikkan
-# ukuran berkas.
-AMBANG_PX = 10.0
+
+# Ambang panjang segmen per kelas. Jalan utama dipertahankan sampai yang
+# pendek karena justru merekalah rangka teksturnya; jalan kecil disaring
+# lebih keras supaya ukuran berkas tetap masuk akal.
+AMBANG = {"utama": 2.0, "menengah": 4.0, "kecil": 11.0}
+
+# Tag highway OSM -> kelas tekstur.
+KELAS = {
+    "motorway": "utama",
+    "trunk": "utama",
+    "primary": "utama",
+    "motorway_link": "utama",
+    "trunk_link": "utama",
+    "primary_link": "utama",
+    "secondary": "menengah",
+    "tertiary": "menengah",
+    "secondary_link": "menengah",
+    "tertiary_link": "menengah",
+}
+
+
+def kelas_jalan(teks):
+    """Tag highway bisa berupa string atau daftar Python yang di-str().
+
+    Kalau daftar, kelas paling tinggi yang menang.
+    """
+    if not teks:
+        return "kecil"
+    t = teks.strip()
+    if t.startswith("["):
+        # "['living_street', 'residential']"
+        isi = [b.strip(" '\"") for b in t.strip("[]").split(",")]
+        peringkat = [KELAS.get(b, "kecil") for b in isi]
+        for k in ("utama", "menengah"):
+            if k in peringkat:
+                return k
+        return "kecil"
+    return KELAS.get(t, "kecil")
 
 
 def kunci_atribut():
-    """Cari id key untuk atribut x dan y pada simpul."""
-    kx = ky = None
+    """Cari id key untuk x/y pada simpul dan highway pada sisi."""
+    kx = ky = kh = None
     for _, el in ET.iterparse(GRAF, events=("start",)):
-        if el.tag == f"{NS}key" and el.get("for") == "node":
-            if el.get("attr.name") == "x":
-                kx = el.get("id")
-            elif el.get("attr.name") == "y":
-                ky = el.get("id")
+        if el.tag == f"{NS}key":
+            if el.get("for") == "node":
+                if el.get("attr.name") == "x":
+                    kx = el.get("id")
+                elif el.get("attr.name") == "y":
+                    ky = el.get("id")
+            elif el.get("for") == "edge" and el.get("attr.name") == "highway":
+                kh = el.get("id")
         if el.tag == f"{NS}graph":
             break
-    return kx, ky
+    return kx, ky, kh
 
 
-def baca_graf(kx, ky):
+def baca_graf(kx, ky, kh):
     simpul = {}
     sisi = []
     for _, el in ET.iterparse(GRAF, events=("end",)):
@@ -66,7 +106,11 @@ def baca_graf(kx, ky):
                 simpul[el.get("id")] = (x, y)
             el.clear()
         elif el.tag == f"{NS}edge":
-            sisi.append((el.get("source"), el.get("target")))
+            hw = None
+            for d in el.findall(f"{NS}data"):
+                if d.get("key") == kh:
+                    hw = d.text
+            sisi.append((el.get("source"), el.get("target"), kelas_jalan(hw)))
             el.clear()
     return simpul, sisi
 
@@ -75,11 +119,11 @@ def main():
     if not GRAF.exists():
         raise SystemExit(f"Graf tidak ditemukan: {GRAF}")
 
-    kx, ky = kunci_atribut()
+    kx, ky, kh = kunci_atribut()
     if not kx or not ky:
         raise SystemExit("Tidak menemukan key koordinat x/y pada graphml.")
 
-    simpul, sisi = baca_graf(kx, ky)
+    simpul, sisi = baca_graf(kx, ky, kh)
     print(f"simpul: {len(simpul):,} | sisi: {len(sisi):,}")
 
     span_lon = LON_MAKS - LON_MIN
@@ -88,14 +132,16 @@ def main():
     tinggi = round(LEBAR * (span_lat / span_lon) / 0.99)
 
     def proyeksi(x, y):
-        px = (x - LON_MIN) / span_lon * LEBAR
-        py = (LAT_MAKS - y) / span_lat * tinggi
-        return px, py
+        return (
+            (x - LON_MIN) / span_lon * LEBAR,
+            (LAT_MAKS - y) / span_lat * tinggi,
+        )
 
-    garis = []
+    garis = {"utama": [], "menengah": [], "kecil": []}
     terlihat = set()
     dilewati = 0
-    for a, b in sisi:
+
+    for a, b, kelas in sisi:
         pa, pb = simpul.get(a), simpul.get(b)
         if not pa or not pb:
             continue
@@ -107,25 +153,31 @@ def main():
             continue
         x1, y1 = proyeksi(*pa)
         x2, y2 = proyeksi(*pb)
-        # Pada opasitas 3-6% detail halus tidak terlihat sama sekali; yang
-        # tersisa hanya menambah ukuran berkas. Segmen pendek dibuang dan
-        # koordinat dibulatkan ke bilangan bulat.
-        if abs(x1 - x2) < AMBANG_PX and abs(y1 - y2) < AMBANG_PX:
+        ambang = AMBANG[kelas]
+        if abs(x1 - x2) < ambang and abs(y1 - y2) < ambang:
             continue
-        kunci = (round(x1), round(y1), round(x2), round(y2))
+        kunci = (kelas, round(x1), round(y1), round(x2), round(y2))
         if kunci in terlihat:
             continue
         terlihat.add(kunci)
-        garis.append(f"M{kunci[0]} {kunci[1]}L{kunci[2]} {kunci[3]}")
+        garis[kelas].append(
+            f"M{kunci[1]} {kunci[2]}L{kunci[3]} {kunci[4]}"
+        )
 
-    print(f"garis dipakai: {len(garis):,} | di luar batas: {dilewati:,}")
+    for k, v in garis.items():
+        print(f"  {k:9s}: {len(v):,} garis")
+    print(f"di luar batas: {dilewati:,}")
 
-    d = "".join(garis)
+    # Urutan path: kecil dulu, utama terakhir, supaya jalan utama menimpa.
+    bagian = "".join(
+        f'<path class="jalan-{k}" pathLength="1" d="{"".join(garis[k])}"/>'
+        for k in ("kecil", "menengah", "utama")
+        if garis[k]
+    )
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {LEBAR} {tinggi}" '
-        f'preserveAspectRatio="xMidYMid slice" fill="none" '
-        f'stroke="currentColor" stroke-width="0.7" stroke-linecap="round">'
-        f'<path d="{d}"/></svg>'
+        f'fill="none" stroke="currentColor" stroke-linecap="round">'
+        f"{bagian}</svg>"
     )
     KELUARAN.parent.mkdir(parents=True, exist_ok=True)
     KELUARAN.write_text(svg, encoding="utf-8")

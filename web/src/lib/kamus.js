@@ -43,7 +43,11 @@ export const NAMA_INDIKATOR = {
   W2_keteduhan: "Keteduhan jalur",
   W3_penerangan: "Penerangan kawasan",
   W4_banjir: "Keamanan dari genangan",
-  W5_tekanan_lalin: "Tekanan lalu lintas",
+  // Pipeline menyimpan `1 - tekanan` (lihat 30_indicators/04_w5_lalin.py),
+  // jadi nilai tinggi = lalu lintas TENANG. Label lama "Tekanan lalu lintas"
+  // membalik artinya bagi pembaca: nilai 0,7 tampak "lebih padat" padahal
+  // justru lebih tenang. Skornya sendiri sudah benar sejak awal.
+  W5_tekanan_lalin: "Ketenangan lalu lintas",
   W6_integritas_jalur: "Integritas jalur pejalan",
 };
 
