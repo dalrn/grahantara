@@ -319,6 +319,49 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
               ? "Bobot bawaan berasal dari metadata.bobot_default pada berkas data."
               : "Bobot bawaan diasumsikan dari dokumen proyek; metadata.bobot_default tidak ada."}
           </p>
+
+          <h3 className="mt-6 text-base font-semibold text-white">
+            Bobot dari pilihan di beranda
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            Beranda meminta pengguna memilih paling banyak dua dimensi yang
+            paling penting baginya, bukan menggeser empat slider. Alasannya:
+            skor memakai bobot relatif, sehingga keempat slider di nilai
+            maksimum menghasilkan bobot yang sama persis dengan keempatnya di
+            nilai minimum, yaitu 25% untuk tiap dimensi. Pilihan berbatas
+            membuat perbedaan bobot selalu nyata.
+          </p>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-sm text-slate-300">
+              <thead>
+                <tr className="border-b border-slate-700 text-left text-slate-400">
+                  <th className="py-1 pr-3">Pilihan di beranda</th>
+                  <th className="py-1">Bobot yang dipakai</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-800">
+                  <td className="py-1 pr-3">Dua dimensi dipilih</td>
+                  <td className="py-1">40% · 40% · 10% · 10%</td>
+                </tr>
+                <tr className="border-b border-slate-800">
+                  <td className="py-1 pr-3">Satu dimensi dipilih</td>
+                  <td className="py-1">57% · 14% · 14% · 14%</td>
+                </tr>
+                <tr className="border-b border-slate-800">
+                  <td className="py-1 pr-3">
+                    &ldquo;Semuanya sama penting bagiku&rdquo;
+                  </td>
+                  <td className="py-1">25% untuk tiap dimensi</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Angka mentahnya 40 untuk dimensi terpilih dan 10 untuk sisanya,
+            lalu dinormalisasi. Di halaman peta, bobot ini menjadi posisi awal
+            slider dan masih bisa disetel bebas.
+          </p>
         </StorySection>
         <StorySection className="story-section">
           <h2 className="mt-6 text-xl font-semibold text-white">

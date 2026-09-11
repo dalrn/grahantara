@@ -61,280 +61,897 @@ input[type="checkbox"] {
   background: #526d63;
   border-radius: 10px;
 }
+/* --- Halaman beranda -------------------------------------------------------
+   Palet diambil dari skala warna skor peta (config.js scoreColors), bukan
+   dipilih terpisah. Aksen teal #15615f adalah versi gelap dari #319b98, kelas
+   tengah skala itu, sehingga warna di halaman ini punya rujukan yang sama
+   dengan warna di peta. Tidak ada gradien, glassmorphism, atau bayangan tebal. */
 .home-page {
-  background:
-    radial-gradient(ellipse at 20% 42%, #31594d88, transparent 52%), #172925;
+  color-scheme: light;
+  --tinta: #12332f;
+  --tinta-2: #3c5450;
+  --aksen: #15615f;
+  --aksen-pekat: #0f4f4d;
+  --garis: #c8d5d2;
+  --garis-tipis: #dde6e4;
+  --latar: #eef2f1;
+  --kartu: #ffffff;
+  color: var(--tinta);
+  background: var(--latar);
 }
 .home-nav {
-  max-width: 1440px;
-  margin: auto;
-  height: 104px;
-  padding: 0 5%;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 72px;
+  padding: 0 max(24px, calc((100% - 1240px) / 2));
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border-bottom: 1px solid #bddacb14;
+  gap: 32px;
+  background: var(--latar);
+  border-bottom: 1px solid var(--garis);
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #f4f8f6;
+  gap: 9px;
+  color: var(--tinta);
   text-decoration: none;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.6px;
 }
 .brand-mark {
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: #18342d;
-  width: 36px;
-  height: 38px;
-  border-radius: 12px 12px 12px 2px;
-  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
 }
-.brand-dot {
-  color: var(--accent);
-  font-size: 8px;
-  align-self: flex-start;
-  margin-top: 8px;
-  margin-left: -6px;
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .home-nav nav {
   display: flex;
   align-items: center;
-  gap: 32px;
-  font-size: 13px;
-  color: #c1d0ca;
+  gap: 26px;
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--tinta-2);
+}
+.home-nav nav button:hover {
+  color: var(--aksen);
+  text-decoration: underline;
 }
 .nav-active {
-  color: var(--accent);
+  color: var(--aksen);
+  font-weight: 600;
 }
-.location-tag {
-  font-size: 12px;
-  color: #c8d5d0;
-  padding: 9px 13px;
-  border: 1px solid #a7c7b923;
-  border-radius: 99px;
-}
+
 .home-layout {
-  max-width: 1280px;
+  max-width: 1240px;
   margin: auto;
-  padding: 64px 48px 48px;
+  padding: 48px 24px 40px;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 84px;
+  grid-template-columns: 1fr 424px;
+  gap: 56px;
   align-items: start;
 }
-.eyebrow {
-  font-size: 12px;
-  letter-spacing: 2.5px;
-  color: #c3d2cb;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.eyebrow > span {
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px #65dfbb12;
-}
 .home-intro h1 {
-  font-size: clamp(38px, 4.2vw, 59px);
-  line-height: 1.17;
+  font-size: clamp(32px, 3.3vw, 44px);
+  line-height: 1.15;
   font-weight: 600;
-  letter-spacing: -2.8px;
+  letter-spacing: -1.5px;
+  margin: 0;
+  /* Pindah baris dibiarkan alami; <br> keras pernah membuat kata menyatu
+     saat disembunyikan di layar sempit. */
+  max-width: 17ch;
 }
-.home-intro h1 em {
-  font-style: normal;
-  color: var(--accent);
+.intro-lead {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--tinta-2);
+  max-width: 54ch;
+  margin-top: 16px;
 }
-.home-intro > p {
-  font-size: 17px;
-  color: #c8d5d0;
-  line-height: 1.95;
-  max-width: 390px;
-  margin-top: 24px;
-}
-.home-map-art {
+
+/* Peta hero: instance MapLibre dengan heksagon asli. Border dan radius kecil
+   supaya terbaca sebagai elemen halaman, bukan peta yang gagal dimuat. */
+.hero-peta {
   position: relative;
-  height: 236px;
-  margin-top: 22px;
-  overflow: hidden;
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 9%,
-    #000 94%,
-    transparent
-  );
-}
-.home-map-art svg {
-  width: 100%;
-  height: 100%;
-}
-.map-art-label {
-  position: absolute;
-  top: 58%;
-  left: 38%;
-  white-space: nowrap;
-  padding: 12px;
-  border: 1px solid #65dfbb2c;
+  margin-top: 24px;
+  /* Basemap gelap adalah keputusan tim (config.js): basemap terang membuat
+     kelas skor tertinggi nyaris menyatu dengan latar. Bingkai gelap tipis
+     membuat peta terbaca sebagai panel yang disengaja. */
+  border: 1px solid #2e4b46;
   border-radius: 10px;
-  background: #1b302bed;
-  font-size: 12px;
-  box-shadow: 0 8px 24px #0004;
+  overflow: hidden;
+  background: #16201f;
 }
-.map-art-note {
+.hero-peta-kanvas,
+.hero-peta-cadangan {
+  height: 392px;
+  width: 100%;
+  cursor: pointer;
+}
+.hero-peta-cadangan {
+  border: 1px solid var(--garis);
+  border-radius: 10px;
+  background: #dfe7e5;
+  margin-top: 24px;
+  display: block;
+}
+/* Placeholder solid, bukan skeleton berkedip. */
+.hero-peta-memuat {
   position: absolute;
-  bottom: 4px;
-  right: 30px;
-  font-size: 8px;
-  color: #a9bcb4;
+  inset: 0;
+  background: #dfe7e5;
+  pointer-events: none;
 }
-.home-facts {
+.hero-peta-gagal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--tinta-2);
+  background: #dfe7e5;
+}
+/* Chip skor hanya muncul pada perangkat berkursor: di layar sentuh tidak ada
+   hover, jadi menampilkannya akan menjanjikan interaksi yang tidak ada. */
+@media (hover: none) {
+  .hero-peta-skor {
+    display: none;
+  }
+}
+.hero-peta-skor {
+  position: absolute;
+  top: 12px;
+  left: 12px;
   display: flex;
-  gap: 34px;
-  border-top: 1px solid #bddacb1a;
-  padding-top: 22px;
+  align-items: baseline;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  font-size: 12px;
+  color: var(--tinta-2);
+  pointer-events: none;
+  min-height: 36px;
 }
-.home-facts > div {
+.hero-peta-skor strong {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--tinta);
+}
+.hero-peta-buka {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  color: var(--tinta);
+  font-size: 13px;
+  font-weight: 600;
+}
+.hero-peta-buka:hover {
+  border-color: var(--aksen);
+  color: var(--aksen);
+}
+.hero-legenda {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  font-size: 11px;
+  color: var(--tinta-2);
+  pointer-events: none;
+}
+.legenda-skala {
+  display: flex;
+  height: 8px;
+  width: 104px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.legenda-skala > span {
+  flex: 1;
+}
+.hero-peta-keterangan {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+
+/* Kartu formulir */
+.preference-card {
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  padding: 24px;
+  background: var(--kartu);
+}
+.preference-card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+.card-description {
+  color: var(--tinta-2);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.peringatan-stub {
+  margin-top: 14px;
+  border-radius: 6px;
+  background: #9f1239;
+  color: #fff;
+  padding: 8px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kolom-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--garis-tipis);
+}
+.bidang {
+  display: grid;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.bidang-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+  padding: 0;
+}
+.bidang-kepala {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.bidang-nilai {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--aksen);
+  font-variant-numeric: tabular-nums;
+}
+.bidang-bantuan {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+}
+.bidang-kaki {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+.preference-card select,
+.preference-card textarea {
+  width: 100%;
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  background: var(--kartu);
+  color: var(--tinta);
+  padding: 10px 11px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.preference-card select {
+  min-height: 42px;
+}
+.preference-card textarea {
+  resize: vertical;
+  min-height: 74px;
+}
+.preference-card textarea::placeholder {
+  color: #5a736e;
+}
+.kotak-centang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tinta-2);
+  cursor: pointer;
+}
+.kotak-centang input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--aksen);
+}
+
+.preference-card input[type="range"] {
+  width: 100%;
+  accent-color: var(--aksen);
+  height: 22px;
+}
+
+/* Tombol: primer jelas lebih berat daripada sekunder. */
+.tombol-primer {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--aksen);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 46px;
+}
+.tombol-primer:hover {
+  background: var(--aksen-pekat);
+}
+.tombol-primer:disabled {
+  background: #dde4e2;
+  color: #6d817d;
+}
+.tombol-sekunder {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  border: 0;
+  background: none;
+  color: var(--aksen);
+  font-size: 14px;
+  text-decoration: underline;
+}
+.tombol-sekunder:hover {
+  color: var(--aksen-pekat);
+}
+/* --- Tahap 1: menulis ---------------------------------------------------- */
+.label-tersembunyi {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.textarea-utama {
+  margin-top: 16px;
+  min-height: 118px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.contoh-baris {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+.contoh-chip {
+  text-align: left;
+  padding: 8px 11px;
+  border: 1px solid var(--garis);
+  border-radius: 7px;
+  background: var(--kartu);
+  color: var(--tinta-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.contoh-chip:hover {
+  border-color: var(--aksen);
+  color: var(--aksen);
+}
+.tautan-lewati {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--garis-tipis);
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  color: var(--tinta-2);
+  font-size: 13px;
+  text-decoration: underline;
+}
+.tautan-lewati:hover {
+  color: var(--aksen);
+}
+
+/* --- Tahap 2: konfirmasi ------------------------------------------------- */
+/* Penanda halus untuk kontrol yang tidak berhasil diisi dari narasi. Bukan
+   error: pengguna hanya perlu tahu mana yang masih harus dilengkapi. */
+.tanda-belum {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #d9c48a;
+  background: #fdf6e3;
+  color: #6b5307;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+.catatan-asli {
+  margin: 0;
+  padding: 9px 11px;
+  border-left: 2px solid var(--garis);
+  background: #f4f7f6;
+  color: var(--tinta-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* "Pilih dua": state terpilih ditandai kotak centang SVG, border tebal, dan
+   latar terisi sekaligus — tidak bergantung pada warna saja. */
+.pilih-daftar {
+  display: grid;
+  gap: 6px;
+}
+.pilih-opsi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  background: var(--kartu);
+  color: var(--tinta);
+  font-size: 14px;
+}
+.pilih-opsi:hover:not(:disabled) {
+  border-color: var(--aksen);
+}
+.pilih-kotak {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--garis);
+  border-radius: 4px;
+  background: var(--kartu);
+  color: #fff;
+}
+.pilih-opsi.is-aktif {
+  border-color: var(--aksen);
+  border-width: 2px;
+  padding: 9px 11px;
+  background: #e7f0ef;
+  font-weight: 600;
+}
+.pilih-opsi.is-aktif .pilih-kotak {
+  background: var(--aksen);
+  border-color: var(--aksen);
+}
+/* Kuota penuh: opsi sisanya benar-benar disabled. Batas dua pilihan
+   dikomunikasikan lewat kontrolnya, bukan lewat kalimat bantuan. Untuk
+   mengganti pilihan, batalkan dulu salah satu yang terpilih.
+
+   Tidak memakai opacity pada seluruh tombol: pada 0,55 teksnya turun ke
+   3,39:1 terhadap latar putih, di bawah ambang WCAG AA. Yang diredupkan
+   hanya latar dan kotak centangnya; teks tetap memakai warna penuh. */
+.pilih-opsi:disabled {
+  background: #f5f8f7;
+  border-color: var(--garis-tipis);
+  cursor: not-allowed;
+}
+.pilih-opsi:disabled .pilih-kotak {
+  border-color: #d7e0dd;
+}
+.pilih-opsi:disabled .pilih-nama,
+.pilih-opsi:disabled .pilih-persen {
+  color: var(--tinta-2);
+}
+.pilih-nama {
+  flex: 1;
+  min-width: 0;
+}
+.pilih-persen {
+  font-size: 12.5px;
+  color: var(--tinta-2);
+  font-variant-numeric: tabular-nums;
+}
+.pilih-opsi.is-aktif .pilih-persen {
+  color: var(--aksen);
+  font-weight: 600;
+}
+.pilih-setara {
+  margin-top: 2px;
+}
+
+/* --- Pita "pilihanmu mendarat" di /peta ---------------------------------- */
+.pita-prioritas {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(560px, calc(100% - 24px));
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #4c7d72;
+  background: #1d3c36;
+  color: #dcebe6;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 6px 20px #0004;
+}
+.pita-prioritas button {
+  flex-shrink: 0;
+  color: #9fdccb;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+}
+.pita-prioritas button:hover {
+  color: #fff;
+}
+@media (max-width: 767px) {
+  .pita-prioritas {
+    top: 46px;
+    font-size: 12px;
+    padding: 8px 11px;
+    gap: 10px;
+  }
+}
+
+/* Bagian 3: dua kolom selebar konten. Kiri "Empat hal yang dinilai", kanan
+   "Dasar penilaiannya". Rata atas, tinggi sengaja dibiarkan berbeda. */
+.home-penjelasan {
+  max-width: 1240px;
+  margin: 20px auto 0;
+  padding: 40px 24px 48px;
+  border-top: 1px solid var(--garis);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+/* Pemisah vertikal tipis supaya kedua kolom tidak terbaca sebagai satu blok. */
+.home-penjelasan > .home-data {
+  padding-left: 56px;
+  border-left: 1px solid var(--garis-tipis);
+}
+.home-data {
+  min-width: 0;
+}
+.home-data h2 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0 0 20px;
+}
+.data-catatan {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--garis-tipis);
+}
+.data-catatan p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--tinta-2);
+}
+/* Kolom kanan lebih sempit daripada sebelumnya: angka disusun menurun,
+   satu baris per angka, bukan berjajar tiga. */
+.data-grid {
+  display: grid;
+  gap: 18px;
+}
+.data-grid > div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+.data-grid strong {
+  font-size: 29px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  color: var(--aksen);
+}
+.data-grid span {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+.data-versi {
+  margin-top: 26px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+.data-versi button {
+  color: var(--aksen);
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+/* Empat dimensi + sebaran subskor asli */
+.dimensi-bagian {
+  min-width: 0;
+}
+.dimensi-bagian h2 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0 0 20px;
+  color: var(--tinta);
+}
+.dimensi-cadangan {
+  min-height: 300px;
+}
+.home-dimensi {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--garis-tipis);
+}
+/* Nama dan kalimat penjelas menumpuk di satu kolom; histogram mendapat
+   kolomnya sendiri dengan lebar yang layak. */
+.home-dimensi > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 148px;
+  /* Jarak kolom saja. Jarak antar-baris diatur margin dd supaya nama dan
+     kalimatnya tetap rapat meski histogram lebih tinggi. */
+  column-gap: 24px;
+  row-gap: 0;
+  align-content: start;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--garis-tipis);
+}
+.home-dimensi dt {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+.home-dimensi dd {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--tinta-2);
+}
+.dimensi-sebaran {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+.dimensi-sebaran {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.dimensi-sebaran svg rect {
+  fill: #7fb4ae;
+}
+.dimensi-sebaran span {
+  font-size: 11.5px;
+  color: var(--tinta-2);
+}
+.dimensi-catatan {
+  margin-top: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tinta-2);
+  max-width: 74ch;
+}
+
+.home-footer {
+  max-width: 1240px;
+  margin: auto;
+  padding: 24px 24px 36px;
+  border-top: 1px solid var(--garis);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+.footer-brand {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  max-width: 40ch;
 }
-.home-facts strong {
-  font-weight: 600;
-  font-size: 24px;
-  letter-spacing: -1px;
+.footer-brand strong {
+  color: var(--tinta);
+  font-size: 14px;
 }
-.home-facts span {
-  color: #b7c8c1;
-  font-size: 12px;
-}
-.preference-card {
-  border: 1px solid #b6d9c825;
-  border-radius: 24px;
-  padding: 30px;
-  background: linear-gradient(145deg, #2a433b, #20332e);
-  box-shadow: 0 24px 70px #0002;
-}
-.card-step {
+.footer-nav {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  color: var(--accent);
+  gap: 20px;
+}
+.footer-nav button {
   font-size: 13px;
+  color: var(--tinta);
+  text-decoration: underline;
 }
-.card-step > span {
-  font-size: 12px;
-  letter-spacing: 1.8px;
-  color: #b8cbc2;
+.footer-nav button:hover {
+  color: var(--aksen);
 }
-.card-step > .step-dots {
-  margin-left: auto;
-  color: var(--accent);
-  letter-spacing: 3px;
-}
-.preference-card h2 {
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -1px;
-  margin-top: 26px;
-}
-.card-description {
-  color: #c1d1c9;
-  font-size: 15px;
-  line-height: 1.85;
-  margin-top: 12px;
-}
-.data-stamp {
-  font-size: 12px;
-  color: #b8cbc2;
-  margin: 13px 0 22px;
-}
-.data-stamp:before {
-  content: "●";
-  color: var(--accent);
-  margin-right: 6px;
-  font-size: 6px;
-}
-.input-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #e1e9e5;
-  margin-top: 14px;
-}
-.preference-card textarea {
-  margin-top: 10px;
-  padding: 16px;
-  line-height: 1.9;
-  font-size: 15px;
-  min-height: 124px;
-  background: #142622;
-  border-radius: 12px;
-}
-.preference-card textarea::placeholder {
-  color: #9fb5ac;
-}
-.example-chips {
+.footer-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  align-items: center;
-  margin: 15px 0 20px;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
 }
-.example-chips > span {
-  width: 100%;
-  margin-bottom: 2px;
-  font-size: 12px;
+
+/* Utilitas Tailwind gelap yang masih dipakai editor profil di dalam kartu. */
+.home-page .text-slate-100,
+.home-page .text-slate-200,
+.home-page .text-slate-300,
+.home-page .text-slate-400,
+.home-page .text-slate-500,
+.home-page .text-slate-600 {
+  color: var(--tinta-2);
 }
-.example-chip {
-  border: 1px solid #a4c1b226;
-  border-radius: 7px;
-  padding: 7px 9px;
-  color: #d2ded9;
-  font-size: 13px;
+.home-page .text-emerald-400 {
+  color: var(--aksen);
 }
-.example-chip:hover {
-  background: #65dfbb15;
-  border-color: #65dfbb66;
+.home-page .bg-slate-900,
+.home-page .bg-slate-800 {
+  background-color: #eef3f2;
 }
-.preference-card > button {
-  font-size: 13px;
-  min-height: 44px;
+.home-page .bg-slate-800 {
+  border: 1px solid var(--garis);
 }
-.preference-card > button.bg-emerald-500:hover {
-  box-shadow: 0 0 25px #65dfbb25;
+
+@media (max-width: 1100px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+    padding: 36px 24px 28px;
+    gap: 32px;
+  }
+  /* Dua kolom penjelasan menumpuk: "Empat hal yang dinilai" di atas,
+     "Dasar penilaiannya" di bawah. Pemisah jadi horizontal. */
+  .home-penjelasan {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .home-penjelasan > .home-data {
+    padding-left: 0;
+    padding-top: 32px;
+    border-left: 0;
+    border-top: 1px solid var(--garis-tipis);
+  }
+  .data-grid,
+  .data-catatan {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .home-dimensi > div {
+    grid-template-columns: 168px 1fr;
+    gap: 18px;
+  }
+  .dimensi-sebaran {
+    grid-column: 2;
+  }
 }
-.privacy-note {
-  color: #b6c9c0;
-  font-size: 12px;
-  margin-top: 24px;
-  text-align: center;
-}
-.home-footer {
-  max-width: 1280px;
-  padding: 24px 48px;
-  margin: auto;
-  border-top: 1px solid #bddacb14;
-  display: flex;
-  justify-content: space-between;
-  color: #a9beb5;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-.home-footer button {
-  letter-spacing: 0;
-  font-size: 12px;
+@media (max-width: 767px) {
+  .home-nav {
+    height: 62px;
+    padding: 0 18px;
+    gap: 14px;
+  }
+  .brand {
+    font-size: 17px;
+  }
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+  .home-nav nav {
+    gap: 16px;
+    font-size: 13px;
+  }
+  .nav-active {
+    display: none;
+  }
+  .home-layout {
+    padding: 28px 18px 24px;
+    gap: 28px;
+  }
+  .home-intro h1 {
+    font-size: 29px;
+    letter-spacing: -1px;
+  }
+  .home-intro h1 {
+    max-width: none;
+  }
+  .intro-lead {
+    font-size: 15px;
+  }
+  .hero-peta-kanvas,
+  .hero-peta-cadangan {
+    height: 290px;
+  }
+  .hero-peta-buka {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+  /* Layar sempit: chip skor dan legenda tidak muat berdampingan dengan
+     tombol. Hover pun tidak ada di layar sentuh, jadi chip disembunyikan
+     dan legenda pindah ke bawah peta. */
+  .hero-peta-skor {
+    display: none;
+  }
+  .hero-legenda {
+    left: 12px;
+    right: 12px;
+    /* Di atas bar atribusi MapLibre, bukan di belakangnya. */
+    bottom: 30px;
+    justify-content: center;
+  }
+  .preference-card {
+    padding: 18px;
+  }
+  .preference-card h2 {
+    font-size: 20px;
+  }
+  .home-dimensi > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .dimensi-sebaran {
+    grid-row: auto;
+    grid-column: 1;
+    margin-top: 4px;
+  }
+  .home-penjelasan {
+    padding: 30px 18px 36px;
+  }
+  .data-grid > div {
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+  }
+  .home-footer {
+    padding: 22px 18px 30px;
+    flex-direction: column;
+  }
+  .footer-meta {
+    text-align: left;
+  }
 }
 .route-panel {
   border: 1px solid #bbd7c626;
@@ -534,90 +1151,7 @@ input[type="checkbox"] {
     right: 504px;
   }
 }
-@media (max-width: 1000px) {
-  .home-layout {
-    padding: 40px 30px;
-    gap: 36px;
-  }
-  .home-nav {
-    padding: 0 30px;
-  }
-  .location-tag {
-    display: none;
-  }
-  .home-facts {
-    gap: 20px;
-  }
-  .preference-card {
-    padding: 24px;
-  }
-  .home-intro h1 {
-    font-size: 43px;
-  }
-  .map-art-label {
-    left: 18%;
-  }
-}
 @media (max-width: 767px) {
-  .home-nav {
-    height: 76px;
-    padding: 0 20px;
-  }
-  .brand {
-    font-size: 18px;
-  }
-  .brand-mark {
-    width: 28px;
-    height: 30px;
-    font-size: 23px;
-  }
-  .home-nav nav {
-    gap: 15px;
-    font-size: 12px;
-  }
-  .nav-active {
-    display: none;
-  }
-  .home-layout {
-    grid-template-columns: 1fr;
-    padding: 32px 20px;
-    gap: 28px;
-  }
-  .home-intro h1 {
-    font-size: 43px;
-    letter-spacing: -2px;
-  }
-  .home-intro > p {
-    font-size: 16px;
-  }
-  .home-map-art {
-    display: none;
-  }
-  .home-facts {
-    margin-top: 26px;
-    gap: 28px;
-  }
-  .home-facts strong {
-    font-size: 20px;
-  }
-  .home-facts span {
-    font-size: 12px;
-  }
-  .preference-card {
-    padding: 22px;
-  }
-  .preference-card h2 {
-    font-size: 28px;
-  }
-  .home-footer {
-    margin: 0 20px;
-    padding: 20px 0;
-    gap: 20px;
-    flex-direction: column;
-  }
-  .home-footer button {
-    text-align: left;
-  }
   .map-nav {
     top: 10px;
     width: max-content;
@@ -691,58 +1225,3 @@ input[type="checkbox"] {
 @media (max-width: 767px) {
   .map-comparing .control-panel { top: 174px; }
 }
-
-.home-page {
-  color-scheme: light;
-  color: #183d32;
-  background: linear-gradient(90deg, rgba(244,247,245,.82), rgba(244,247,245,.42)), url('https://images.unsplash.com/photo-1721127074326-4c08c803800d?auto=format&fit=crop&w=2200&q=85') center / cover fixed, #f4f7f5;
-}
-/* Header berdiri di atas foto; sisi kanan foto hanya berkabut 42% sehingga
-   teks nav sebelumnya menyatu dengan dedaunan. Beri lapisan sendiri agar
-   kontras teks tetap terbaca di seluruh lebar layar. */
-.home-nav {
-  background: linear-gradient(#f4f7f5f2, #f4f7f5d9 62%, #f4f7f500);
-  border-color: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  max-width: none;
-  padding: 0 max(5%, calc((100% - 1440px) / 2 + 5%));
-  backdrop-filter: blur(6px);
-}
-.home-page .brand { color: #183d32; }
-.home-page .brand-mark { background: transparent; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; }
-.brand-mark img { display: block; width: 100%; height: 100%; }
-@media (max-width: 767px) { .home-page .brand-mark { width: 36px; height: 36px; } }
-.community-tag { color: #08735b; font-weight: 700; }
-.home-page .eyebrow, .home-page .home-intro > p,
-.home-page .home-facts span, .home-page .card-description,
-.home-page .data-stamp, .home-page .card-step > span,
-.home-page .privacy-note, .home-page .home-footer { color: #3d5e51; }
-/* Nav dan tag lokasi lebih gelap daripada teks sekunder lain: keduanya
-   duduk di atas foto, bukan di atas kartu putih. */
-.home-page .home-nav nav, .home-page .location-tag { color: #22483a; }
-.home-page .home-nav nav button:hover { color: #08735b; }
-.home-page .location-tag {
-  background: #ffffffb8;
-  border-color: #8fb3a1;
-}
-.home-page .nav-active, .home-page .home-intro h1 em { color: #08735b; }
-.home-page .preference-card { background: #ffffffed; border-color: #bdd4c8; box-shadow: 0 20px 60px #193c2614; }
-.home-page .input-label { color: #254b3b; }
-.home-page .preference-card textarea { background: #f4f8f5; color: #183d32; }
-.home-page .preference-card textarea::placeholder { color: #526d5e; }
-.home-page .example-chip { color: #254b3b; border-color: #b1cabb; background: #f2f8f3; }
-.home-page .card-step { color: #08735b; }
-.home-page .home-footer { background: #ffffffc9; flex-wrap: wrap; gap: 16px; }
-.home-page .home-footer a { max-width: 340px; text-decoration: underline; }
-.home-page .text-slate-100, .home-page .text-slate-200,
-.home-page .text-slate-300, .home-page .text-slate-400,
-.home-page .text-slate-500, .home-page .text-slate-600 { color: #436353; }
-.home-page .text-emerald-400 { color: #08735b; }
-.home-page .bg-slate-900, .home-page .bg-slate-800 { background-color: #edf5ee; }
-.home-page .bg-emerald-500 { color: #143b2d; }
-.home-page button:disabled { background-color: #dce8df; color: #526b5b; }
-.home-page .home-map-art { background: #f5faf4ad; border-radius: 20px; }
-.home-page .map-art-label { background: #ffffffed; color: #315141; }
-.home-page .map-art-note { color: #436353; }

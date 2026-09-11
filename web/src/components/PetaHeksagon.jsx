@@ -186,6 +186,11 @@ export default function PetaHeksagon({
       zoom: fokusRef.current?.zoom ?? 12,
     });
     peta.current = map;
+    // Kait untuk uji Playwright (tests/ui-*.mjs dan map-symbols-comparison).
+    // Uji-uji itu sudah lama menunggu window.__qaMap yang tidak pernah
+    // di-assign di mana pun, sehingga selalu habis waktu di layer "titik-kos".
+    // Hanya di DEV: jangan bocorkan instance peta ke bundel produksi.
+    if (import.meta.env.DEV) window.__qaMap = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     let disposed = false;
