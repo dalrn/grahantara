@@ -68,3 +68,19 @@ export const NAMA_DIMENSI = {
   amenity: "Kenyamanan",
   walkability: "Kenyamanan berjalan kaki",
 };
+
+// SUMBER TUNGGAL label, urutan, dan warna keempat dimensi untuk kontrol yang
+// dilihat pengguna: kartu prioritas di beranda dan slider bobot di /peta.
+// Keduanya wajib memakai kata dan urutan yang sama, kalau tidak pilihan di
+// beranda terasa tidak mendarat di peta.
+//
+// Sengaja terpisah dari KELOMPOK_INDIKATOR.label, yang dipakai panel detail,
+// pembanding, dan metodologi dengan istilah yang lebih teknis
+// ("Keterjangkauan", "Kenyamanan"). Label di sini dipilih supaya terbaca oleh
+// mahasiswa baru.
+export const DIMENSI_UI = [
+  { kunci: "connectivity", label: "Akses transportasi", warna: "#5379a5" },
+  { kunci: "affordability", label: "Biaya", warna: "#319b98" },
+  { kunci: "amenity", label: "Fasilitas", warna: "#94ca91" },
+  { kunci: "walkability", label: "Lingkungan jalan kaki", warna: "#b08fd4" },
+];

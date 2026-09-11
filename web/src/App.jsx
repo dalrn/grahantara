@@ -13,7 +13,7 @@ import Metodologi from "./components/Metodologi";
 import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
-import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "./lib/kamus";
+import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "./lib/kamus";
 import { formatNilai } from "./lib/format";
 import { fokusDariProfil } from "./lib/fokusKampus";
 
@@ -50,9 +50,28 @@ function bobotMetadataKeMentah(meta) {
   return salin;
 }
 
+// Kalimat pendek untuk pita di peta: menyebut apa yang dipilih di beranda
+// supaya pilihan itu terasa mendarat, bukan diabaikan.
+function ringkasPrioritas(profil) {
+  const dipilih = Array.isArray(profil?.prioritas) ? profil.prioritas : [];
+  if (dipilih.length === 0) {
+    return "Semua dimensi diberi bobot setara sesuai pilihanmu. Geser slider untuk menyesuaikan.";
+  }
+  const nama = dipilih
+    .map((k) => DIMENSI_UI.find((d) => d.kunci === k)?.label)
+    .filter(Boolean);
+  if (nama.length === 0) return null;
+  const daftar = nama.length === 1 ? nama[0] : `${nama[0]} dan ${nama[1]}`;
+  return `Slider disetel ke prioritasmu: ${daftar}. Geser untuk menyesuaikan.`;
+}
+
 export default function App() {
   const [tampilan, setTampilan] = useState("beranda");
   const [profilTerakhir, setProfilTerakhir] = useState(null);
+  // Pita yang memberi tahu bahwa pilihan prioritas dari beranda sudah
+  // diterapkan ke slider. Muncul sekali per sesi, lalu bisa ditutup.
+  const [pitaPrioritas, setPitaPrioritas] = useState(null);
+  const [pitaPernahTampil, setPitaPernahTampil] = useState(false);
   const [fokusPeta, setFokusPeta] = useState(null);
   const [kosRute, setKosRute] = useState(null);
   const [rute, setRute] = useState(null);
@@ -257,12 +276,17 @@ export default function App() {
               setProfilTerakhir(profil);
               setBobot(skorProfilKeBobot(profil, bobotBawaan));
               setFokusPeta(fokusDariProfil(profil));
+              if (!pitaPernahTampil) {
+                setPitaPrioritas(ringkasPrioritas(profil));
+                setPitaPernahTampil(true);
+              }
               setTampilan("peta");
             }}
             onLewati={() => {
               setProfilTerakhir(null);
               setBobot(bobotBawaan);
               setFokusPeta(null);
+              setPitaPrioritas(null);
               setTampilan("peta");
             }}
           />
@@ -278,6 +302,18 @@ export default function App() {
         <div
           className={`relative flex-1 overflow-hidden ${modeBanding ? "map-comparing" : ""}`}
         >
+          {pitaPrioritas && (
+            <div className="pita-prioritas" role="status">
+              <span>{pitaPrioritas}</span>
+              <button
+                type="button"
+                onClick={() => setPitaPrioritas(null)}
+                aria-label="Tutup pemberitahuan"
+              >
+                Tutup
+              </button>
+            </div>
+          )}
           <div className="map-nav absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1.5">
             <button
               onClick={() => setTampilan("beranda")}

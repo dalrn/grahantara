@@ -1,11 +1,10 @@
 import { BOBOT_DEFAULT } from "../config";
+import { DIMENSI_UI } from "../lib/kamus";
 
-const DIMENSI = [
-  ["connectivity", "Akses transportasi"],
-  ["affordability", "Keterjangkauan"],
-  ["amenity", "Kenyamanan"],
-  ["walkability", "Kenyamanan berjalan kaki"],
-];
+// Label dan urutan diambil dari sumber yang sama dengan kartu prioritas di
+// beranda. Kalau keduanya berbeda kata, pilihan di beranda terasa tidak
+// mendarat di peta.
+const DIMENSI = DIMENSI_UI.map((d) => [d.kunci, d.label]);
 
 export default function PanelBobot({
   bobot,
@@ -23,10 +22,10 @@ export default function PanelBobot({
       ? Math.round(((bobot[k] ?? 0) / total) * 100)
       : Math.round(BOBOT_DEFAULT[k] * 100);
   const impact = {
-    connectivity: "Akses kampus & transportasi",
-    affordability: "Biaya kos & makan",
-    amenity: "Pilihan fasilitas harian",
-    walkability: "Kenyamanan berjalan kaki",
+    connectivity: "Halte, rute, dan jangkauan kampus",
+    affordability: "Harga kos dan makan",
+    amenity: "Tempat makan dan layanan harian",
+    walkability: "Trotoar, keteduhan, penerangan",
   };
 
   return (
@@ -37,8 +36,12 @@ export default function PanelBobot({
             <label key={kunci} className="block text-xs">
               <div className="flex justify-between">
                 <span>{nama}</span>
+                {/* Persentase relatif, bukan nilai mentah 0-100. Bobot mentah
+                    tidak memberi tahu apa pun: 100 untuk semua dimensi sama
+                    saja dengan 25 untuk semua. Persentase membuat itu
+                    terlihat karena jumlahnya selalu 100%. */}
                 <span className="font-semibold text-emerald-400">
-                  {bobot[kunci]}
+                  {pct(kunci)}%
                 </span>
               </div>
               <input
@@ -51,9 +54,7 @@ export default function PanelBobot({
                 aria-valuetext={`${bobot[kunci]} dari 100, setara ${pct(kunci)} persen prioritas`}
                 className="mt-1 w-full accent-emerald-400"
               />
-              <div className="text-xs text-slate-400">
-                {impact[kunci]} ({pct(kunci)}%)
-              </div>
+              <div className="text-xs text-slate-400">{impact[kunci]}</div>
             </label>
           ))}
           <div className="flex items-center justify-between border-t border-white/10 pt-2 text-xs">

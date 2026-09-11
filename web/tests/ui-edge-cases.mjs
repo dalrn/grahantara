@@ -24,7 +24,7 @@ try {
     await route.fulfill({ status: 503, body: "Unavailable" });
   });
   await page.goto(base);
-  await page.getByRole("button", { name: "Lewati, langsung ke peta" }).click();
+  await page.getByRole("button", { name: "Jelajahi peta tanpa mengisi" }).click();
   await page.getByText("Menyiapkan peta kawasan…").waitFor();
   await page.getByText("Peta belum berhasil dimuat.").waitFor();
   assert.ok(
@@ -56,7 +56,7 @@ try {
   );
   await modelPage.goto(base);
   await modelPage
-    .getByRole("button", { name: "Lewati, langsung ke peta" })
+    .getByRole("button", { name: "Jelajahi peta tanpa mengisi" })
     .click();
   await modelPage.waitForFunction(() => window.__qaMap?.getLayer("titik-kos"));
   await modelPage.getByRole("checkbox", { name: "Titik kos" }).check();
