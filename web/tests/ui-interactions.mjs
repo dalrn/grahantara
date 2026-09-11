@@ -42,11 +42,35 @@ await page.screenshot({
   fullPage: true,
 });
 await page.setViewportSize({ width: 1440, height: 1000 });
-await page.getByRole("button", { name: "Maba UGM", exact: false }).click();
-await page.getByRole("button", { name: "Temukan kawasan saya" }).click();
+// Beranda dua tahap. Tahap 1 mengirim narasi ke /api/parse-preference, tahap
+// 2 menampilkan hasilnya sebagai kontrol terisi untuk dikoreksi.
+await page
+  .locator("#needs")
+  .fill("maba UGM, budget 800 ribuan, penting deket halte dan warung murah");
+await page.getByRole("button", { name: "Lanjut", exact: true }).click();
 await page.getByRole("button", { name: "Lihat peta", exact: true }).waitFor();
-assert.match(await page.locator("body").innerText(), /Diproses tanpa AI/);
-const priority = await page.locator("input[type=number]").first().inputValue();
+// Prioritas disetel eksplisit supaya nilai yang diharapkan di slider peta
+// tidak bergantung pada tebakan model. Kosongkan dulu: saat kuota dua sudah
+// penuh, opsi yang belum terpilih memang disabled — itu perilaku yang
+// disengaja, jadi klik langsung akan menggantung.
+// Nama aksesibel tombol memuat persentasenya juga ("Biaya 40%"), jadi
+// pencocokan lewat .pilih-nama, bukan getByRole exact.
+while ((await page.locator(".pilih-opsi.is-aktif").count()) > 0) {
+  await page.locator(".pilih-opsi.is-aktif").first().click();
+}
+assert.equal(
+  await page.locator(".pilih-opsi:disabled").count(),
+  0,
+  "membatalkan pilihan mengaktifkan kembali opsi lain",
+);
+await page.getByRole("button", { name: /^Biaya/ }).click();
+const terpilih = await page
+  .locator(".pilih-opsi.is-aktif .pilih-nama")
+  .allInnerTexts();
+assert.ok(
+  terpilih.length > 0 && terpilih.length <= 2,
+  "pilih dua membatasi jumlah prioritas",
+);
 await page.getByRole("button", { name: "Lihat peta", exact: true }).click();
 await page.waitForFunction(() => window.__qaMap?.getLayer("titik-kos"));
 await page.waitForFunction(
@@ -54,10 +78,14 @@ await page.waitForFunction(
 );
 await page.waitForTimeout(900);
 await page.screenshot({ path: "test-results/qa-map-weights.png" });
-assert.equal(
-  await page.getByRole("slider").first().inputValue(),
-  priority,
-  "parsed priorities survive map loading",
+// Bobot beranda mendarat di slider peta: dimensi terpilih 40, sisanya 10.
+const nilaiSlider = await page.getByRole("slider").evaluateAll((els) =>
+  els.slice(0, 4).map((e) => Number(e.value)),
+);
+assert.deepEqual(
+  [...nilaiSlider].sort((a, b) => a - b),
+  [10, 10, 10, 40],
+  "priorities chosen on the landing page land on the map sliders",
 );
 await page.getByRole("checkbox", { name: "Titik kos" }).check();
 await page.waitForTimeout(300);

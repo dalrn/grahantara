@@ -4,12 +4,14 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { GAYA_BASEMAP_MAPID, WARNA_KELAS } from "../config";
+import { bandingColors } from "../design";
 import { hitungKuintil, ekspresiWarna, labelKelas } from "../lib/kelas";
 import { siapkanMesin } from "../lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 import { prepareBasemap } from "../lib/basemap";
 import { busImage, campusImage, polygonCenter } from "../lib/mapSymbols";
 import { formatCoordinates } from "../lib/format";
+import { namaTempatTerdekat } from "../lib/namaTempat";
 
 const BATAS = [
   [110.334, -7.837],
@@ -186,6 +188,11 @@ export default function PetaHeksagon({
       zoom: fokusRef.current?.zoom ?? 12,
     });
     peta.current = map;
+    // Kait untuk uji Playwright (tests/ui-*.mjs dan map-symbols-comparison).
+    // Uji-uji itu sudah lama menunggu window.__qaMap yang tidak pernah
+    // di-assign di mana pun, sehingga selalu habis waktu di layer "titik-kos".
+    // Hanya di DEV: jangan bocorkan instance peta ke bundel produksi.
+    if (import.meta.env.DEV) window.__qaMap = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     let disposed = false;
@@ -278,9 +285,9 @@ export default function PetaHeksagon({
             "line-color": [
               "case",
               ["boolean", ["feature-state", "bandingA"], false],
-              "#38bdf8",
+              bandingColors.a,
               ["boolean", ["feature-state", "bandingB"], false],
-              "#f97316",
+              bandingColors.b,
               ["boolean", ["feature-state", "terpilih"], false],
               "#ffffff",
               ["boolean", ["feature-state", "hover"], false],
@@ -467,6 +474,7 @@ export default function PetaHeksagon({
           dihitungPada: data.metadata?.dihitung_pada ?? null,
           bobotDefault: data.metadata?.bobot_default ?? null,
           labels: labelKelas(ambang, minSkor, maksSkor),
+          ambang,
         });
         mesin.current = siapkanMesin(data);
         ambangBawaan.current = ambang;
@@ -772,10 +780,14 @@ export default function PetaHeksagon({
         }
         // indikator disimpan di luar sumber peta.
         props.indikator = indikatorPerH3.current.get(id) ?? null;
+        const koordBanding = hexCoordinates.current.get(id);
         onPilihBanding({
           ...props,
           h3_index: id,
-          coordinates: hexCoordinates.current.get(id),
+          coordinates: koordBanding,
+          // Nama desa/kelurahan dari basemap; koordinat tidak berarti apa-apa
+          // bagi pembaca.
+          namaTempat: namaTempatTerdekat(map, koordBanding),
         });
         return;
       }
@@ -799,9 +811,11 @@ export default function PetaHeksagon({
         }
       }
       props.indikator = indikatorPerH3.current.get(id) ?? null;
+      const koord = hexCoordinates.current.get(id);
       onPilih({
         ...props,
-        coordinates: hexCoordinates.current.get(id),
+        coordinates: koord,
+        namaTempat: namaTempatTerdekat(map, koord),
         galatParsing: galat || undefined,
       });
     });

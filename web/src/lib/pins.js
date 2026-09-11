@@ -1,4 +1,4 @@
-import { scoreColors } from "../design";
+import { scoreColors, bandingColors } from "../design";
 
 export const PIN_SIZE = [
   "interpolate",
@@ -87,9 +87,9 @@ export function createPinImage(map, id, missingPrice, initialColor) {
       ctx.shadowOffsetY = 0;
       ctx.strokeStyle =
         comparison === "A"
-          ? "#38bdf8"
+          ? bandingColors.a
           : comparison === "B"
-            ? "#f97316"
+            ? bandingColors.b
             : "#eef8eb";
       ctx.lineWidth = comparison ? 5 : missingPrice ? 2.4 : 1.5;
       ctx.setLineDash(missingPrice ? [5, 4] : []);
@@ -111,7 +111,8 @@ export function createPinImage(map, id, missingPrice, initialColor) {
       ctx.closePath();
       ctx.fill();
       if (comparison) {
-        ctx.fillStyle = comparison === "A" ? "#38bdf8" : "#f97316";
+        ctx.fillStyle =
+          comparison === "A" ? bandingColors.a : bandingColors.b;
         ctx.beginPath();
         ctx.arc(22, -78, 13, 0, Math.PI * 2);
         ctx.fill();

@@ -61,280 +61,1221 @@ input[type="checkbox"] {
   background: #526d63;
   border-radius: 10px;
 }
+/* --- Halaman beranda -------------------------------------------------------
+   Palet diambil dari skala warna skor peta (config.js scoreColors), bukan
+   dipilih terpisah. Aksen teal #226c6a adalah versi gelap dari #319b98, kelas
+   tengah skala itu, sehingga warna di halaman ini punya rujukan yang sama
+   dengan warna di peta. Tidak ada gradien, glassmorphism, atau bayangan tebal. */
 .home-page {
-  background:
-    radial-gradient(ellipse at 20% 42%, #31594d88, transparent 52%), #172925;
+  color-scheme: light;
+  /* Semua warna di bawah diturunkan dari skala warna peta (design.js
+     scoreColors). Lihat komentar di berkas itu untuk faktor turunannya.
+     Jangan menambah warna yang tidak bisa ditelusuri ke skala tersebut.
+
+     Tiga kelompok yang SENGAJA di luar aturan itu:
+     1. Netral (--latar, --garis, --garis-tipis, --kartu): abu-abu kehijauan
+        nyaris tanpa saturasi. Diturunkan dari toska hasilnya beda < 2 digit
+        heksa, jadi tidak ada gunanya diubah.
+     2. Warna semantik: merah peringatan data palsu (#9f1239) dan kuning
+        penanda "belum terbaca" (#fdf6e3/#d9c48a/#6b5307). Keduanya harus
+        terbaca sebagai peringatan, dan skala peta tidak punya merah.
+     3. Latar peta hero (#16201f): mengikuti basemap gelap MAPID, bukan
+        palet halaman. */
+  --tinta: #1d2a21; /* <- #46a35a hijau, sangat gelap */
+  --tinta-2: #405946; /* <- #46a35a hijau, L 0,30 S 0,16 */
+  --aksen: #285d33; /* <- #46a35a hijau, kelas tertinggi skala */
+  --aksen-pekat: #20492a;
+  --angka-kawasan: #e0685e; /* <- #c2352c merah, versi terang */
+  --angka-kampus: #f0d45e; /* <- #f0d45e kuning, apa adanya */
+  --angka-indikator: #7fc98a; /* <- #46a35a hijau, versi terang */
+  --aksen-kuning: #f0d45e; /* <- #f0d45e, HANYA aksen non-teks */
+  --garis: #c8d5d2;
+  --garis-tipis: #dde6e4;
+  --latar: #eef2f1;
+  --kartu: #ffffff;
+  color: var(--tinta);
+  background: var(--latar);
+}
+/* .home-page adalah wadah yang menggulir, jadi inset: 0 pada anaknya mengacu
+   ke kotak yang TERLIHAT, bukan ke seluruh isi yang bisa digulir. Bungkus
+   ini yang jadi jangkarnya: tingginya mengikuti isi, sehingga lapisan
+   tekstur bisa setinggi dokumen dan ikut menggulir bersama konten. */
+.home-isi {
+  position: relative;
+  min-height: 100%;
+  /* Lapisan tekstur sengaja dibiarkan meluber ke samping (rasio aspeknya
+     dijaga, bukan diregangkan). Potong di sini supaya luapannya tidak
+     memunculkan scroll horizontal. */
+  overflow-x: hidden;
+}
+/* Semua isi berdiri di atas lapisan tekstur. */
+.home-nav,
+.home-layout,
+.home-bawah,
+.home-footer {
+  position: relative;
+  z-index: 1;
 }
 .home-nav {
-  max-width: 1440px;
-  margin: auto;
-  height: 104px;
-  padding: 0 5%;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 72px;
+  padding: 0 max(24px, calc((100% - 1240px) / 2));
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border-bottom: 1px solid #bddacb14;
+  gap: 32px;
+  /* Sedikit lebih abu daripada latar halaman, supaya pita atas dan bawah
+     terbaca sebagai bingkai, bukan bagian dari kanvas. */
+  background: #e4e8e7;
+  border-bottom: 1px solid var(--garis);
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #f4f8f6;
+  gap: 9px;
+  color: var(--tinta);
   text-decoration: none;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.6px;
 }
 .brand-mark {
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: #18342d;
-  width: 36px;
-  height: 38px;
-  border-radius: 12px 12px 12px 2px;
-  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
 }
-.brand-dot {
-  color: var(--accent);
-  font-size: 8px;
-  align-self: flex-start;
-  margin-top: 8px;
-  margin-left: -6px;
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .home-nav nav {
   display: flex;
   align-items: center;
-  gap: 32px;
-  font-size: 13px;
-  color: #c1d0ca;
+  gap: 26px;
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--tinta-2);
+}
+.home-nav nav button:hover {
+  color: var(--aksen);
+  text-decoration: underline;
 }
 .nav-active {
-  color: var(--accent);
+  color: var(--aksen);
+  font-weight: 600;
 }
-.location-tag {
-  font-size: 12px;
-  color: #c8d5d0;
-  padding: 9px 13px;
-  border: 1px solid #a7c7b923;
-  border-radius: 99px;
-}
+
+/* Hero dua kolom: kiri judul + paragraf + peta, kanan kartu form yang
+   berdiri sendiri (tidak melayang di atas peta). */
 .home-layout {
-  max-width: 1280px;
+  max-width: 1240px;
   margin: auto;
-  padding: 64px 48px 48px;
+  padding: 44px 24px 40px;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 84px;
+  grid-template-columns: 1fr 424px;
+  gap: 56px;
   align-items: start;
 }
-.eyebrow {
-  font-size: 12px;
-  letter-spacing: 2.5px;
-  color: #c3d2cb;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 24px;
+.home-intro {
+  min-width: 0;
 }
-.eyebrow > span {
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px #65dfbb12;
+/* Judul dan paragraf pembuka berdiri di atas lapisan semi-solid: tanpa itu
+   teks aksen turun ke 4,25:1 saat kebetulan jatuh di atas garis jalan utama
+   yang tebal. Alasnya melebar sedikit ke luar teks dan memudar ke bawah. */
+/* Alas mengikuti BENTUK tulisan, bukan satu persegi panjang atas seluruh
+   blok. Sebelumnya memakai ::before absolut, sehingga baris kedua yang lebih
+   pendek menyisakan balok abu yang menonjol tanpa alasan.
+
+   box-decoration-break: clone membuat latar dan padding diulang per baris
+   terpotong, jadi tepinya naik-turun mengikuti panjang tiap baris.
+   display: inline penting: dengan block, latarnya kembali jadi satu kotak. */
+/* Alas mengikuti BENTUK tulisan, bukan satu persegi panjang atas seluruh
+   blok. Sebelumnya memakai ::before absolut, sehingga baris kedua yang lebih
+   pendek menyisakan balok abu yang menonjol tanpa alasan.
+
+   Diterapkan pada <span> di dalam h1/p (bukan pada h1/p itu sendiri) supaya
+   elemennya tetap block dan jarak antar-paragraf tidak berubah.
+   box-decoration-break: clone mengulang latar dan padding di tiap baris
+   terpotong, jadi tepinya naik-turun mengikuti panjang masing-masing. */
+.alas-teks {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background: var(--latar);
+  padding: 0.1em 0.36em;
+  margin-left: -0.36em;
+  border-radius: 6px;
 }
 .home-intro h1 {
-  font-size: clamp(38px, 4.2vw, 59px);
-  line-height: 1.17;
+  font-size: clamp(32px, 3.6vw, 48px);
+  /* Sedikit lebih longgar daripada 1,14: alas per baris butuh ruang supaya
+     tidak saling menempel dan bentuk tangganya terbaca. */
+  line-height: 1.3;
   font-weight: 600;
-  letter-spacing: -2.8px;
+  letter-spacing: -1.6px;
+  margin: 0;
+  max-width: 22ch;
 }
-.home-intro h1 em {
-  font-style: normal;
-  color: var(--accent);
+.intro-lead {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--tinta-2);
+  max-width: 54ch;
+  margin-top: 16px;
 }
-.home-intro > p {
-  font-size: 17px;
-  color: #c8d5d0;
-  line-height: 1.95;
-  max-width: 390px;
-  margin-top: 24px;
-}
-.home-map-art {
+
+/* Peta hero: instance MapLibre dengan heksagon asli. Border dan radius kecil
+   supaya terbaca sebagai elemen halaman, bukan peta yang gagal dimuat. */
+.hero-peta {
   position: relative;
-  height: 236px;
-  margin-top: 22px;
+  margin-top: 24px;
+  /* Basemap gelap adalah keputusan tim (config.js): basemap terang membuat
+     kelas skor tertinggi nyaris menyatu dengan latar. Bingkai gelap tipis
+     membuat peta terbaca sebagai panel yang disengaja. */
+  border: 1px solid #2b442f; /* <- #46a35a hijau, gelap */
+  border-radius: 10px;
   overflow: hidden;
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 9%,
-    #000 94%,
-    transparent
-  );
+  background: #16201f;
 }
-.home-map-art svg {
+.hero-peta-kanvas,
+.hero-peta-cadangan {
+  height: 392px;
+  width: 100%;
+  cursor: pointer;
+}
+/* Placeholder memakai warna dan bingkai yang SAMA dengan peta jadinya.
+   Sebelumnya abu terang #dfe7e5 di atas peta gelap #16201f, sehingga saat
+   dimuat terlihat berkedip terang lalu gelap. */
+.hero-peta-cadangan {
+  border: 1px solid #2b4443;
+  border-radius: 10px;
+  background: #16201f;
+  margin-top: 24px;
+  display: block;
+}
+.hero-peta-memuat {
+  position: absolute;
+  inset: 0;
+  background: #16201f;
+  pointer-events: none;
+}
+/* Kanvas peta memudar masuk begitu lapisan siap, bukan muncul mendadak. */
+.hero-peta-kanvas {
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+.hero-peta.is-siap .hero-peta-kanvas {
+  opacity: 1;
+}
+.hero-peta-gagal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--tinta-2);
+  background: #dfe7e5;
+}
+/* Chip skor hanya muncul pada perangkat berkursor: di layar sentuh tidak ada
+   hover, jadi menampilkannya akan menjanjikan interaksi yang tidak ada. */
+@media (hover: none) {
+  .hero-peta-skor {
+    display: none;
+  }
+}
+/* Chip skor berkumpul dengan legenda di bawah, sesama pembacaan peta, dan
+   menjauh dari tombol "Buka peta lengkap" di kanan atas. */
+.hero-peta-skor {
+  position: absolute;
+  bottom: 52px;
+  left: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  font-size: 12px;
+  color: var(--tinta-2);
+  pointer-events: none;
+  min-height: 36px;
+}
+.hero-peta-skor strong {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--tinta);
+}
+.hero-peta-buka {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  color: var(--tinta);
+  font-size: 13px;
+  font-weight: 600;
+}
+.hero-peta-buka:hover {
+  border-color: var(--aksen);
+  color: var(--aksen);
+}
+.hero-legenda {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  font-size: 11px;
+  color: var(--tinta-2);
+  pointer-events: none;
+}
+.legenda-skala {
+  display: flex;
+  height: 8px;
+  width: 104px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.legenda-skala > span {
+  flex: 1;
+}
+.hero-peta-keterangan {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+
+/* Kartu formulir. Pada layar lebar ia melayang di atas peta, menempel ke
+   sisi kanan yang kosong. Kartu putih di atas basemap gelap sudah cukup
+   kontras; tidak perlu bayangan tebal atau efek kaca. */
+.preference-card {
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  padding: 24px;
+  background: var(--kartu);
+}
+
+.preference-card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+.card-description {
+  color: var(--tinta-2);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.peringatan-stub {
+  margin-top: 14px;
+  border-radius: 6px;
+  background: #9f1239;
+  color: #fff;
+  padding: 8px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kolom-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--garis-tipis);
+}
+.bidang {
+  display: grid;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.bidang-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+  padding: 0;
+}
+.bidang-kepala {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.bidang-nilai {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--aksen);
+  font-variant-numeric: tabular-nums;
+}
+.bidang-bantuan {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+}
+.bidang-kaki {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+.preference-card select,
+.preference-card textarea {
+  width: 100%;
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  background: var(--kartu);
+  color: var(--tinta);
+  padding: 10px 11px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.preference-card select {
+  min-height: 42px;
+}
+.preference-card textarea {
+  resize: vertical;
+  min-height: 74px;
+}
+.preference-card textarea::placeholder {
+  color: #4f7256; /* <- #46a35a hijau, L 0,38 */
+}
+.kotak-centang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tinta-2);
+  cursor: pointer;
+}
+.kotak-centang input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--aksen);
+}
+
+.preference-card input[type="range"] {
+  width: 100%;
+  accent-color: var(--aksen);
+  height: 22px;
+}
+
+/* Tombol: primer jelas lebih berat daripada sekunder. */
+.tombol-primer {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--aksen);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 46px;
+}
+.tombol-primer:hover {
+  background: var(--aksen-pekat);
+}
+.tombol-primer:disabled {
+  background: #dde4e2;
+  color: #6d817d;
+}
+.tombol-sekunder {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  border: 0;
+  background: none;
+  color: var(--aksen);
+  font-size: 14px;
+  text-decoration: underline;
+}
+.tombol-sekunder:hover {
+  color: var(--aksen-pekat);
+}
+/* --- Tahap 1: menulis ---------------------------------------------------- */
+.label-tersembunyi {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.textarea-utama {
+  margin-top: 16px;
+  min-height: 118px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.contoh-baris {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+.contoh-chip {
+  text-align: left;
+  padding: 8px 11px;
+  border: 1px solid var(--garis);
+  border-radius: 7px;
+  background: var(--kartu);
+  color: var(--tinta-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.contoh-chip:hover {
+  border-color: var(--aksen);
+  color: var(--aksen);
+}
+.tautan-lewati {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--garis-tipis);
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  color: var(--tinta-2);
+  font-size: 13px;
+  text-decoration: underline;
+}
+.tautan-lewati:hover {
+  color: var(--aksen);
+}
+
+/* --- Tahap 2: konfirmasi ------------------------------------------------- */
+/* Penanda halus untuk kontrol yang tidak berhasil diisi dari narasi. Bukan
+   error: pengguna hanya perlu tahu mana yang masih harus dilengkapi. */
+.tanda-belum {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #d9c48a;
+  background: #fdf6e3;
+  color: #6b5307;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+.catatan-asli {
+  margin: 0;
+  padding: 9px 11px;
+  border-left: 2px solid var(--garis);
+  background: #f5f7f5; /* <- #46a35a hijau, L 0,965 */
+  color: var(--tinta-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* "Pilih dua": state terpilih ditandai kotak centang SVG, border tebal, dan
+   latar terisi sekaligus — tidak bergantung pada warna saja. */
+/* <legend> tidak ikut grid gap fieldset seperti anak biasa, jadi jaraknya ke
+   daftar opsi diberikan eksplisit di sini. Tanpa ini pertanyaan menempel ke
+   kotak pilihan pertama. */
+.bidang-prioritas > legend {
+  margin-bottom: 12px;
+}
+.pilih-daftar {
+  display: grid;
+  gap: 6px;
+}
+.pilih-opsi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--garis);
+  border-radius: 8px;
+  background: var(--kartu);
+  color: var(--tinta);
+  font-size: 14px;
+}
+.pilih-opsi:hover:not(:disabled) {
+  border-color: var(--aksen);
+}
+.pilih-kotak {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--garis);
+  border-radius: 4px;
+  background: var(--kartu);
+  color: #fff;
+}
+.pilih-opsi.is-aktif {
+  border-color: var(--aksen);
+  border-width: 2px;
+  padding: 9px 11px;
+  background: #e9f2ea; /* <- #46a35a hijau, L 0,93 */
+  font-weight: 600;
+}
+.pilih-opsi.is-aktif .pilih-kotak {
+  background: var(--aksen);
+  border-color: var(--aksen);
+}
+/* Kuota penuh: opsi sisanya benar-benar disabled. Batas dua pilihan
+   dikomunikasikan lewat kontrolnya, bukan lewat kalimat bantuan. Untuk
+   mengganti pilihan, batalkan dulu salah satu yang terpilih.
+
+   Tidak memakai opacity pada seluruh tombol: pada 0,55 teksnya turun ke
+   3,39:1 terhadap latar putih, di bawah ambang WCAG AA. Yang diredupkan
+   hanya latar dan kotak centangnya; teks tetap memakai warna penuh. */
+.pilih-opsi:disabled {
+  background: #f5f7f7; /* <- #319b98 toska, L 0,965 */
+  border-color: var(--garis-tipis);
+  cursor: not-allowed;
+}
+.pilih-opsi:disabled .pilih-kotak {
+  border-color: #d7e0dd;
+}
+.pilih-opsi:disabled .pilih-nama,
+.pilih-opsi:disabled .pilih-persen {
+  color: var(--tinta-2);
+}
+.pilih-nama {
+  flex: 1;
+  min-width: 0;
+}
+.pilih-persen {
+  font-size: 12.5px;
+  color: var(--tinta-2);
+  font-variant-numeric: tabular-nums;
+}
+.pilih-opsi.is-aktif .pilih-persen {
+  color: var(--aksen);
+  font-weight: 600;
+}
+.pilih-setara {
+  margin-top: 2px;
+}
+
+/* --- Pita "pilihanmu mendarat" di /peta ---------------------------------- */
+.pita-prioritas {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(560px, calc(100% - 24px));
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #3a5940; /* <- #46a35a hijau */
+  background: #1c3221; /* <- #46a35a hijau, L 0,38 */
+  color: #93b99a; /* <- #46a35a hijau */
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 6px 20px #0004;
+}
+.pita-prioritas button {
+  flex-shrink: 0;
+  color: #72b681; /* <- #46a35a hijau */
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+}
+.pita-prioritas button:hover {
+  color: #fff;
+}
+@media (max-width: 767px) {
+  .pita-prioritas {
+    top: 46px;
+    font-size: 12px;
+    padding: 8px 11px;
+    gap: 10px;
+  }
+}
+
+/* Wadah bagian bawah: tekstur jaringan jalan Sleman duduk di belakangnya. */
+.home-bawah {
+  position: relative;
+}
+
+/* --- Tekstur jaringan jalan ------------------------------------------------
+   SATU lapisan untuk seluruh halaman, di level root beranda. Absolute (bukan
+   fixed) supaya ikut menggulir bersama konten, dan tingginya mengikuti tinggi
+   dokumen lewat inset: 0 pada .home-page yang position: relative. */
+.tekstur-jalan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Tiap salinan menjaga rasio aspek lewat padding-top; SVG mengisi penuh.
+   Diposisikan di tengah dan dibiarkan meluber ke samping — diregangkan akan
+   mendistorsi bentuk jaringan jalannya. */
+/* Rasio aspek dijaga lewat padding-top; tidak boleh memakai min-width karena
+   itu memaksa lebar dokumen dan memunculkan scroll horizontal di ponsel.
+   Untuk menjaga jaringan jalan tetap terbaca di layar sempit, salinannya
+   diperlebar lewat transform: scale — yang tidak menambah lebar tata letak. */
+/* Rasio aspek dijaga lewat padding-top; tidak memakai min-width karena itu
+   memaksa lebar dokumen dan memunculkan scroll horizontal di ponsel.
+   Diperbesar lewat transform: scale — tidak menambah lebar tata letak, dan
+   luapannya dipotong .home-isi. Tanpa ini, pada layar lebar wilayah studi
+   yang sempit menyisakan tepi kiri dan kanan yang kosong. */
+.tekstur-salinan {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  height: 0;
+  /* Digeser sedikit ke kiri: pita paling kiri viewBox (Godean/Moyudan yang
+     rural) hanya punya ~40% kepadatan jalan dibanding sisanya, dan kalau
+     dibiarkan di tengah ia jatuh tepat di belakang judul sehingga sisi kiri
+     halaman terlihat kosong. */
+  transform: scale(1.45) translateX(-4%);
+  transform-origin: center top;
+}
+@media (max-width: 900px) {
+  .tekstur-salinan {
+    transform: scale(1.9) translateX(-3%);
+  }
+}
+.tekstur-salinan svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
-.map-art-label {
-  position: absolute;
-  top: 58%;
-  left: 38%;
-  white-space: nowrap;
-  padding: 12px;
-  border: 1px solid #65dfbb2c;
-  border-radius: 10px;
-  background: #1b302bed;
-  font-size: 12px;
-  box-shadow: 0 8px 24px #0004;
+/* Ketebalan dan warna per kelas jalan. Jalan utama paling tebal dan pekat,
+   jalan kecil paling tipis. Dua warna dari skala peta: toska untuk jalan
+   kecil, ungu untuk jalan utama. */
+.tekstur-jalan .jalan-kecil {
+  stroke: #46a35a;
+  stroke-width: 0.8;
+  opacity: 0.5;
 }
-.map-art-note {
-  position: absolute;
-  bottom: 4px;
-  right: 30px;
-  font-size: 8px;
-  color: #a9bcb4;
+.tekstur-jalan .jalan-menengah {
+  stroke: #5c8a46;
+  stroke-width: 1.5;
+  opacity: 0.75;
 }
-.home-facts {
-  display: flex;
-  gap: 34px;
-  border-top: 1px solid #bddacb1a;
+.tekstur-jalan .jalan-utama {
+  stroke: #3f6b3a;
+  stroke-width: 2.6;
+  opacity: 1;
+}
+/* Opasitas keseluruhan lapisan. Jauh lebih tegas daripada 5% sebelumnya,
+   tapi tetap di bawah ambang yang membuat teks sulit dibaca — semua blok
+   teks di halaman ini punya latar sendiri (lihat .home-penjelasan dsb). */
+.tekstur-jalan {
+  opacity: 0.16;
+  /* Hanya meredup tipis di ujung atas dan bawah. Sebelumnya pita atas
+     diredam sampai 37%, membuat sisi kiri hero terlihat kosong sama
+     sekali. */
+  mask-image: linear-gradient(
+    to bottom,
+    #000a 0,
+    #000 6%,
+    #000 92%,
+    #000a 100%
+  );
+}
+
+/* Animasi "jalan tergambar": garis ditarik dari pusat Sleman ke luar saat
+   halaman pertama dimuat, lalu diam permanen. pathLength="1" di SVG membuat
+   dasharray bisa memakai angka 0..1 tanpa mengukur panjang nyata.
+   Tiap kelas berangkat sedikit berbeda supaya terasa menyebar, bukan satu
+   blok. Total ~2,1 detik. */
+@keyframes tarik-jalan {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.tekstur-jalan path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: tarik-jalan 2.1s ease-out both;
+}
+.tekstur-jalan .jalan-utama {
+  animation-delay: 0s;
+}
+.tekstur-jalan .jalan-menengah {
+  animation-delay: 0.18s;
+}
+.tekstur-jalan .jalan-kecil {
+  animation-delay: 0.36s;
+}
+/* Isi bagian bawah berdiri di atas tekstur. */
+.home-bawah > .home-penjelasan,
+.home-bawah > .home-data {
+  position: relative;
+  z-index: 1;
+}
+
+/* Bagian 3: dua kolom selebar konten. Kiri "Empat hal yang dinilai", kanan
+   "Dasar penilaiannya". Rata atas, tinggi sengaja dibiarkan berbeda. */
+/* Blok teks panjang berdiri di atas lapisan solid sendiri: pada opasitas
+   tekstur 16% teks tanpa alas jadi sulit dibaca. Alasnya dilebarkan sedikit
+   ke luar padding supaya tepinya tidak terlihat mepet. */
+/* Satu kolom selebar konten. Dulu dua kolom (kiri "Empat hal", kanan "Dasar
+   penilaiannya"), tapi bagian kanan sudah pindah ke pita gelap; menyisakan
+   grid dua kolom membuat isinya terjepit di separuh halaman. */
+.home-penjelasan {
+  position: relative;
+  max-width: 1240px;
+  margin: 20px auto 0;
+  padding: 40px 32px 48px;
+  border-top: 1px solid var(--garis);
+  background: color-mix(in srgb, var(--latar) 88%, transparent);
+  border-radius: 12px;
+}
+/* Bagian kepercayaan: pita gelap selebar layar (full-bleed), memakai warna
+   gelap yang sama dengan basemap peta. */
+.home-data {
+  position: relative;
+  z-index: 1;
+  background: #16201f;
+  color: #e6e9e4;
+  padding: 64px 24px 68px;
+  margin-top: 28px;
+  overflow: hidden;
+}
+.data-isi {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px 56px;
+  align-items: start;
+}
+.home-data h2 {
+  grid-column: 1 / -1;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  margin: 0 0 8px;
+  color: #ffffff;
+}
+.home-data .data-catatan {
+  border-bottom: 0;
+  margin: 0;
+  padding: 0;
+}
+.home-data .data-catatan p {
+  color: #b9c6c3;
+}
+.home-data .data-versi {
+  grid-column: 1 / -1;
+  margin-top: 16px;
   padding-top: 22px;
+  border-top: 1px solid #33403e;
+  color: #a7b6b3;
 }
-.home-facts > div {
+.home-data .data-versi button {
+  color: #7fc98a;
+}
+/* Tekstur di dalam pita gelap: garis terang, opasitas lebih tinggi. */
+.home-data .tekstur-jalan {
+  opacity: 0.25;
+}
+.home-data .tekstur-jalan .jalan-kecil {
+  stroke: #7fc98a;
+}
+.home-data .tekstur-jalan .jalan-menengah {
+  stroke: #b9d47a;
+}
+.home-data .tekstur-jalan .jalan-utama {
+  stroke: #e0a55e;
+}
+.data-catatan {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 26px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--garis-tipis);
+}
+.data-catatan p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--tinta-2);
+}
+/* Kolom kanan lebih sempit daripada sebelumnya: angka disusun menurun,
+   satu baris per angka, bukan berjajar tiga. */
+.data-grid {
+  display: grid;
+  gap: 18px;
+}
+.data-grid > div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+.data-grid strong {
+  /* Jauh lebih besar daripada versi terang: di pita gelap angka inilah
+     jangkar visualnya. */
+  font-size: clamp(40px, 4.4vw, 62px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+}
+/* Di latar gelap, warna yang dipakai adalah ujung TERANG skala peta apa
+   adanya (bukan turunan gelapnya): toska #319b98, hijau #94ca91, kuning
+   #edd58b. Ketiganya >= 4,98:1 terhadap #16201f. */
+.data-grid > div:nth-child(1) strong {
+  color: #e0685e;
+}
+.data-grid > div:nth-child(2) strong {
+  color: #f0d45e;
+}
+.data-grid > div:nth-child(3) strong {
+  color: #7fc98a;
+}
+.home-data .data-grid {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 36px;
+  margin-top: 16px;
+}
+.home-data .data-grid > div {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.home-data .data-grid span {
+  color: #b9c6c3;
+  max-width: 34ch;
+}
+.data-grid span {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+.data-versi {
+  margin-top: 26px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+.data-versi button {
+  color: var(--aksen);
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+/* Empat dimensi + sebaran subskor asli */
+.dimensi-bagian {
+  min-width: 0;
+}
+.dimensi-bagian h2 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0 0 20px;
+  color: var(--tinta);
+}
+.dimensi-cadangan {
+  min-height: 300px;
+}
+/* Empat dimensi berjajar dalam SATU baris. Kalimat penjelas di bawahnya
+   adalah elemen terpisah (.dimensi-catatan), jadi otomatis melintasi
+   keempat kolom sebagai baris baru. */
+.home-dimensi {
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 26px;
+}
+.home-dimensi > div {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--garis-tipis);
+}
+.home-dimensi dt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+.home-dimensi dd {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+.dimensi-sebaran {
+  margin-top: auto;
+  padding-top: 12px;
+  margin-bottom: 22px;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+/* Histogram menyesuaikan lebar kolom yang kini jauh lebih sempit. */
+.dimensi-sebaran svg {
+  width: 100%;
+  height: auto;
+  max-width: 148px;
+}
+.dimensi-sebaran svg rect {
+  fill: #7aa86a;
+}
+/* Histogram interaktif: batang yang ditunjuk naik sedikit dan berubah warna,
+   rentangnya muncul sebagai tooltip kecil. */
+.sebaran-bingkai {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+.dimensi-sebaran .batang {
+  transition:
+    fill 120ms ease,
+    y 120ms ease,
+    height 120ms ease;
+}
+.dimensi-sebaran .batang.is-sorot {
+  fill: var(--aksen);
+}
+/* Tooltip di BAWAH histogram: di atasnya ada kalimat penjelas dimensi, dan
+   pada tata letak 2 x 2 jaraknya terlalu rapat sehingga saling menimpa. */
+.sebaran-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--garis);
+  background: var(--kartu);
+  color: var(--tinta);
+  font-size: 11.5px;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 3;
+}
+.dimensi-sebaran span {
+  font-size: 11.5px;
+  color: var(--tinta-2);
+}
+/* Baris tersendiri di bawah keempat kolom; sengaja tanpa max-width supaya
+   benar-benar melintasi semuanya. */
+.dimensi-catatan {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--garis-tipis);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tinta-2);
+}
+
+/* Pita abu footer selebar layar penuh; isinya tetap terpusat lewat padding
+   simetris seperti .home-nav, bukan max-width (yang membuat warnanya ikut
+   terpotong di 1240 px). */
+.home-footer {
+  position: relative;
+  background: #e4e8e7;
+  padding: 24px max(24px, calc((100% - 1240px) / 2)) 36px;
+  border-top: 1px solid var(--garis);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+.footer-brand {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  max-width: 40ch;
 }
-.home-facts strong {
-  font-weight: 600;
-  font-size: 24px;
-  letter-spacing: -1px;
+.footer-brand strong {
+  color: var(--tinta);
+  font-size: 14px;
 }
-.home-facts span {
-  color: #b7c8c1;
-  font-size: 12px;
-}
-.preference-card {
-  border: 1px solid #b6d9c825;
-  border-radius: 24px;
-  padding: 30px;
-  background: linear-gradient(145deg, #2a433b, #20332e);
-  box-shadow: 0 24px 70px #0002;
-}
-.card-step {
+.footer-nav {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  color: var(--accent);
+  gap: 20px;
+}
+.footer-nav button {
   font-size: 13px;
+  color: var(--tinta);
+  text-decoration: underline;
 }
-.card-step > span {
-  font-size: 12px;
-  letter-spacing: 1.8px;
-  color: #b8cbc2;
+.footer-nav button:hover {
+  color: var(--aksen);
 }
-.card-step > .step-dots {
-  margin-left: auto;
-  color: var(--accent);
-  letter-spacing: 3px;
-}
-.preference-card h2 {
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -1px;
-  margin-top: 26px;
-}
-.card-description {
-  color: #c1d1c9;
-  font-size: 15px;
-  line-height: 1.85;
-  margin-top: 12px;
-}
-.data-stamp {
-  font-size: 12px;
-  color: #b8cbc2;
-  margin: 13px 0 22px;
-}
-.data-stamp:before {
-  content: "●";
-  color: var(--accent);
-  margin-right: 6px;
-  font-size: 6px;
-}
-.input-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #e1e9e5;
-  margin-top: 14px;
-}
-.preference-card textarea {
-  margin-top: 10px;
-  padding: 16px;
-  line-height: 1.9;
-  font-size: 15px;
-  min-height: 124px;
-  background: #142622;
-  border-radius: 12px;
-}
-.preference-card textarea::placeholder {
-  color: #9fb5ac;
-}
-.example-chips {
+.footer-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  align-items: center;
-  margin: 15px 0 20px;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
 }
-.example-chips > span {
-  width: 100%;
-  margin-bottom: 2px;
-  font-size: 12px;
+
+/* Utilitas Tailwind gelap yang masih dipakai editor profil di dalam kartu. */
+.home-page .text-slate-100,
+.home-page .text-slate-200,
+.home-page .text-slate-300,
+.home-page .text-slate-400,
+.home-page .text-slate-500,
+.home-page .text-slate-600 {
+  color: var(--tinta-2);
 }
-.example-chip {
-  border: 1px solid #a4c1b226;
-  border-radius: 7px;
-  padding: 7px 9px;
-  color: #d2ded9;
-  font-size: 13px;
+.home-page .text-emerald-400 {
+  color: var(--aksen);
 }
-.example-chip:hover {
-  background: #65dfbb15;
-  border-color: #65dfbb66;
+.home-page .bg-slate-900,
+.home-page .bg-slate-800 {
+  background-color: #eef3f2;
 }
-.preference-card > button {
-  font-size: 13px;
-  min-height: 44px;
+.home-page .bg-slate-800 {
+  border: 1px solid var(--garis);
 }
-.preference-card > button.bg-emerald-500:hover {
-  box-shadow: 0 0 25px #65dfbb25;
+
+@media (max-width: 1100px) {
+  /* Hero turun jadi satu kolom: judul, paragraf, dan peta di atas, kartu
+     form di bawahnya. */
+  .home-layout {
+    grid-template-columns: 1fr;
+    padding: 32px 24px 28px;
+    gap: 28px;
+  }
+  .hero-peta-kanvas,
+  .hero-peta-cadangan {
+    height: 420px;
+  }
+  /* Dua kolom penjelasan menumpuk: "Empat hal yang dinilai" di atas,
+     "Dasar penilaiannya" di bawah. Pemisah jadi horizontal. */
+
+  .data-grid,
+  .data-catatan {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .home-dimensi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 26px;
+  }
 }
-.privacy-note {
-  color: #b6c9c0;
-  font-size: 12px;
-  margin-top: 24px;
-  text-align: center;
-}
-.home-footer {
-  max-width: 1280px;
-  padding: 24px 48px;
-  margin: auto;
-  border-top: 1px solid #bddacb14;
-  display: flex;
-  justify-content: space-between;
-  color: #a9beb5;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-.home-footer button {
-  letter-spacing: 0;
-  font-size: 12px;
+@media (max-width: 767px) {
+  .home-nav {
+    height: 62px;
+    padding: 0 18px;
+    gap: 14px;
+  }
+  .brand {
+    font-size: 17px;
+  }
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+  .home-nav nav {
+    gap: 16px;
+    font-size: 13px;
+  }
+  .nav-active {
+    display: none;
+  }
+  .home-intro {
+    padding: 26px 18px 14px;
+  }
+  .home-layout {
+    padding: 0 18px 24px;
+    gap: 20px;
+  }
+  .home-intro h1 {
+    font-size: 29px;
+    letter-spacing: -1px;
+  }
+  .home-intro h1 {
+    max-width: none;
+  }
+  .intro-lead {
+    font-size: 15px;
+  }
+  .hero-peta-kanvas,
+  .hero-peta-cadangan {
+    height: 290px;
+  }
+  .hero-peta-buka {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+  /* Layar sempit: chip skor dan legenda tidak muat berdampingan dengan
+     tombol. Hover pun tidak ada di layar sentuh, jadi chip disembunyikan
+     dan legenda pindah ke bawah peta. */
+  .hero-peta-skor {
+    display: none;
+  }
+  .hero-legenda {
+    left: 12px;
+    right: 12px;
+    /* Di atas bar atribusi MapLibre, bukan di belakangnya. */
+    bottom: 30px;
+    justify-content: center;
+  }
+  .preference-card {
+    padding: 18px;
+  }
+  .preference-card h2 {
+    font-size: 20px;
+  }
+  .home-dimensi {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .home-penjelasan {
+    padding: 30px 18px 36px;
+  }
+  .data-grid > div {
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+  }
+  .home-footer {
+    padding: 22px 18px 30px;
+    flex-direction: column;
+  }
+  .footer-meta {
+    text-align: left;
+  }
 }
 .route-panel {
   border: 1px solid #bbd7c626;
@@ -534,90 +1475,7 @@ input[type="checkbox"] {
     right: 504px;
   }
 }
-@media (max-width: 1000px) {
-  .home-layout {
-    padding: 40px 30px;
-    gap: 36px;
-  }
-  .home-nav {
-    padding: 0 30px;
-  }
-  .location-tag {
-    display: none;
-  }
-  .home-facts {
-    gap: 20px;
-  }
-  .preference-card {
-    padding: 24px;
-  }
-  .home-intro h1 {
-    font-size: 43px;
-  }
-  .map-art-label {
-    left: 18%;
-  }
-}
 @media (max-width: 767px) {
-  .home-nav {
-    height: 76px;
-    padding: 0 20px;
-  }
-  .brand {
-    font-size: 18px;
-  }
-  .brand-mark {
-    width: 28px;
-    height: 30px;
-    font-size: 23px;
-  }
-  .home-nav nav {
-    gap: 15px;
-    font-size: 12px;
-  }
-  .nav-active {
-    display: none;
-  }
-  .home-layout {
-    grid-template-columns: 1fr;
-    padding: 32px 20px;
-    gap: 28px;
-  }
-  .home-intro h1 {
-    font-size: 43px;
-    letter-spacing: -2px;
-  }
-  .home-intro > p {
-    font-size: 16px;
-  }
-  .home-map-art {
-    display: none;
-  }
-  .home-facts {
-    margin-top: 26px;
-    gap: 28px;
-  }
-  .home-facts strong {
-    font-size: 20px;
-  }
-  .home-facts span {
-    font-size: 12px;
-  }
-  .preference-card {
-    padding: 22px;
-  }
-  .preference-card h2 {
-    font-size: 28px;
-  }
-  .home-footer {
-    margin: 0 20px;
-    padding: 20px 0;
-    gap: 20px;
-    flex-direction: column;
-  }
-  .home-footer button {
-    text-align: left;
-  }
   .map-nav {
     top: 10px;
     width: max-content;
@@ -658,6 +1516,14 @@ input[type="checkbox"] {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  /* Aturan di atas hanya memangkas durasi; animation-delay tetap berlaku,
+     jadi garis jalan bisa sempat berkedip sebelum muncul. Matikan animasinya
+     sama sekali dan tampilkan garis utuh sejak awal. */
+  .tekstur-jalan path {
+    animation: none !important;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
 }
 
 /* Popup hover gerbang: kecil, tidak menangkap pointer supaya tidak
@@ -692,57 +1558,356 @@ input[type="checkbox"] {
   .map-comparing .control-panel { top: 174px; }
 }
 
-.home-page {
-  color-scheme: light;
-  color: #183d32;
-  background: linear-gradient(90deg, rgba(244,247,245,.82), rgba(244,247,245,.42)), url('https://images.unsplash.com/photo-1721127074326-4c08c803800d?auto=format&fit=crop&w=2200&q=85') center / cover fixed, #f4f7f5;
+/* Panel bobot: jatah poin tetap 100. Angka yang tampil adalah POIN yang
+   dibagikan pengguna, bukan persentase hasil normalisasi. */
+.jatah-poin {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 2px 2px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #ffffff1a;
+  font-size: 12px;
+  color: #c2d2ca;
 }
-/* Header berdiri di atas foto; sisi kanan foto hanya berkabut 42% sehingga
-   teks nav sebelumnya menyatu dengan dedaunan. Beri lapisan sendiri agar
-   kontras teks tetap terbaca di seluruh lebar layar. */
-.home-nav {
-  background: linear-gradient(#f4f7f5f2, #f4f7f5d9 62%, #f4f7f500);
-  border-color: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  max-width: none;
-  padding: 0 max(5%, calc((100% - 1440px) / 2 + 5%));
-  backdrop-filter: blur(6px);
+.jatah-poin strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9bcf5f;
+  font-variant-numeric: tabular-nums;
 }
-.home-page .brand { color: #183d32; }
-.home-page .brand-mark { background: transparent; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; }
-.brand-mark img { display: block; width: 100%; height: 100%; }
-@media (max-width: 767px) { .home-page .brand-mark { width: 36px; height: 36px; } }
-.community-tag { color: #08735b; font-weight: 700; }
-.home-page .eyebrow, .home-page .home-intro > p,
-.home-page .home-facts span, .home-page .card-description,
-.home-page .data-stamp, .home-page .card-step > span,
-.home-page .privacy-note, .home-page .home-footer { color: #3d5e51; }
-/* Nav dan tag lokasi lebih gelap daripada teks sekunder lain: keduanya
-   duduk di atas foto, bukan di atas kartu putih. */
-.home-page .home-nav nav, .home-page .location-tag { color: #22483a; }
-.home-page .home-nav nav button:hover { color: #08735b; }
-.home-page .location-tag {
-  background: #ffffffb8;
-  border-color: #8fb3a1;
+.poin-nilai {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-weight: 600;
+  color: #9bcf5f;
+  font-variant-numeric: tabular-nums;
 }
-.home-page .nav-active, .home-page .home-intro h1 em { color: #08735b; }
-.home-page .preference-card { background: #ffffffed; border-color: #bdd4c8; box-shadow: 0 20px 60px #193c2614; }
-.home-page .input-label { color: #254b3b; }
-.home-page .preference-card textarea { background: #f4f8f5; color: #183d32; }
-.home-page .preference-card textarea::placeholder { color: #526d5e; }
-.home-page .example-chip { color: #254b3b; border-color: #b1cabb; background: #f2f8f3; }
-.home-page .card-step { color: #08735b; }
-.home-page .home-footer { background: #ffffffc9; flex-wrap: wrap; gap: 16px; }
-.home-page .home-footer a { max-width: 340px; text-decoration: underline; }
-.home-page .text-slate-100, .home-page .text-slate-200,
-.home-page .text-slate-300, .home-page .text-slate-400,
-.home-page .text-slate-500, .home-page .text-slate-600 { color: #436353; }
-.home-page .text-emerald-400 { color: #08735b; }
-.home-page .bg-slate-900, .home-page .bg-slate-800 { background-color: #edf5ee; }
-.home-page .bg-emerald-500 { color: #143b2d; }
-.home-page button:disabled { background-color: #dce8df; color: #526b5b; }
-.home-page .home-map-art { background: #f5faf4ad; border-radius: 20px; }
-.home-page .map-art-label { background: #ffffffed; color: #315141; }
-.home-page .map-art-note { color: #436353; }
+/* Porsi relatif: angka yang benar-benar menentukan skor. Dibuat lebih redup
+   daripada poinnya supaya tidak bersaing, tapi tetap terbaca. */
+.poin-porsi {
+  font-weight: 500;
+  font-size: 11px;
+  color: #9fb2a6;
+}
+.weight-panel input[type="range"] {
+  accent-color: #9bcf5f;
+}
+
+/* --- Panel bandingkan kawasan --------------------------------------------
+   Vonis dulu, tabel angka di balik tombol. */
+.vonis {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #ffffff0e;
+  border: 1px solid #ffffff1a;
+}
+.vonis-kalimat {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #f0f5f2;
+}
+.vonis-ai {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #c2d2ca;
+}
+.vonis-tunggu {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #8fa39a;
+}
+.alasan-daftar {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #c2d2ca;
+}
+.alasan-daftar strong {
+  color: #f0f5f2;
+}
+.cocok-untuk {
+  margin-top: 10px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: #c2d2ca;
+}
+.cocok-untuk strong {
+  color: #9bcf5f;
+  margin-right: 4px;
+}
+.tombol-detail {
+  width: 100%;
+  margin-top: 14px;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid #ffffff26;
+  background: #ffffff0d;
+  color: #e6ede9;
+  font-size: 13px;
+  font-weight: 600;
+}
+.tombol-detail:hover {
+  background: #ffffff1a;
+}
+/* Sel unggul: tebal + latar tipis, tidak bergantung warna saja. */
+.sel-unggul {
+  font-weight: 700;
+  color: #ffffff;
+  background: #ffffff14;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+.indicator-konteks {
+  padding: 0 8px 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #8fa39a;
+}
+.toggle-mentah {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #a7b8af;
+  cursor: pointer;
+}
+.toggle-mentah input {
+  width: 13px;
+  height: 13px;
+  accent-color: #9bcf5f;
+}
+.ringkas-kosong {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #ffffff0a;
+  font-size: 12px;
+  color: #a7b8af;
+}
+.ringkas-kosong button {
+  color: #c2d2ca;
+  text-decoration: underline;
+  font-size: 12px;
+}
+.ringkas-kosong ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 3px;
+}
+.ringkas-kosong p {
+  margin: 8px 0 0;
+  line-height: 1.5;
+  color: #8fa39a;
+}
+
+/* Kartu A/B: warnanya harus cukup tegas untuk dicocokkan dengan garis
+   heksagon di peta, tapi tidak boleh memakai warna dari skala skor. */
+.kartu-banding {
+  border: 2px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.kartu-banding-judul {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+/* Huruf A/B besar di sudut: pembeda yang tidak bergantung warna sama sekali,
+   untuk pengguna buta warna. */
+.kartu-banding::before {
+  content: attr(data-huruf);
+  float: right;
+  margin: -2px 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--warna-banding);
+  opacity: 0.55;
+}
+
+/* --- Alokasi poin prioritas ------------------------------------------------
+   12 poin untuk 24 kotak: mengalokasikan berarti benar-benar memilih. */
+.alokasi {
+  display: grid;
+  gap: 14px;
+}
+.alokasi-kepala {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.alokasi-sisa {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--aksen);
+}
+/* Kedipan saat poin tidak cukup: memberi tahu tanpa pesan error. */
+.alokasi-sisa.is-kedip {
+  animation: kedip-sisa 0.45s ease;
+}
+@keyframes kedip-sisa {
+  0%,
+  100% {
+    color: var(--aksen);
+  }
+  30%,
+  70% {
+    color: #c2352c;
+  }
+}
+.alokasi-rata {
+  font-size: 12px;
+  color: var(--tinta-2);
+  text-decoration: underline;
+}
+.alokasi-rata:hover {
+  color: var(--aksen);
+}
+.alokasi-daftar {
+  display: grid;
+  gap: 14px;
+}
+.alokasi-judul {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.alokasi-nama {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+.alokasi-persen {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--aksen);
+  font-variant-numeric: tabular-nums;
+}
+.alokasi-kotak {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+.alokasi-kotak:focus-visible {
+  outline: 2px solid var(--aksen);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* Terisi vs kosong dibedakan isi penuh versus outline, bukan warna saja. */
+.kotak {
+  flex: 1;
+  height: 26px;
+  min-width: 0;
+  border: 1.5px solid var(--garis);
+  border-radius: 4px;
+  background: transparent;
+  padding: 0;
+}
+.kotak.is-isi {
+  background: var(--aksen);
+  border-color: var(--aksen);
+}
+.kotak:hover {
+  border-color: var(--aksen);
+}
+.alokasi-rentang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--tinta-2);
+}
+.alokasi-panah {
+  color: var(--aksen);
+  font-weight: 700;
+}
+.alokasi-catatan {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 7px;
+  background: #f0f4f1;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+}
+
+@media (max-width: 480px) {
+  /* Layar sempit: nama + persen di baris sendiri, kotak jadi batang
+     bersegmen selebar penuh dengan target sentuh 44 px. */
+  .kotak {
+    height: 44px;
+  }
+  .alokasi-kotak {
+    gap: 3px;
+  }
+  .alokasi-rentang {
+    font-size: 11px;
+  }
+}
+
+/* Alokasi poin di panel bobot /peta: latarnya gelap, jadi tokennya dibalik.
+   Struktur dan interaksinya sama persis dengan yang di beranda. */
+.weight-panel .alokasi-sisa {
+  color: #9bcf5f;
+}
+.weight-panel .alokasi-rata {
+  color: #c2d2ca;
+}
+.weight-panel .alokasi-rata:hover {
+  color: #9bcf5f;
+}
+.weight-panel .alokasi-nama {
+  color: #e6ede9;
+}
+.weight-panel .alokasi-persen {
+  color: #9bcf5f;
+}
+.weight-panel .kotak {
+  border-color: #ffffff33;
+  height: 22px;
+}
+.weight-panel .kotak.is-isi {
+  background: #9bcf5f;
+  border-color: #9bcf5f;
+}
+.weight-panel .kotak:hover {
+  border-color: #9bcf5f;
+}
+.weight-panel .alokasi-catatan {
+  background: #ffffff0f;
+  color: #a7b8af;
+}
+.weight-panel .alokasi-kotak:focus-visible {
+  outline-color: #9bcf5f;
+}
+.weight-panel .alokasi,
+.weight-panel .alokasi-daftar {
+  gap: 10px;
+}
+@keyframes kedip-sisa-gelap {
+  0%,
+  100% {
+    color: #9bcf5f;
+  }
+  30%,
+  70% {
+    color: #f0736a;
+  }
+}
+.weight-panel .alokasi-sisa.is-kedip {
+  animation: kedip-sisa-gelap 0.45s ease;
+}

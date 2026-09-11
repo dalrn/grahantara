@@ -43,7 +43,11 @@ export const NAMA_INDIKATOR = {
   W2_keteduhan: "Keteduhan jalur",
   W3_penerangan: "Penerangan kawasan",
   W4_banjir: "Keamanan dari genangan",
-  W5_tekanan_lalin: "Tekanan lalu lintas",
+  // Pipeline menyimpan `1 - tekanan` (lihat 30_indicators/04_w5_lalin.py),
+  // jadi nilai tinggi = lalu lintas TENANG. Label lama "Tekanan lalu lintas"
+  // membalik artinya bagi pembaca: nilai 0,7 tampak "lebih padat" padahal
+  // justru lebih tenang. Skornya sendiri sudah benar sejak awal.
+  W5_tekanan_lalin: "Ketenangan lalu lintas",
   W6_integritas_jalur: "Integritas jalur pejalan",
 };
 
@@ -68,3 +72,19 @@ export const NAMA_DIMENSI = {
   amenity: "Kenyamanan",
   walkability: "Kenyamanan berjalan kaki",
 };
+
+// SUMBER TUNGGAL label, urutan, dan warna keempat dimensi untuk kontrol yang
+// dilihat pengguna: kartu prioritas di beranda dan slider bobot di /peta.
+// Keduanya wajib memakai kata dan urutan yang sama, kalau tidak pilihan di
+// beranda terasa tidak mendarat di peta.
+//
+// Sengaja terpisah dari KELOMPOK_INDIKATOR.label, yang dipakai panel detail,
+// pembanding, dan metodologi dengan istilah yang lebih teknis
+// ("Keterjangkauan", "Kenyamanan"). Label di sini dipilih supaya terbaca oleh
+// mahasiswa baru.
+export const DIMENSI_UI = [
+  { kunci: "connectivity", label: "Akses transportasi", warna: "#5379a5" },
+  { kunci: "affordability", label: "Biaya", warna: "#319b98" },
+  { kunci: "amenity", label: "Fasilitas", warna: "#94ca91" },
+  { kunci: "walkability", label: "Lingkungan jalan kaki", warna: "#b08fd4" },
+];
