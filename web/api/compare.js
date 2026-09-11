@@ -9,14 +9,9 @@ const NAMA_DIMENSI = {
 const DIMENSI = Object.keys(NAMA_DIMENSI);
 const AMBANG_SETARA = 0.02;
 
-function sumberLabel(sumber) {
-  const peta = {
-    survei: "survei", mapid_poi: "MAPID POI", osm: "OpenStreetMap",
-    sentinel2: "Sentinel-2", viirs: "VIIRS", inarisk: "InaRISK",
-    krl: "Jadwal KRL", model: "Estimasi model", tidak_tersedia: "tidak tersedia",
-  };
-  return peta[sumber] ?? sumber;
-}
+// Tidak ada peta label sumber di sini: baris data hanya perlu penanda
+// "(estimasi)" untuk sumber "model", dan barisData() menuliskannya langsung.
+// Label sumber lengkap dipakai explain-score.js, bukan endpoint ini.
 
 function angkaSah(x) {
   return typeof x === "number" && Number.isFinite(x) && x >= 0 && x <= 100;

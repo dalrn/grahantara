@@ -108,8 +108,8 @@ export default function PanelBanding({
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold text-slate-300">
             {a
-              ? "Bandingkan kawasan — klik kawasan B di peta"
-              : "Bandingkan kawasan — klik dua heksagon di peta"}
+              ? "Bandingkan kawasan: klik kawasan B di peta"
+              : "Bandingkan kawasan: klik dua heksagon di peta"}
           </span>
           <button
             onClick={onTutup}
@@ -310,7 +310,7 @@ export default function PanelBanding({
                 </div>
                 {hasilBanding.cocokUntuk && (
                   <div className="text-xs text-slate-400">
-                    Cocok untuk: A — {hasilBanding.cocokUntuk.A} | B —{" "}
+                    Cocok untuk: (A) {hasilBanding.cocokUntuk.A} | (B){" "}
                     {hasilBanding.cocokUntuk.B}
                   </div>
                 )}

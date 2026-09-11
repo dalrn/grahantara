@@ -16,8 +16,11 @@ import numpy as np
 import pandas as pd
 
 # Allowed values of the `sumber` field. Must match contracts/hexagon.schema.json.
+# `mapid` covers MAPID's non-POI layers (flood hazard, nighttime light polygons);
+# `mapid_poi` stays for the POI point layers. `viirs` and `inarisk` are retained
+# for older files only -- W3 and W4 have read MAPID layers since 2026-09-11.
 SUMBER = {
-    "survei", "mapid_poi", "osm", "sentinel2", "viirs", "inarisk",
+    "survei", "mapid_poi", "mapid", "osm", "sentinel2", "viirs", "inarisk",
     "krl", "model", "tidak_tersedia",
 }
 
@@ -118,7 +121,7 @@ def skor_akhir(sub: dict[str, float | None], bobot_dimensi: dict[str, float],
     NOTE for web/src/lib/mesinSkor.js: the client recomputes this in log space
     from the four subscores. Hexagons with an excluded dimension carry that
     dimension as 0 in the GeoJSON for schema conformance, so the client MUST
-    read metadata.dimensi_terpakai to reproduce these numbers.
+    read properties.dimensi_kosong to reproduce these numbers.
     """
     ada = {d: v for d, v in sub.items() if v is not None}
     if not ada:

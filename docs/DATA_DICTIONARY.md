@@ -67,8 +67,8 @@ besar `tidak_tersedia` dengan bobot dinormalisasi ulang ke M1/M2/M4.
 |---|---|---|---|---|
 | `W1_kerapatan_simpang` | Simpang jalan kaki per km² | Persentil | OSMnx | 0,15 |
 | `W2_keteduhan` | NDVI rata-rata dalam buffer 15 m sepanjang jalur | Persentil | Sentinel-2 | 0,20 |
-| `W3_penerangan` | Radiansi malam | `log(1+x)`, persentil | VIIRS | 0,15 |
-| `W4_banjir` | Keamanan dari genangan | `1 - indeks bahaya` | InaRISK | 0,15 |
+| `W3_penerangan` | Radiansi malam | `log(1+x)`, persentil | MAPID nighttime light 2023 | 0,15 |
+| `W4_banjir` | Keamanan dari genangan | `1 - indeks bahaya` | MAPID bahaya banjir | 0,15 |
 | `W5_tekanan_lalin` | Tekanan lalu lintas terhadap pejalan | Kelas jalan OSM + lebar, **dikalibrasi** ke survei | OSM + survei | 0,15 |
 | `W6_integritas_jalur` | Kondisi mikro trotoar | Indeks komposit 5 komponen, lihat bawah | Survei (76 ruas) → **model** | 0,20 |
 

@@ -9,9 +9,10 @@ const NAMA_DIMENSI = {
 
 function sumberLabel(sumber) {
   const peta = {
-    survei: "survei", mapid_poi: "MAPID POI", osm: "OpenStreetMap",
-    sentinel2: "Sentinel-2", viirs: "VIIRS", inarisk: "InaRISK",
-    krl: "Jadwal KRL", model: "Estimasi model", tidak_tersedia: "tidak tersedia",
+    survei: "survei", mapid_poi: "MAPID POI", mapid: "MAPID",
+    osm: "OpenStreetMap", sentinel2: "Sentinel-2", viirs: "VIIRS",
+    inarisk: "InaRISK", krl: "Jadwal KRL", model: "Estimasi model",
+    tidak_tersedia: "tidak tersedia",
   };
   return peta[sumber] ?? sumber;
 }

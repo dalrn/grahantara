@@ -339,8 +339,11 @@ export default function Beranda({
               animate={{ opacity: 1, y: 0 }}
               className="mt-5 rounded-lg bg-slate-900 p-4 ring-1 ring-slate-800"
             >
-              <div className="text-sm text-slate-400">
-                Profil dari permintaanmu — koreksi bila salah:
+              <div className="text-sm text-slate-200">
+                Sudah sesuai maksudmu?
+              </div>
+              <div className="text-xs text-slate-400">
+                Semua masih bisa diubah di bawah ini.
               </div>
 
               {profil.sumber === "fallback" && (

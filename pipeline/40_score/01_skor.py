@@ -51,8 +51,11 @@ SPEK = {
     "M4_layanan_harian":       ("amenity", "M4_nilai", "m4_k",         "kategori",  "mapid_poi", True),
     "W1_kerapatan_simpang":    ("w1",      "W1_nilai", "n_simpang",    "per km2",   "osm",       True),
     "W2_keteduhan":            ("w2",      "W2_nilai", "w2_ndvi",      "NDVI",      "sentinel2", True),
-    "W3_penerangan":           ("w3",      "W3_nilai", "w3_radians",   "nW/sr/cm2", "viirs",     True),
-    "W4_banjir":               ("w4",      "W4_nilai", None,           "indeks",    "inarisk",   True),
+    # W3/W4 read MAPID GeoJSON layers (nighttime_light_2023, bahaya_banjir), not
+    # VIIRS or InaRISK -- those were replaced in 30_indicators/. They are polygon
+    # layers rather than POI points, so they carry `mapid`, not `mapid_poi`.
+    "W3_penerangan":           ("w3",      "W3_nilai", "w3_radians",   "nW/sr/cm2", "mapid",     True),
+    "W4_banjir":               ("w4",      "W4_nilai", None,           "indeks",    "mapid",     True),
     "W5_tekanan_lalin":        ("w5",      "W5_nilai", None,           "indeks",    "osm",       True),
     "W6_integritas_jalur":     ("w6",      "W6_nilai", None,           "indeks",    "model",     True),
 }

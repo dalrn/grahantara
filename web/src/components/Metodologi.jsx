@@ -275,7 +275,7 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
                 Nol di situ berarti tidak ada data, bukan nilai nol. Pada data
                 ini {formatBilangan(denganKosong)} dari {formatBilangan(jumlah)}{" "}
                 heksagon memiliki dimensi kosong
-                {dimKosong ? ` — ${dimKosong}` : ""}.
+                {dimKosong ? `, yaitu ${dimKosong}` : ""}.
               </li>
             )}
             {denganKosong > 0 && (
@@ -359,7 +359,7 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
                       <td className="py-1 text-right">
                         {cakupan === 0 ? (
                           <span className="rounded bg-red-900/70 px-1.5 py-0.5 text-xs font-semibold text-red-100">
-                            0% — tanpa data
+                            0%, tanpa data
                           </span>
                         ) : (
                           formatPecahan(cakupan * 100)
@@ -422,7 +422,7 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
                   .sort((a, b) => b[1] - a[1])
                   .map(([s, n]) => (
                     <li key={s}>
-                      {s} — {formatBilangan(n)} titik
+                      {s}: {formatBilangan(n)} titik
                     </li>
                   ))}
               </ul>
@@ -434,8 +434,8 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
                   .sort((a, b) => b[1] - a[1])
                   .map(([p, n]) => (
                     <li key={p}>
-                      {p} — {formatBilangan(n)} titik
-                      {ARTIKEL_PRESISI[p] ? <>: {ARTIKEL_PRESISI[p]}.</> : ""}
+                      {p}: {formatBilangan(n)} titik
+                      {ARTIKEL_PRESISI[p] ? <> ({ARTIKEL_PRESISI[p]})</> : ""}
                     </li>
                   ))}
               </ul>
@@ -490,8 +490,8 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
             </li>
             <li>
               Harga sewa berasal dari{" "}
-              {kosTotal ? formatBilangan(kosTotal) : "31"} titik survei —
-              sebagian dari media sosial dan spanduk, bukan seluruhnya wawancara
+              {kosTotal ? formatBilangan(kosTotal) : "31"} titik survei.
+              Sebagian dari media sosial dan spanduk, bukan seluruhnya wawancara
               langsung.
             </li>
             <li>
