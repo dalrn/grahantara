@@ -236,9 +236,13 @@ input[type="checkbox"] {
     display: none;
   }
 }
+/* Chip skor duduk tepat di atas legenda, bukan di kiri atas: sejak tombol
+   "Buka peta lengkap" pindah ke kiri atas (kartu form menempati sisi kanan),
+   keduanya bertumpuk saat kursor menyapu heksagon. Di sini ia juga berkumpul
+   dengan legenda, sesama pembacaan peta. */
 .hero-peta-skor {
   position: absolute;
-  top: 12px;
+  bottom: 52px;
   left: 12px;
   display: flex;
   align-items: baseline;
