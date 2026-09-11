@@ -7,10 +7,13 @@ import Legenda from "./Legenda";
 // Satu sidebar bertab menggantikan tiga panel melayang yang dulu saling
 // menimpa di sudut yang sama. Hanya satu isi tampil sekaligus, jadi tinggi
 // yang dipakai tetap terkendali di layar laptop.
+// Legenda lebih dulu, dan jadi tab yang terbuka saat peta dibuka: yang
+// pertama dibutuhkan pembaca adalah arti warna heksagon, bukan penyetelan
+// bobot.
 const TAB = [
+  { id: "legenda", label: "Legenda" },
   { id: "bobot", label: "Bobot" },
   { id: "lapisan", label: "Lapisan" },
-  { id: "legenda", label: "Legenda" },
 ];
 
 export default function PanelKontrol({
@@ -25,7 +28,7 @@ export default function PanelKontrol({
   // terjangkau supaya lapisan gerbang bisa dinyalakan tanpa menutup rute.
   modeRute = false,
 }) {
-  const [aktif, setAktif] = useState("bobot");
+  const [aktif, setAktif] = useState("legenda");
   const [terbuka, setTerbuka] = useState(() =>
     window.matchMedia("(min-width: 768px)").matches,
   );

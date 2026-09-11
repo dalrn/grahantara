@@ -47,17 +47,7 @@ export default function PetaHero({ onBuka }) {
       container: wadah.current,
       style: gaya,
       bounds: BATAS,
-      // Padding kanan besar pada layar lebar: kartu form melayang di sisi
-      // kanan peta, jadi gugus heksagon digeser ke kiri supaya tidak
-      // tertutup. Di bawah 1101 px kartu turun ke bawah peta dan padding
-      // kembali simetris.
-      fitBoundsOptions: {
-        padding:
-          window.innerWidth > 1100
-            ? { top: 24, bottom: 24, left: 24, right: 430 }
-            : 24,
-        duration: 0,
-      },
+      fitBoundsOptions: { padding: 24, duration: 0 },
       attributionControl: { compact: true },
       // Peta ini pengantar, bukan alat. Rotasi dimatikan supaya tidak ada
       // cara membuat peta miring lalu bingung mengembalikannya.
@@ -355,7 +345,7 @@ export default function PetaHero({ onBuka }) {
   }, []);
 
   return (
-    <div className="hero-peta">
+    <div className={`hero-peta${siap ? " is-siap" : ""}`}>
       <div
         ref={wadah}
         className="hero-peta-kanvas"

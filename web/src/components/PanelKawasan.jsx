@@ -2,6 +2,7 @@ import { PanelMotion, Collapse } from "./Motion";
 import { useEffect, useState } from "react";
 
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
+import { warnaTeksSkor } from "../lib/kelas";
 import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
 import { BOBOT_DEFAULT } from "../config";
 import BarisIndikator, { Lencana } from "./BarisIndikator";
@@ -110,15 +111,17 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
       )}
       {narasi && (
         <div className="mt-2 space-y-1.5 text-xs">
+          {/* Kata, bukan simbol: tidak ada legenda untuk panah naik/turun,
+              dan artinya sudah jelas kalau ditulis. */}
           {narasi.kekuatan?.map((k) => (
-            <div key={k} className="flex gap-1.5 text-emerald-300">
-              <span className="shrink-0 font-bold">▲</span>
+            <div key={k} className="flex gap-2 text-emerald-300">
+              <span className="shrink-0 font-semibold">Unggul</span>
               <span>{k}</span>
             </div>
           ))}
           {narasi.kelemahan?.map((k) => (
-            <div key={k} className="flex gap-1.5 text-yellow-300">
-              <span className="shrink-0 font-bold">▼</span>
+            <div key={k} className="flex gap-2 text-yellow-300">
+              <span className="shrink-0 font-semibold">Lemah</span>
               <span>{k}</span>
             </div>
           ))}
@@ -235,6 +238,7 @@ export default function PanelKawasan({
   bobotDariMetadata,
   skorKini,
   bobotKini,
+  ambangSkor,
   onTutup,
   narasiCache,
   simpanNarasi,
@@ -301,7 +305,13 @@ export default function PanelKawasan({
         {pakaiBobotAnda ? (
           <>
             <div className="text-xs text-slate-400">Skor dengan bobot Anda</div>
-            <div className="text-4xl font-bold text-emerald-400">
+            {/* Angka skor diberi warna dari skala yang sama dengan heksagon:
+                merah rendah, hijau tinggi. Pembaca tidak perlu membandingkan
+                dengan legenda untuk tahu 34 itu buruk. */}
+            <div
+              className="text-4xl font-bold"
+              style={{ color: warnaTeksSkor(skorKini, ambangSkor) ?? undefined }}
+            >
               {formatSkor(skorKini)}
             </div>
             <div className="text-xs text-slate-400">
@@ -310,7 +320,12 @@ export default function PanelKawasan({
           </>
         ) : (
           <>
-            <div className="text-4xl font-bold text-emerald-400">
+            <div
+              className="text-4xl font-bold"
+              style={{
+                color: warnaTeksSkor(heksagon.skor, ambangSkor) ?? undefined,
+              }}
+            >
               {formatSkor(heksagon.skor)}
             </div>
             <div className="text-xs text-slate-400">

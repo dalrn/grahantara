@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Lapisan latar dari jaringan jalan Sleman (OSM), bukan pola hias generik.
@@ -8,17 +8,28 @@ import { useEffect, useState } from "react";
  * (`data/interim/walk_graph.graphml`). Tidak ada penggambaran ulang saat
  * runtime: komponen ini hanya mengambil berkas statis lalu menyisipkannya.
  *
- * Disisipkan sebagai elemen <svg>, bukan background-image: pada lebar 1600
- * unit, garis setebal 0,7 jadi sub-piksel saat diskalakan CSS dan hilang sama
- * sekali. Sebagai elemen, ketebalan garis bisa dinaikkan tanpa membesarkan
- * berkasnya.
+ * SATU lapisan untuk seluruh halaman, dipasang di level root beranda:
+ *   - absolute, tinggi mengikuti tinggi DOKUMEN (bukan viewport), sehingga
+ *     ikut menggulir bersama konten. Bukan position: fixed.
+ *   - rasio aspek SVG dipertahankan; kalau dokumen lebih tinggi daripada satu
+ *     salinan SVG, salinan berikutnya ditumpuk vertikal. Sambungannya tidak
+ *     terlihat pada opasitas latar.
  *
- * Warna diwarisi lewat `currentColor` dari CSS, yang mengambilnya dari token
- * di design.js. Opasitasnya diatur CSS (5%); di atas itu polanya mulai
- * terbaca sebagai peta dan mengganggu teks.
+ * Disisipkan sebagai elemen <svg>, bukan background-image: pada lebar 1600
+ * unit, garis tipis jadi sub-piksel saat diskalakan CSS dan hilang sama
+ * sekali. Sebagai elemen, ketebalan tiap kelas jalan diatur CSS.
  */
+
+// Rasio viewBox berkas (1600 x 2256). Dipakai menghitung berapa salinan
+// vertikal yang dibutuhkan; kalau berkas dibangkitkan ulang dengan rasio
+// berbeda, nilai ini ikut dibaca dari viewBox-nya.
+const RASIO_BAWAAN = 2256 / 1600;
+
 export default function TeksturJalan() {
   const [svg, setSvg] = useState(null);
+  const [rasio, setRasio] = useState(RASIO_BAWAAN);
+  const [salinan, setSalinan] = useState(1);
+  const wadah = useRef(null);
 
   useEffect(() => {
     let batal = false;
@@ -30,8 +41,9 @@ export default function TeksturJalan() {
       })
       .then((t) => {
         if (batal) return;
-        // Garis dinaikkan dari 0,7 (ukuran berkas) ke 1,6 (keterbacaan).
-        setSvg(t.replace('stroke-width="0.7"', 'stroke-width="1.6"'));
+        const vb = t.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+        if (vb) setRasio(Number(vb[2]) / Number(vb[1]));
+        setSvg(t);
       })
       // Tekstur murni dekorasi turunan data; kalau gagal, latar polos saja.
       .catch(() => {});
@@ -41,14 +53,39 @@ export default function TeksturJalan() {
     };
   }, []);
 
+  // Berapa salinan vertikal yang dibutuhkan agar tekstur menerus sampai
+  // dasar dokumen. Diukur ulang saat ukuran halaman berubah.
+  useEffect(() => {
+    if (!svg) return;
+    const el = wadah.current;
+    if (!el) return;
+    const hitung = () => {
+      const induk = el.parentElement;
+      if (!induk) return;
+      const tinggiDok = induk.scrollHeight;
+      const tinggiSatu = induk.clientWidth * rasio;
+      if (tinggiSatu <= 0) return;
+      setSalinan(Math.max(1, Math.ceil(tinggiDok / tinggiSatu)));
+    };
+    hitung();
+    const ro = new ResizeObserver(hitung);
+    ro.observe(el.parentElement ?? el);
+    return () => ro.disconnect();
+  }, [svg, rasio]);
+
   if (!svg) return null;
   // dangerouslySetInnerHTML aman di sini: isinya artefak build milik sendiri
   // dari public/, bukan masukan pengguna dan bukan konten pihak ketiga.
   return (
-    <div
-      className="tekstur-jalan"
-      aria-hidden="true"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="tekstur-jalan" aria-hidden="true" ref={wadah}>
+      {Array.from({ length: salinan }, (_, i) => (
+        <div
+          key={i}
+          className="tekstur-salinan"
+          style={{ paddingTop: `${rasio * 100}%` }}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      ))}
+    </div>
   );
 }

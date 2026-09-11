@@ -15,6 +15,7 @@ const KELOMPOK = 22;
  */
 export default function SebaranDimensi({ dimensi }) {
   const [sebaran, setSebaran] = useState(null);
+  const [sorot, setSorot] = useState(null);
 
   useEffect(() => {
     let batal = false;
@@ -33,7 +34,9 @@ export default function SebaranDimensi({ dimensi }) {
             const kosong = f.properties.dimensi_kosong ?? [];
             const daftar = Array.isArray(kosong)
               ? kosong
-              : String(kosong).split(/[,\s[\]"]+/).filter(Boolean);
+              : String(kosong)
+                  .split(/[,\s[\]"]+/)
+                  .filter(Boolean);
             if (daftar.includes(kunci)) continue;
             nilai.push(f.properties.subskor[kunci]);
           }
@@ -61,13 +64,17 @@ export default function SebaranDimensi({ dimensi }) {
       {dimensi.map(([kunci, nama, jelas]) => {
         const s = sebaran?.[kunci];
         const lebarBatang = LEBAR / KELOMPOK;
+        const aktif = sorot?.kunci === kunci ? sorot : null;
         return (
           <div key={kunci}>
             <dt>{nama}</dt>
             <dd>{jelas}</dd>
             <div className="dimensi-sebaran">
               {s ? (
-                <>
+                <div
+                  className="sebaran-bingkai"
+                  onMouseLeave={() => setSorot(null)}
+                >
                   <svg
                     width={LEBAR}
                     height={TINGGI}
@@ -77,18 +84,37 @@ export default function SebaranDimensi({ dimensi }) {
                   >
                     {s.bin.map((c, i) => {
                       const t = (c / s.puncak) * (TINGGI - 2);
+                      const ini = aktif?.i === i;
+                      // Batang yang ditunjuk naik sedikit; batang bernilai 0
+                      // tetap punya area tangkap supaya rentangnya bisa
+                      // dibaca juga.
+                      const tinggiBatang = Math.max(t + (ini ? 3 : 0), 1);
                       return (
                         <rect
                           key={i}
+                          className={ini ? "batang is-sorot" : "batang"}
                           x={i * lebarBatang}
-                          y={TINGGI - t}
+                          y={TINGGI - tinggiBatang}
                           width={lebarBatang - 1}
-                          height={t}
+                          height={tinggiBatang}
+                          onMouseEnter={() => setSorot({ kunci, i, cacah: c })}
                         />
                       );
                     })}
                   </svg>
-                </>
+                  {aktif && (
+                    <span
+                      className="sebaran-tip"
+                      style={{
+                        left: `${((aktif.i + 0.5) / KELOMPOK) * 100}%`,
+                      }}
+                    >
+                      {Math.round((aktif.i / KELOMPOK) * 100)}&ndash;
+                      {Math.round(((aktif.i + 1) / KELOMPOK) * 100)} (
+                      {aktif.cacah.toLocaleString("id-ID")} kawasan)
+                    </span>
+                  )}
+                </div>
               ) : (
                 <span className="sebaran-kosong">&nbsp;</span>
               )}
