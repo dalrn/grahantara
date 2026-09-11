@@ -1417,3 +1417,83 @@ angka meleset sampai 59 poin pada 1.981 heksagon.
 deploy. Ini sempat terancam: aturan `.gitignore` bertuliskan `data/` tanpa awalan
 garis miring juga cocok dengan `web/public/data/`, dan kalau tidak ketahuan,
 build Vercel akan terbit tanpa data sama sekali. Sudah diperbaiki jadi `/data/`.
+
+---
+
+## Fase 7 — Label sumber W3/W4 dan pembersihan kode mati (2026-09-11)
+
+Bukan perubahan metodologi. Tidak ada rumus, bobot, atau ambang yang bergeser;
+yang berubah hanya **nama sumber** yang dilaporkan W3 dan W4, ditambah tiga
+komentar usang dan dua potong kode mati.
+
+### Masalah: label sumber tertinggal di belakang kodenya
+
+`30_indicators/03_w3_penerangan.py` berhenti memakai VIIRS lewat Google Earth
+Engine dan beralih ke `nighttime_light_2023.geojson` dari MAPID.
+`02_w4_banjir.py` berhenti memakai InaRISK dan beralih ke `bahaya_banjir.geojson`.
+Kedua docstring sudah menyatakannya terang-terangan ("This replaces InaRISK"),
+tetapi tabel `SPEK` di `40_score/01_skor.py` masih menuliskan `viirs` dan
+`inarisk`.
+
+Akibatnya **provenance yang salah sampai ke pengguna**: panel indikator memberi
+lencana "VIIRS" dan "InaRISK" pada angka yang sebenarnya berasal dari MAPID, dan
+narasi AI-2 ikut menyebut nama sumber yang keliru karena ia diberi label itu apa
+adanya. Untuk produk yang seluruh klaimnya bersandar pada keterlacakan, ini cacat
+yang nyata, bukan kosmetik.
+
+### Keputusan: nilai enum baru `mapid`, bukan memakai ulang `mapid_poi`
+
+Keduanya lapisan MAPID, jadi memakai ulang `mapid_poi` menggoda. Ditolak: kedua
+lapisan ini **poligon** (kelas bahaya banjir, kelas DN cahaya malam), bukan titik
+POI. Melabelinya `mapid_poi` akan membuat nama itu berbohong, dan nama yang
+berbohong persis masalah yang sedang diperbaiki.
+
+Alternatif `mapid_nightlight` + `mapid_banjir` juga ditolak: dua nilai enum untuk
+dua indikator, tanpa ada konsumen yang membedakannya. Nama lapisan sudah tercatat
+di docstring tiap langkah.
+
+| `sumber` | Arti |
+|---|---|
+| `mapid_poi` | lapisan titik POI MAPID (M1, M2, M4) |
+| `mapid` | lapisan MAPID non-POI (W3, W4) |
+
+`viirs` dan `inarisk` **tetap di dalam enum**. Menghapusnya akan membuat berkas
+`hexagons.geojson` lama gagal validasi tanpa alasan yang berguna; keduanya kini
+ditandai usang di deskripsi schema.
+
+### Perubahan kontrak — disetujui pemilik repo
+
+Ini menyentuh `contracts/hexagon.schema.json`, yang aturan 2 CLAUDE.md larang
+diubah sepihak. Diputuskan oleh pemilik repo pada 2026-09-11, lalu diterapkan
+serentak di lima tempat supaya tidak ada yang tertinggal:
+
+| Berkas | Perubahan |
+|---|---|
+| `contracts/hexagon.schema.json` | `mapid` masuk enum; deskripsi menandai `viirs`/`inarisk` usang |
+| `pipeline/common/indicators.py` | `SUMBER` menerima `mapid` |
+| `pipeline/40_score/01_skor.py` | `SPEK` W3 dan W4 → `mapid` |
+| `pipeline/tests/validate_schema.py` | `SUMBER_SAH` menerima `mapid` |
+| `web/src/lib/kamus.js`, `web/api/explain-score.js` | label tampilan "MAPID" |
+
+`docs/METHODOLOGY.md` dan `docs/DATA_DICTIONARY.md` ikut diperbaiki — keduanya
+masih menulis "VIIRS" dan "InaRISK" sebagai sumber W3/W4.
+
+### Kode mati yang dihapus
+
+- **`web/src/lib/skor.js`** — `hitungSkor()` dan `CATATAN_RUMUS` tidak diimpor
+  siapa pun. Lebih dari sekadar tak terpakai: fungsi itu **tidak membaca
+  `dimensi_kosong`**, jadi siapa pun yang memakainya akan mendapat angka berbeda
+  dari `mesinSkor.js` pada 1.981 heksagon. Menyimpan jebakan yang menganggur di
+  repo lebih buruk daripada menghapusnya; `mesinSkor.js` adalah satu-satunya
+  mesin skor sisi klien.
+- **`sumberLabel()` di `web/api/compare.js`** — didefinisikan tapi tidak pernah
+  dipanggil; `barisData()` menuliskan penanda "(estimasi)" sendiri. Salinan di
+  `explain-score.js` memang dipakai dan tetap ada.
+
+### Komentar usang yang diperbaiki
+
+| Berkas | Sebelumnya | Sekarang |
+|---|---|---|
+| `pipeline/common/indicators.py` | docstring `skor_akhir()` menyuruh klien membaca `metadata.dimensi_terpakai` | `properties.dimensi_kosong` — field yang lama tidak pernah ada |
+| `web/api/_klienLLM.js` | "BELUM dipakai siapa pun" | menyebut tiga endpoint yang mengimpornya |
+

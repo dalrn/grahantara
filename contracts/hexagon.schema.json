@@ -78,6 +78,7 @@
       "enum": [
         "survei",
         "mapid_poi",
+        "mapid",
         "osm",
         "sentinel2",
         "viirs",
@@ -86,7 +87,7 @@
         "model",
         "tidak_tersedia"
       ],
-      "description": "Asal nilai. 'model' = ditaksir dari data sekunder dan WAJIB ditandai di UI. 'tidak_tersedia' = dikeluarkan dari skor, bobotnya dinormalisasi ulang."
+      "description": "Asal nilai. 'mapid_poi' = lapisan titik POI MAPID. 'mapid' = lapisan MAPID non-POI (poligon bahaya banjir, nighttime light). 'viirs' dan 'inarisk' dipertahankan demi kompatibilitas berkas lama; sejak 2026-09-11 W3 dan W4 memakai 'mapid'. 'model' = ditaksir dari data sekunder dan WAJIB ditandai di UI. 'tidak_tersedia' = dikeluarkan dari skor, bobotnya dinormalisasi ulang."
     },
     "indikator": {
       "type": "object",

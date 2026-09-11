@@ -1,7 +1,8 @@
 import https from "node:https";
 
 // Modul bantu klien LLM (DeepSeek). Nama berawalan garis bawah agar Vercel
-// tidak memperlakukannya sebagai endpoint. BELUM dipakai siapa pun.
+// tidak memperlakukannya sebagai endpoint. Dipakai oleh parse-preference.js,
+// explain-score.js, dan compare.js.
 // Kunci hanya dibaca dari environment di sisi server; tidak pernah dikirim
 // ke browser dan tidak pernah dikembalikan ke klien.
 //

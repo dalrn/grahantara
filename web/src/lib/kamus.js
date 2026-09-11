@@ -47,9 +47,12 @@ export const NAMA_INDIKATOR = {
   W6_integritas_jalur: "Integritas jalur pejalan",
 };
 
+// viirs dan inarisk hanya muncul pada berkas data lama; sejak 2026-09-11
+// W3 dan W4 memakai sumber "mapid" (lapisan MAPID non-POI).
 export const LABEL_SUMBER = {
   survei: "Survei lapangan",
   mapid_poi: "MAPID POI",
+  mapid: "MAPID",
   osm: "OpenStreetMap",
   sentinel2: "Sentinel-2",
   viirs: "VIIRS",

@@ -21,8 +21,8 @@ INDIKATOR_WAJIB = [
     "W1_kerapatan_simpang", "W2_keteduhan", "W3_penerangan", "W4_banjir",
     "W5_tekanan_lalin", "W6_integritas_jalur",
 ]
-SUMBER_SAH = {"survei", "mapid_poi", "osm", "sentinel2", "viirs", "inarisk",
-              "krl", "model", "tidak_tersedia"}
+SUMBER_SAH = {"survei", "mapid_poi", "mapid", "osm", "sentinel2", "viirs",
+              "inarisk", "krl", "model", "tidak_tersedia"}
 SUBSKOR = ["connectivity", "affordability", "amenity", "walkability"]
 
 

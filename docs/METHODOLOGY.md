@@ -175,7 +175,7 @@ seluruh 20 gang tercatat "Sepi", dan 30 dari 31 ruas "Ramai" adalah jalan raya.
 
 | Tier | `sumber` | Perlakuan |
 |---|---|---|
-| Teramati | `survei`, `osm`, `mapid_poi`, `sentinel2`, `viirs`, `inarisk` | dipakai langsung |
+| Teramati | `survei`, `osm`, `mapid_poi`, `mapid`, `sentinel2` | dipakai langsung |
 | Ditaksir | `model` | dipakai, **ditandai "estimasi"** di antarmuka |
 | Tidak ada | `tidak_tersedia` | **dikeluarkan**, bobot dinormalisasi ulang |
 
