@@ -24,6 +24,10 @@ const BATAS = [
  *
  * onBuka dipanggil saat peta diklik; App membuka halaman peta penuh.
  */
+// Modul-level, bukan state React: animasi masuk hanya sekali per sesi, tidak
+// diulang saat pengguna kembali ke beranda dari halaman peta.
+let sudahDianimasikan = false;
+
 export default function PetaHero({ onBuka }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -43,7 +47,17 @@ export default function PetaHero({ onBuka }) {
       container: wadah.current,
       style: gaya,
       bounds: BATAS,
-      fitBoundsOptions: { padding: 24, duration: 0 },
+      // Padding kanan besar pada layar lebar: kartu form melayang di sisi
+      // kanan peta, jadi gugus heksagon digeser ke kiri supaya tidak
+      // tertutup. Di bawah 1101 px kartu turun ke bawah peta dan padding
+      // kembali simetris.
+      fitBoundsOptions: {
+        padding:
+          window.innerWidth > 1100
+            ? { top: 24, bottom: 24, left: 24, right: 430 }
+            : 24,
+        duration: 0,
+      },
       attributionControl: { compact: true },
       // Peta ini pengantar, bukan alat. Rotasi dimatikan supaya tidak ada
       // cara membuat peta miring lalu bingung mengembalikannya.
@@ -59,6 +73,7 @@ export default function PetaHero({ onBuka }) {
 
     const controller = new AbortController();
     let dibuang = false;
+    let rafId = null;
 
     const muat = async () => {
       try {
@@ -72,14 +87,33 @@ export default function PetaHero({ onBuka }) {
         // Indikator (16 per heksagon, ~3,3 MB) tidak dipakai di hero.
         // Lepas sebelum diserahkan ke MapLibre supaya tidak disalin dan
         // diserikan percuma.
+        // Jarak ternormalisasi tiap heksagon dari pusat gugus (0 di tengah,
+        // 1 di tepi terjauh). Dipakai untuk memunculkan heksagon bertahap
+        // dari pusat ke luar; dihitung sekali di sini, bukan per frame.
+        const titik = data.features.map((f) => {
+          const c = f.geometry.coordinates[0][0];
+          return [c[0], c[1]];
+        });
+        const pusatX =
+          titik.reduce((a, p) => a + p[0], 0) / (titik.length || 1);
+        const pusatY =
+          titik.reduce((a, p) => a + p[1], 0) / (titik.length || 1);
+        let jauhMaks = 0;
+        const jarak = titik.map(([x, y]) => {
+          const d = Math.hypot(x - pusatX, y - pusatY);
+          if (d > jauhMaks) jauhMaks = d;
+          return d;
+        });
+
         const ringan = {
           ...data,
-          features: data.features.map((f) => ({
+          features: data.features.map((f, i) => ({
             type: f.type,
             geometry: f.geometry,
             properties: {
               h3_index: f.properties.h3_index,
               skor: f.properties.skor,
+              jauh: jauhMaks > 0 ? jarak[i] / jauhMaks : 0,
             },
           })),
         };
@@ -96,13 +130,10 @@ export default function PetaHero({ onBuka }) {
           source: "heksagon",
           paint: {
             "fill-color": ekspresiWarna(ambang, WARNA_KELAS),
-            "fill-opacity": [
-              "case",
-              ["boolean", ["feature-state", "hover"], false],
-              0.78,
-              0.55,
-            ],
-            "fill-opacity-transition": { duration: 150 },
+            // Opasitas awal 0; animasi masuk menaikkannya lewat
+            // setPaintProperty per frame (lihat jalankanAnimasiMasuk).
+            "fill-opacity": 0,
+            "fill-opacity-transition": { duration: 0 },
           },
         });
         map.addLayer({
@@ -187,6 +218,66 @@ export default function PetaHero({ onBuka }) {
           },
         });
 
+        // Animasi masuk heksagon: muncul bertahap dari pusat ke luar, ~0,5
+        // detik, sekali saja. Basemap dan penanda kampus sudah tampil lebih
+        // dulu karena lapisan heksagon dimulai dari fill-opacity 0.
+        //
+        // Dijalankan lewat setPaintProperty per frame, bukan ekspresi
+        // MapLibre: tidak ada variabel ekspresi yang bisa dianimasikan.
+        const opasitasNormal = [
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          0.78,
+          0.55,
+        ];
+        const kurangGerak = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        // Dihormati mutlak: langsung tampil penuh, tanpa transisi apa pun.
+        if (kurangGerak || sudahDianimasikan) {
+          map.setPaintProperty("heksagon-isi", "fill-opacity", opasitasNormal);
+          map.setPaintProperty("heksagon-isi", "fill-opacity-transition", {
+            duration: 150,
+          });
+        } else {
+          sudahDianimasikan = true;
+          const DURASI = 520;
+          const mulai = performance.now();
+          const langkah = (t) => {
+            if (dibuang || !map.getLayer("heksagon-isi")) return;
+            const maju = Math.min(1, (t - mulai) / DURASI);
+            if (maju >= 1) {
+              map.setPaintProperty(
+                "heksagon-isi",
+                "fill-opacity",
+                opasitasNormal,
+              );
+              map.setPaintProperty("heksagon-isi", "fill-opacity-transition", {
+                duration: 150,
+              });
+              return;
+            }
+            // Gerbang bergerak dari pusat (jauh=0) ke tepi (jauh=1). Lebar
+            // 0,35 membuat tepinya lembut, bukan lingkaran keras.
+            map.setPaintProperty("heksagon-isi", "fill-opacity", [
+              "*",
+              opasitasNormal,
+              [
+                "interpolate",
+                ["linear"],
+                ["-", maju * 1.35, ["get", "jauh"]],
+                0,
+                0,
+                0.35,
+                1,
+              ],
+            ]);
+            rafId = requestAnimationFrame(langkah);
+          };
+          rafId = requestAnimationFrame(langkah);
+        }
+
         if (!dibuang) setSiap(true);
       } catch (e) {
         if (e?.name === "AbortError" || dibuang) return;
@@ -226,15 +317,40 @@ export default function PetaHero({ onBuka }) {
       setSorot(null);
     };
 
-    map.on("load", muat);
+    // "load" hanya menyala sekali, setelah style selesai dimuat. Di dev,
+    // StrictMode memasang komponen dua kali dan pembongkaran mount pertama
+    // membatalkan permintaan style.json milik mount kedua; akibatnya "load"
+    // tidak pernah menyala dan tidak ada satu pun lapisan yang terbentuk.
+    // Karena itu jangan bergantung pada satu peristiwa saja: kalau style
+    // ternyata sudah siap, jalankan langsung; kalau belum, tunggu "load"
+    // sekaligus "styledata" sebagai jaring pengaman.
+    let sudahMuat = false;
+    const muatSekali = () => {
+      if (sudahMuat || dibuang) return;
+      // isStyleLoaded() TIDAK dipakai sebagai syarat: saat permintaan sprite
+      // atau glyph dibatalkan, nilainya tetap false selamanya walau style
+      // sudah punya lapisan lengkap. Yang menentukan cukup ada style dengan
+      // lapisan, karena addSource/addLayer hanya butuh itu.
+      if (!map.getStyle()?.layers?.length) return;
+      sudahMuat = true;
+      muat();
+    };
+    muatSekali();
+    map.on("load", muatSekali);
+    map.on("styledata", muatSekali);
     map.on("mousemove", "heksagon-isi", onMove);
     map.on("mouseleave", "heksagon-isi", onLeave);
 
     return () => {
       dibuang = true;
       controller.abort();
+      if (rafId) cancelAnimationFrame(rafId);
       map.remove();
       peta.current = null;
+      // Jangan tinggalkan rujukan ke peta yang sudah dibuang.
+      if (import.meta.env.DEV && window.__heroMap === map) {
+        window.__heroMap = null;
+      }
     };
   }, []);
 

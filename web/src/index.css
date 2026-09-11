@@ -63,15 +63,32 @@ input[type="checkbox"] {
 }
 /* --- Halaman beranda -------------------------------------------------------
    Palet diambil dari skala warna skor peta (config.js scoreColors), bukan
-   dipilih terpisah. Aksen teal #15615f adalah versi gelap dari #319b98, kelas
+   dipilih terpisah. Aksen teal #226c6a adalah versi gelap dari #319b98, kelas
    tengah skala itu, sehingga warna di halaman ini punya rujukan yang sama
    dengan warna di peta. Tidak ada gradien, glassmorphism, atau bayangan tebal. */
 .home-page {
   color-scheme: light;
-  --tinta: #12332f;
-  --tinta-2: #3c5450;
-  --aksen: #15615f;
-  --aksen-pekat: #0f4f4d;
+  /* Semua warna di bawah diturunkan dari skala warna peta (design.js
+     scoreColors). Lihat komentar di berkas itu untuk faktor turunannya.
+     Jangan menambah warna yang tidak bisa ditelusuri ke skala tersebut.
+
+     Tiga kelompok yang SENGAJA di luar aturan itu:
+     1. Netral (--latar, --garis, --garis-tipis, --kartu): abu-abu kehijauan
+        nyaris tanpa saturasi. Diturunkan dari toska hasilnya beda < 2 digit
+        heksa, jadi tidak ada gunanya diubah.
+     2. Warna semantik: merah peringatan data palsu (#9f1239) dan kuning
+        penanda "belum terbaca" (#fdf6e3/#d9c48a/#6b5307). Keduanya harus
+        terbaca sebagai peringatan, dan skala peta tidak punya merah.
+     3. Latar peta hero (#16201f): mengikuti basemap gelap MAPID, bukan
+        palet halaman. */
+  --tinta: #322a46; /* <- #534675 ungu, kelas terendah skala */
+  --tinta-2: #405958; /* <- #319b98 toska, L 0,30 S 0,16 */
+  --aksen: #226c6a; /* <- #319b98 toska, kelas tengah skala */
+  --aksen-pekat: #1c5a58;
+  --angka-kawasan: #3c5777; /* <- #5379a5 biru */
+  --angka-kampus: #226c6a; /* <- #319b98 toska */
+  --angka-indikator: #3e7a3b; /* <- #94ca91 hijau */
+  --aksen-kuning: #edd58b; /* <- #edd58b, HANYA aksen non-teks */
   --garis: #c8d5d2;
   --garis-tipis: #dde6e4;
   --latar: #eef2f1;
@@ -131,24 +148,32 @@ input[type="checkbox"] {
   font-weight: 600;
 }
 
-.home-layout {
+/* Judul melebar sendiri di atas peta. */
+.home-intro {
   max-width: 1240px;
   margin: auto;
-  padding: 48px 24px 40px;
-  display: grid;
-  grid-template-columns: 1fr 424px;
-  gap: 56px;
-  align-items: start;
+  padding: 44px 24px 22px;
+}
+/* Peta selebar konten; kartu form melayang di atasnya, menempel kanan.
+   Gugus heksagon berada di tengah-kiri peta sehingga sisi kanan lapang. */
+.home-layout {
+  position: relative;
+  max-width: 1240px;
+  margin: auto;
+  padding: 0 24px 40px;
+}
+.hero-peta-wadah {
+  min-width: 0;
 }
 .home-intro h1 {
-  font-size: clamp(32px, 3.3vw, 44px);
-  line-height: 1.15;
+  font-size: clamp(32px, 3.6vw, 48px);
+  line-height: 1.14;
   font-weight: 600;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.6px;
   margin: 0;
   /* Pindah baris dibiarkan alami; <br> keras pernah membuat kata menyatu
      saat disembunyikan di layar sempit. */
-  max-width: 17ch;
+  max-width: 22ch;
 }
 .intro-lead {
   font-size: 16px;
@@ -166,14 +191,16 @@ input[type="checkbox"] {
   /* Basemap gelap adalah keputusan tim (config.js): basemap terang membuat
      kelas skor tertinggi nyaris menyatu dengan latar. Bingkai gelap tipis
      membuat peta terbaca sebagai panel yang disengaja. */
-  border: 1px solid #2e4b46;
+  border: 1px solid #2b4443; /* <- #319b98 toska, gelap */
   border-radius: 10px;
   overflow: hidden;
   background: #16201f;
 }
 .hero-peta-kanvas,
 .hero-peta-cadangan {
-  height: 392px;
+  /* Peta adalah produknya; beri tinggi yang sepadan, dibatasi tinggi layar
+     supaya judul di atasnya tetap ikut terlihat. */
+  height: min(560px, 62vh);
   width: 100%;
   cursor: pointer;
 }
@@ -279,12 +306,38 @@ input[type="checkbox"] {
   color: var(--tinta-2);
 }
 
-/* Kartu formulir */
+/* Kartu formulir. Pada layar lebar ia melayang di atas peta, menempel ke
+   sisi kanan yang kosong. Kartu putih di atas basemap gelap sudah cukup
+   kontras; tidak perlu bayangan tebal atau efek kaca. */
 .preference-card {
   border: 1px solid var(--garis);
   border-radius: 12px;
   padding: 24px;
   background: var(--kartu);
+}
+@media (min-width: 1101px) {
+  /* Sisi kanan peta ditempati kartu; tombol dan atribusi pindah ke kiri. */
+  .hero-peta-buka {
+    right: auto;
+    left: 12px;
+  }
+  .hero-peta .maplibregl-ctrl-bottom-right {
+    right: auto;
+    left: 300px;
+  }
+  .preference-card {
+    position: absolute;
+    top: 20px;
+    right: 44px;
+    z-index: 5;
+    width: 392px;
+    /* Tidak boleh melebihi tinggi peta: kalau isinya memanjang, kartu yang
+       di-scroll, bukan petanya yang ikut memanjang. Sisakan ruang di bawah
+       agar bar atribusi MAPID tetap terlihat. */
+    max-height: calc(min(560px, 62vh) - 62px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 .preference-card h2 {
   font-size: 22px;
@@ -376,7 +429,7 @@ input[type="checkbox"] {
   min-height: 74px;
 }
 .preference-card textarea::placeholder {
-  color: #5a736e;
+  color: #4f7271; /* <- #319b98 toska, L 0,38 */
 }
 .kotak-centang {
   display: flex;
@@ -507,7 +560,7 @@ input[type="checkbox"] {
   margin: 0;
   padding: 9px 11px;
   border-left: 2px solid var(--garis);
-  background: #f4f7f6;
+  background: #f5f7f7; /* <- #319b98 toska, L 0,965 */
   color: var(--tinta-2);
   font-size: 13px;
   line-height: 1.55;
@@ -515,6 +568,12 @@ input[type="checkbox"] {
 
 /* "Pilih dua": state terpilih ditandai kotak centang SVG, border tebal, dan
    latar terisi sekaligus — tidak bergantung pada warna saja. */
+/* <legend> tidak ikut grid gap fieldset seperti anak biasa, jadi jaraknya ke
+   daftar opsi diberikan eksplisit di sini. Tanpa ini pertanyaan menempel ke
+   kotak pilihan pertama. */
+.bidang-prioritas > legend {
+  margin-bottom: 12px;
+}
 .pilih-daftar {
   display: grid;
   gap: 6px;
@@ -550,7 +609,7 @@ input[type="checkbox"] {
   border-color: var(--aksen);
   border-width: 2px;
   padding: 9px 11px;
-  background: #e7f0ef;
+  background: #e9f2f2; /* <- #319b98 toska, L 0,93 */
   font-weight: 600;
 }
 .pilih-opsi.is-aktif .pilih-kotak {
@@ -565,7 +624,7 @@ input[type="checkbox"] {
    3,39:1 terhadap latar putih, di bawah ambang WCAG AA. Yang diredupkan
    hanya latar dan kotak centangnya; teks tetap memakai warna penuh. */
 .pilih-opsi:disabled {
-  background: #f5f8f7;
+  background: #f5f7f7; /* <- #319b98 toska, L 0,965 */
   border-color: var(--garis-tipis);
   cursor: not-allowed;
 }
@@ -606,16 +665,16 @@ input[type="checkbox"] {
   max-width: min(560px, calc(100% - 24px));
   padding: 9px 14px;
   border-radius: 8px;
-  border: 1px solid #4c7d72;
-  background: #1d3c36;
-  color: #dcebe6;
+  border: 1px solid #395959; /* <- #319b98 toska */
+  background: #1c3231; /* <- #319b98 toska, L 0,38 */
+  color: #92b9b8; /* <- #319b98 toska, 6,36:1 */
   font-size: 13px;
   line-height: 1.45;
   box-shadow: 0 6px 20px #0004;
 }
 .pita-prioritas button {
   flex-shrink: 0;
-  color: #9fdccb;
+  color: #71b6b4; /* <- #319b98 toska, 5,84:1 di latar pita */
   font-size: 12px;
   font-weight: 600;
   text-decoration: underline;
@@ -632,6 +691,37 @@ input[type="checkbox"] {
     padding: 8px 11px;
     gap: 10px;
   }
+}
+
+/* Wadah bagian bawah: tekstur jaringan jalan Sleman duduk di belakangnya. */
+.home-bawah {
+  position: relative;
+}
+.tekstur-jalan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--aksen);
+  /* 5% adalah batas atas yang masih aman. Di atas itu polanya mulai terbaca
+     sebagai peta dan bersaing dengan teks; di 3% praktis tidak terlihat. */
+  opacity: 0.05;
+  /* Memudar di tepi supaya tidak terpotong tegas di batas bagian. */
+  mask-image: linear-gradient(#0000, #000 14%, #000 78%, #0000);
+}
+.tekstur-jalan svg {
+  position: absolute;
+  left: 50%;
+  top: -8%;
+  width: 1500px;
+  transform: translateX(-50%);
+}
+/* Isi bagian bawah berdiri di atas tekstur. */
+.home-bawah > .home-penjelasan,
+.home-bawah > .home-data {
+  position: relative;
+  z-index: 1;
 }
 
 /* Bagian 3: dua kolom selebar konten. Kiri "Empat hal yang dinilai", kanan
@@ -689,7 +779,18 @@ input[type="checkbox"] {
   font-size: 29px;
   font-weight: 600;
   letter-spacing: -1px;
-  color: var(--aksen);
+  font-variant-numeric: tabular-nums;
+}
+/* Tiap angka memakai satu kelas skala peta yang berbeda, bukan satu warna
+   merek. Urutannya mengikuti urutan kelas: biru, toska, hijau. */
+.data-grid > div:nth-child(1) strong {
+  color: var(--angka-kawasan);
+}
+.data-grid > div:nth-child(2) strong {
+  color: var(--angka-kampus);
+}
+.data-grid > div:nth-child(3) strong {
+  color: var(--angka-indikator);
 }
 .data-grid span {
   font-size: 13.5px;
@@ -838,10 +939,19 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 1100px) {
+  /* Kartu tidak lagi melayang: peta di atas, kartu di bawahnya, keduanya
+     selebar layar. */
+  .home-intro {
+    padding: 32px 24px 18px;
+  }
   .home-layout {
-    grid-template-columns: 1fr;
-    padding: 36px 24px 28px;
-    gap: 32px;
+    padding: 0 24px 28px;
+    display: grid;
+    gap: 24px;
+  }
+  .hero-peta-kanvas,
+  .hero-peta-cadangan {
+    height: 420px;
   }
   /* Dua kolom penjelasan menumpuk: "Empat hal yang dinilai" di atas,
      "Dasar penilaiannya" di bawah. Pemisah jadi horizontal. */
@@ -888,9 +998,12 @@ input[type="checkbox"] {
   .nav-active {
     display: none;
   }
+  .home-intro {
+    padding: 26px 18px 14px;
+  }
   .home-layout {
-    padding: 28px 18px 24px;
-    gap: 28px;
+    padding: 0 18px 24px;
+    gap: 20px;
   }
   .home-intro h1 {
     font-size: 29px;
