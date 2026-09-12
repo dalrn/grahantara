@@ -1277,6 +1277,49 @@ input[type="checkbox"] {
     text-align: left;
   }
 }
+/* Potongan garis di tiap baris langkah rute. Gayanya menyalin garis di peta:
+   isian dari --warna-rute, di atas alas gelap yang sama dengan casing peta.
+   Moda jalan kaki memakai gradien berulang sebagai garis putus-putus, jadi
+   pembedanya tidak bergantung pada warna dan tetap terbaca di grayscale. */
+.contoh-garis {
+  flex-shrink: 0;
+  width: 18px;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: var(--warna-rute);
+  box-shadow: 0 0 0 1px #0b1b16;
+}
+.contoh-garis[data-mode="jalan"] {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--warna-rute) 0 5px,
+    transparent 5px 8px
+  );
+}
+.rute-keterangan {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+/* Baris langkah yang disentuh: latar tipis, sejalan dengan ruas garis di
+   peta yang ikut menebal. */
+.langkah-rute {
+  border-radius: 6px;
+  padding: 3px 4px;
+  margin-left: -4px;
+  transition: background-color var(--motion-micro);
+}
+.langkah-rute:hover,
+.langkah-rute:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+.langkah-rute:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 .route-panel {
   border: 1px solid #bbd7c626;
   max-height: calc(100dvh - 150px);
@@ -1528,6 +1571,19 @@ input[type="checkbox"] {
 
 /* Popup hover gerbang: kecil, tidak menangkap pointer supaya tidak
    mengganggu klik pada gerbang di bawahnya. */
+/* Tautan Google Maps di dalam popup titik. */
+.popup-tautan-maps {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fc98a;
+  text-decoration: underline;
+}
+.popup-tautan-maps:hover {
+  color: #a5ddab;
+}
+
 .popup-gerbang {
   pointer-events: none;
 }
@@ -1597,6 +1653,17 @@ input[type="checkbox"] {
 
 /* --- Panel bandingkan kawasan --------------------------------------------
    Vonis dulu, tabel angka di balik tombol. */
+/* Tombol aksi di panel gelap. Warnanya dari skala skor produk
+   (design.js scoreColors[4] #46a35a), bukan biru terang yang tidak punya
+   rujukan di palet mana pun. Kontras teks #08150d di atasnya 5,9:1 (lolos AA). */
+.tombol-aksi {
+  background: #46a35a;
+  color: #08150d;
+}
+.tombol-aksi:hover {
+  background: #56b96b;
+}
+
 .vonis {
   margin-top: 12px;
   padding: 12px;
@@ -1764,6 +1831,13 @@ input[type="checkbox"] {
   70% {
     color: #c2352c;
   }
+}
+/* Dua pintasan berdampingan: "Bagi rata" dan "Mendekati bawaan". */
+.alokasi-pintasan {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .alokasi-rata {
   font-size: 12px;

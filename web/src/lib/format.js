@@ -1,7 +1,42 @@
+/**
+ * Pembulatan yang menghormati ketelitian data.
+ *
+ * Presisi berlebih menurunkan kepercayaan karena menyiratkan ketelitian yang
+ * tidak dimiliki datanya: jarak jalan kaki tidak butuh satu desimal, dan
+ * 3.504,9 m tidak butuh ketelitian 10 sentimeter. Aturannya:
+ *
+ *   jarak  < 1000 m  -> bulat, "43 m"
+ *   jarak >= 1000 m  -> kilometer satu desimal, "3,5 km"
+ *   skor & subskor    -> bulat, "81" bukan "81,31"
+ *   cacah (rute, titik, kategori) -> bulat
+ *   rupiah            -> bulat, pemisah ribuan
+ *
+ * Indeks abstrak (NDVI, nW/sr/cm2) tidak dibulatkan di sini: angkanya hanya
+ * tampil di balik toggle "angka mentah", tempat presisi justru diinginkan.
+ */
+const SATUAN_CACAH = new Set(["rute", "titik", "kategori", "per km2"]);
+
+export function formatJarak(meter) {
+  if (!Number.isFinite(meter)) return null;
+  if (meter >= 1000) {
+    return `${(meter / 1000).toLocaleString("id-ID", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    })} km`;
+  }
+  return `${Math.round(meter).toLocaleString("id-ID")} m`;
+}
+
 export function formatNilai(nilai, satuan) {
   if (nilai === null || nilai === undefined) return null;
   if (typeof nilai === "string") return nilai;
-  const angka = nilai.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  // Meter -> otomatis naik ke km di atas 1000, tanpa desimal palsu di bawahnya.
+  if (satuan === "m") return formatJarak(nilai);
+  const satuanBersih = typeof satuan === "string" ? satuan.trim() : satuan;
+  const desimal = SATUAN_CACAH.has(satuanBersih) ? 0 : 1;
+  const angka = nilai.toLocaleString("id-ID", {
+    maximumFractionDigits: desimal,
+  });
   if (typeof satuan === "string" && /^Rp/i.test(satuan.trim())) {
     const sisa = satuan.trim().replace(/^Rp/i, "");
     return `Rp ${angka}${sisa}`;
@@ -14,12 +49,13 @@ export function formatPersentil(p) {
   return "persentil " + Math.round(p * 100);
 }
 
+// Skor dan subskor dibulatkan ke bilangan bulat. "81,31" dan "81,3" sama-sama
+// menyiratkan ketelitian yang tidak ada: skor adalah peringkat persentil,
+// dan selisih 0,3 poin tidak berarti apa-apa bagi pembaca.
 export function formatSkor(n) {
   if (n === null || n === undefined) return "-";
-  return n.toLocaleString("id-ID", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  if (!Number.isFinite(n)) return "-";
+  return Math.round(n).toLocaleString("id-ID");
 }
 
 export function formatCoordinates(coordinates) {

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import { BOBOT_DEFAULT } from "../config";
 import { DIMENSI_UI } from "../lib/kamus";
 import AlokasiPoin, { TOTAL_POIN } from "./AlokasiPoin";
 
@@ -43,14 +42,24 @@ function bobotKeAlokasi(bobot) {
 
 export default function PanelBobot({
   bobot,
+  bobotBawaan,
   onBobotBerubah,
   onKembalikanBawaan,
 }) {
-  const bedaDariBawaan =
-    Math.abs(bobot.connectivity - BOBOT_DEFAULT.connectivity * 100) > 0.5 ||
-    Math.abs(bobot.affordability - BOBOT_DEFAULT.affordability * 100) > 0.5 ||
-    Math.abs(bobot.amenity - BOBOT_DEFAULT.amenity * 100) > 0.5 ||
-    Math.abs(bobot.walkability - BOBOT_DEFAULT.walkability * 100) > 0.5;
+  // Acuan bawaan datang dari App (metadata.bobot_default), BUKAN dari
+  // BOBOT_DEFAULT di config. Sebelumnya panel ini memakai konstanta config
+  // sementara App memakai metadata: keduanya kebetulan bernilai sama, jadi
+  // tidak ada gejala — tapi begitu pipeline mengubah bobot bawaan, panel dan
+  // tombol "Kembalikan bawaan" akan berselisih diam-diam.
+  const bedaDariBawaan = DIMENSI_UI.some(
+    ({ kunci }) => Math.abs((bobot[kunci] ?? 0) - (bobotBawaan[kunci] ?? 0)) > 0.5,
+  );
+
+  // Alokasi 12 poin yang paling mendekati bobot bawaan (5-3-2-2 untuk
+  // 40/25/20/15). Dihitung dengan fungsi yang sama dengan konversi biasa,
+  // supaya pintasan "Mendekati bawaan" tidak pernah berbeda dari hasil
+  // "Kembalikan bawaan".
+  const alokasiBawaan = bobotKeAlokasi(bobotBawaan);
 
   // Alokasi disimpan di sini sebagai sumber kebenaran, BUKAN diturunkan
   // ulang dari `bobot` setiap render. Bobot yang dikirim ke App sudah
@@ -94,6 +103,8 @@ export default function PanelBobot({
         nilai={alokasi}
         onUbah={ubahAlokasi}
         rentang={false}
+        pinjamDariLain
+        alokasiBawaan={alokasiBawaan}
       />
       <button
         onClick={onKembalikanBawaan}

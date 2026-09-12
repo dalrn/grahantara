@@ -3,8 +3,30 @@ import { useEffect, useRef, useState } from "react";
 import { DAFTAR_KAMPUS } from "../kampus.js";
 import { KOORDINAT_KAMPUS } from "../lib/fokusKampus";
 import { rencanaRute, lengkapiGeometri } from "../lib/rute";
+import { ruteColors } from "../design";
 
 const IKON = { jalan: "🚶", bus: "🚌" };
+
+/**
+ * Potongan garis pendek yang menyalin gaya garis di peta: biru penuh untuk
+ * bus, kuning putus-putus untuk jalan kaki, keduanya di atas alas gelap yang
+ * sama dengan casing di peta.
+ *
+ * Ini yang menggantikan legenda terpisah — pemetaan warna ke moda terbaca
+ * langsung dari daftar langkah. Pembedanya bukan warna saja: penuh versus
+ * putus-putus tetap terbaca dalam grayscale.
+ */
+function ContohGaris({ mode }) {
+  const bus = mode === "bus";
+  return (
+    <span
+      className="contoh-garis"
+      aria-hidden="true"
+      style={{ "--warna-rute": bus ? ruteColors.bus : ruteColors.jalan }}
+      data-mode={bus ? "bus" : "jalan"}
+    />
+  );
+}
 
 export default function PanelRute({
   kos,
@@ -13,6 +35,7 @@ export default function PanelRute({
   onGerbangReset,
   onRute,
   onTutup,
+  onSorotRuas,
 }) {
   const [kampus, setKampus] = useState(kampusAwal ?? "UGM");
   // Berkas yang sama sudah dimuat peta, jadi permintaan ini dilayani cache
@@ -156,9 +179,27 @@ export default function PanelRute({
             )}
           </div>
 
-          <ol className="mt-3 space-y-2">
+          {/* Satu baris keterangan, tepat di bawah total dan sebelum daftar
+              langkah. Menyebut arti gaya garis, bukan arti warnanya. */}
+          <p className="rute-keterangan">
+            Garis penuh berarti naik kendaraan, garis putus-putus berarti jalan
+            kaki.
+          </p>
+
+          <ol className="mt-2 space-y-1">
             {rute.langkah.map((l, i) => (
-              <li key={i} className="flex gap-2 text-xs">
+              <li
+                key={i}
+                className="langkah-rute flex items-start gap-2 text-xs"
+                onMouseEnter={() => onSorotRuas?.(i)}
+                onMouseLeave={() => onSorotRuas?.(null)}
+                // Penyorotan juga bisa dicapai lewat papan tunjuk dan
+                // pembaca layar, bukan kursor saja.
+                tabIndex={0}
+                onFocus={() => onSorotRuas?.(i)}
+                onBlur={() => onSorotRuas?.(null)}
+              >
+                <ContohGaris mode={l.mode} />
                 <span aria-hidden="true">{IKON[l.mode]}</span>
                 <span className="min-w-0">
                   <span className="text-slate-200">{l.teks}</span>

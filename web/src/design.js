@@ -46,3 +46,20 @@ export const motionTokens = {
   panel: 0.3,
   ease: [0.22, 1, 0.36, 1],
 };
+
+// Warna dan gaya garis rute. SUMBER TUNGGAL, dibaca peta (PetaHeksagon) dan
+// panel rute (PanelRute) supaya potongan garis di daftar langkah tidak pernah
+// berbeda dari garis di peta.
+//
+// Pembeda antar moda TIDAK bergantung pada warna saja: bus garis penuh, jalan
+// kaki garis putus-putus. Itu tetap terbaca dalam mode grayscale dan bagi
+// pembaca dengan buta warna.
+//
+// `casing` adalah garis tepi gelap di sekeliling kedua warna. Tanpa itu garis
+// kuning jalan kaki nyaris hilang di atas heksagon kuning-zaitun (kelas skor
+// tengah #f0d45e), karena warnanya hampir sama.
+export const ruteColors = {
+  bus: "#38bdf8",
+  jalan: "#facc15",
+  casing: "#0b1b16",
+};

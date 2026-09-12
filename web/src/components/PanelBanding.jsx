@@ -19,13 +19,10 @@ import {
 const WARNA_A = bandingColors.a;
 const WARNA_B = bandingColors.b;
 
+// Subskor dan selisihnya dibulatkan, sama dengan formatSkor: satu desimal
+// pada peringkat persentil menyiratkan ketelitian yang tidak ada.
 const fmtAngka = (v) =>
-  typeof v === "number"
-    ? v.toLocaleString("id-ID", {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      })
-    : "-";
+  typeof v === "number" ? Math.round(v).toLocaleString("id-ID") : "-";
 
 // MapLibre menyerikan array/objek bersarang jadi string JSON; pulihkan.
 function daftarKosong(x) {
