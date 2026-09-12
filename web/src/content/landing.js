@@ -100,14 +100,20 @@ export const TEKS = {
       connectivity:
         "Jarak ke halte, jumlah rute, dan apakah ada koridor yang benar-benar sampai ke kampusmu.",
       affordability:
-        "Harga kos di sekitar kawasan. Bersumber dari survei lapangan, sehingga baru terukur di sebagian kawasan.",
+        "Harga kos di sekitar kawasan, bersumber dari survei harga tim di lapangan.",
       amenity:
         "Kepadatan dan keragaman tempat makan, serta layanan harian seperti minimarket dan laundry.",
       walkability:
         "Keteduhan, penerangan malam, kerapatan simpang, ketenangan lalu lintas, dan ketersediaan jalur pejalan kaki.",
     },
-    catatan: (jumlah) =>
-      `Tiap grafik adalah sebaran skor dimensi itu. Semuanya dihitung untuk seluruh ${jumlah} kawasan, kecuali Biaya yang hanya terisi di kawasan tersentuh survei harga kos.`,
+    // Kalimat cakupan DIHASILKAN dari data, bukan ditulis manual: menyebut
+    // dimensi tertentu "hanya terisi sebagian" akan basi begitu datanya
+    // berubah. `kurang` berisi nama dimensi yang cakupannya belum penuh,
+    // dihitung SebaranDimensi dari hexagons.geojson.
+    catatan: (jumlah, kurang = []) =>
+      kurang.length === 0
+        ? `Tiap grafik adalah sebaran skor dimensi itu, dihitung untuk seluruh ${jumlah} kawasan.`
+        : `Tiap grafik adalah sebaran skor dimensi itu. Semuanya dihitung untuk seluruh ${jumlah} kawasan, kecuali ${kurang.join(" dan ")} yang baru terisi di sebagian kawasan.`,
   },
 
   data: {

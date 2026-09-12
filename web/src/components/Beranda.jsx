@@ -114,6 +114,9 @@ export default function Beranda({
   const [tidakTerbaca, setTidakTerbaca] = useState([]);
   const [ringkasAI, setRingkasAI] = useState(null);
   const [pesanBaca, setPesanBaca] = useState(null);
+  // Nama dimensi yang cakupannya belum penuh, dilaporkan SebaranDimensi dari
+  // data. Dipakai kalimat cakupan di bawah grafik.
+  const [dimensiKurang, setDimensiKurang] = useState([]);
   const kartuRef = useRef(null);
 
   useEffect(() => {
@@ -569,10 +572,10 @@ export default function Beranda({
             <section className="dimensi-bagian" aria-labelledby="judul-dimensi">
               <h2 id="judul-dimensi">{TEKS.dimensi.judul}</h2>
               <Suspense fallback={<div className="dimensi-cadangan" />}>
-                <SebaranDimensi dimensi={DIMENSI} />
+                <SebaranDimensi dimensi={DIMENSI} onCakupan={setDimensiKurang} />
               </Suspense>
               <p className="dimensi-catatan">
-                {TEKS.dimensi.catatan(jumlahKawasan)}
+                {TEKS.dimensi.catatan(jumlahKawasan, dimensiKurang)}
               </p>
             </section>
           </div>

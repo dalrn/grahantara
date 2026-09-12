@@ -13,7 +13,7 @@ const KELOMPOK = 22;
  * Affordability hanya terisi di 153 dari 2.134 heksagon. Itu ditampilkan apa
  * adanya, karena justru itu yang perlu diketahui pembaca.
  */
-export default function SebaranDimensi({ dimensi }) {
+export default function SebaranDimensi({ dimensi, onCakupan }) {
   const [sebaran, setSebaran] = useState(null);
   const [sorot, setSorot] = useState(null);
 
@@ -49,6 +49,14 @@ export default function SebaranDimensi({ dimensi }) {
           hasil[kunci] = { bin, puncak, jumlah: nilai.length };
         }
         setSebaran(hasil);
+        // Laporkan dimensi yang cakupannya BELUM penuh, supaya kalimat
+        // cakupan di beranda dihasilkan dari data dan tidak pernah basi.
+        const total = data.features.length;
+        onCakupan?.(
+          dimensi
+            .filter(([kunci]) => (hasil[kunci]?.jumlah ?? 0) < total)
+            .map(([, nama]) => nama),
+        );
       })
       .catch(() => {
         if (!batal) setSebaran(null);
@@ -57,6 +65,9 @@ export default function SebaranDimensi({ dimensi }) {
       batal = true;
       controller.abort();
     };
+  // onCakupan sengaja bukan dependensi: identitasnya berubah tiap render
+  // induk dan akan memicu fetch ulang tanpa henti.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dimensi]);
 
   return (
