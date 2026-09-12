@@ -1,5 +1,6 @@
 import { NAMA_INDIKATOR, LABEL_SUMBER } from "../lib/kamus";
-import { formatNilai, formatPersentil } from "../lib/format";
+import { formatNilai } from "../lib/format";
+import { barisIndikator } from "../lib/bahasaIndikator";
 
 export function Lencana({ teks, warna }) {
   return (
@@ -11,11 +12,28 @@ export function Lencana({ teks, warna }) {
   );
 }
 
-export default function BarisIndikator({ kunci, data }) {
+/**
+ * Satu baris indikator di panel Kawasan Terpilih.
+ *
+ * Yang tampil secara bawaan adalah LABEL KUALITATIF dan kalimat persentil,
+ * bukan nilai mentah. Sebelumnya keduanya tampil bersamaan dan sering saling
+ * bertentangan: "Integritas jalur pejalan: 0,2 indeks - persentil 93" terbaca
+ * sebagai nilai buruk, padahal kawasan itu termasuk 7% terbaik.
+ *
+ * `angkaMentah` membuka nilai asli beserta satuannya. Toggle-nya ada satu
+ * untuk seluruh panel, bukan satu per baris.
+ *
+ * Lencana sumber data TIDAK tampil di baris lagi: 16 baris bersamaan membuat
+ * "OpenStreetMap" / "MAPID POI" / "Sentinel-2" jadi kebisingan, dan
+ * "Sentinel-2" tidak berarti apa-apa bagi mahasiswa baru. Sumber diringkas di
+ * bawah daftar, dan muncul per baris hanya saat angka mentah dibuka.
+ * Lencana "Estimasi" TETAP di barisnya: itu peringatan kualitas data, bukan
+ * atribusi.
+ */
+export default function BarisIndikator({ kunci, data, angkaMentah = false }) {
   const nama = NAMA_INDIKATOR[kunci] ?? kunci;
   const tidakTersedia =
     !data || data.sumber === "tidak_tersedia" || data.nilai === null;
-  const nilai = formatNilai(data?.nilai, data?.satuan);
 
   if (tidakTersedia) {
     return (
@@ -30,28 +48,30 @@ export default function BarisIndikator({ kunci, data }) {
   }
 
   const persentil = data.persentil ?? null;
-  const lencana =
-    data.sumber === "model" ? (
-      <Lencana teks="Estimasi" warna="bg-yellow-700/80 text-yellow-100" />
-    ) : (
-      <Lencana
-        teks={LABEL_SUMBER[data.sumber] ?? data.sumber}
-        warna="bg-slate-700/80 text-slate-300"
-      />
-    );
+  const mentah = formatNilai(data.nilai, data.satuan);
+  const { label, konteks, abstrak } = barisIndikator(kunci, data) ?? {};
+  // Satuan yang sudah dipahami langsung (meter, rupiah, cacah) tetap tampil
+  // apa adanya: angkanya justru lebih informatif daripada kata sifat.
+  const utama = abstrak ? (label ?? mentah) : mentah;
 
   return (
     <div className="py-1.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-slate-200">{nama}</span>
-        {lencana}
+        {data.sumber === "model" && (
+          <Lencana teks="Estimasi" warna="bg-yellow-700/80 text-yellow-100" />
+        )}
       </div>
-      <div className="mt-0.5 flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-white">{nilai}</span>
-        <span className="text-xs text-slate-400">
-          {formatPersentil(persentil)}
-        </span>
-      </div>
+      <div className="mt-0.5 text-sm font-medium text-white">{utama}</div>
+      {konteks && <div className="text-xs text-slate-400">{konteks}</div>}
+      {angkaMentah && (
+        <div className="mt-0.5 text-xs text-slate-500">
+          {/* Untuk satuan yang sudah jelas, `utama` SUDAH angka mentahnya;
+              mengulanginya di baris ini hanya menggandakan teks yang sama. */}
+          {abstrak && mentah ? `${mentah} · ` : ""}
+          {LABEL_SUMBER[data.sumber] ?? data.sumber}
+        </div>
+      )}
       {typeof persentil === "number" && (
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div

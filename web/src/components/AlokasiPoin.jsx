@@ -51,7 +51,15 @@ const RENTANG = {
  *
  * `nilai` adalah objek {kunci: jumlahKotak}. `onUbah` menerima objek serupa.
  */
-export default function AlokasiPoin({ nilai, onUbah, rentang = true }) {
+export default function AlokasiPoin({
+  nilai,
+  onUbah,
+  rentang = true,
+  pinjamDariLain = false,
+  // Alokasi 12 poin yang paling mendekati bobot bawaan, mis. 5-3-2-2.
+  // Kalau tidak diberikan, pintasan bawaan tidak dirender.
+  alokasiBawaan = null,
+}) {
   const [kedip, setKedip] = useState(false);
   const kedipTimer = useRef(null);
 
@@ -79,8 +87,30 @@ export default function AlokasiPoin({ nilai, onUbah, rentang = true }) {
       onUbah({ ...nilai, [kunci]: diminta });
       return;
     }
-    // Poin tidak cukup: isi sebanyak yang mampu, lalu kedipkan penghitung.
-    // Tidak diam, tidak memunculkan pesan error.
+    // Poin tidak cukup. Kalau `pinjamDariLain` aktif (panel peta, yang selalu
+    // dibuka dalam keadaan 12 poin terpakai), kekurangannya diambil dari
+    // dimensi lain mulai dari yang paling besar — tanpa ini klik pertama di
+    // panel itu tidak pernah berbuat apa-apa dan terasa macet.
+    if (pinjamDariLain) {
+      const hasil = { ...nilai, [kunci]: diminta };
+      let kurang = butuh - sisa;
+      const lain = DIMENSI_UI.map((d) => d.kunci)
+        .filter((k) => k !== kunci)
+        .sort((x, y) => (hasil[y] ?? 0) - (hasil[x] ?? 0));
+      for (const k of lain) {
+        while (kurang > 0 && (hasil[k] ?? 0) > 0) {
+          hasil[k] -= 1;
+          kurang -= 1;
+        }
+        if (kurang === 0) break;
+      }
+      if (kurang === 0) {
+        onUbah(hasil);
+        return;
+      }
+    }
+    // Isi sebanyak yang mampu, lalu kedipkan penghitung. Tidak diam, tidak
+    // memunculkan pesan error.
     if (sisa > 0) onUbah({ ...nilai, [kunci]: sekarang + sisa });
     kedipkanSisa();
   };
@@ -116,12 +146,22 @@ export default function AlokasiPoin({ nilai, onUbah, rentang = true }) {
     onUbah(rata);
   };
 
+  // Pintasan ke alokasi terdekat dengan bobot bawaan. Dalam 12 poin, 40/25/
+  // 20/15 jatuh ke 5-3-2-2 = 41,7/25/16,7/16,7 — mendekati, tidak persis.
+  // Labelnya menyebut "mendekati" karena memang begitu adanya.
+  const kePendekatanBawaan = () => {
+    if (!alokasiBawaan) return;
+    onUbah({ ...alokasiBawaan });
+  };
+
   const persen = (k) =>
     terpakai > 0 ? Math.round(((nilai[k] ?? 0) / TOTAL_POIN) * 100) : 0;
 
-  const semuaSama = DIMENSI_UI.every(
-    ({ kunci }) => (nilai[kunci] ?? 0) === TOTAL_POIN / 4,
-  );
+  const samaDenganBawaan =
+    alokasiBawaan &&
+    DIMENSI_UI.every(
+      ({ kunci }) => (nilai[kunci] ?? 0) === (alokasiBawaan[kunci] ?? 0),
+    );
   const adaNol =
     sisa === 0 && DIMENSI_UI.some(({ kunci }) => (nilai[kunci] ?? 0) === 0);
 
@@ -136,13 +176,26 @@ export default function AlokasiPoin({ nilai, onUbah, rentang = true }) {
             aria-live="polite"
           >
             {sisa > 0
-              ? `${sisa} dari ${TOTAL_POIN} poin belum dibagi`
-              : `Semua ${TOTAL_POIN} poin sudah dibagi`}
+              ? `${sisa} poin belum dialokasikan`
+              : "Semua poin sudah dialokasikan"}
           </span>
         </div>
-        <button type="button" className="alokasi-rata" onClick={bagiRata}>
-          Bagi rata
-        </button>
+        <div className="alokasi-pintasan">
+          {/* "Bagi rata" tetap ada sebagai preferensi yang SAH, tapi tidak
+              lagi disebut bawaan: bawaan adalah 40/25/20/15, bukan rata. */}
+          <button type="button" className="alokasi-rata" onClick={bagiRata}>
+            Bagi rata
+          </button>
+          {alokasiBawaan && (
+            <button
+              type="button"
+              className="alokasi-rata"
+              onClick={kePendekatanBawaan}
+            >
+              Mendekati bawaan
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="alokasi-daftar">
@@ -196,13 +249,13 @@ export default function AlokasiPoin({ nilai, onUbah, rentang = true }) {
 
       {/* Catatan tenang, bukan larangan. Muncul sekali, tidak diulang per
           dimensi dan tidak menghalangi lanjut. */}
-      {semuaSama && (
+      {samaDenganBawaan && (
         <p className="alokasi-catatan">
-          Pembagian rata sama dengan bobot bawaan, jadi peta tidak akan berbeda
-          dari tampilan awalnya.
+          Alokasi ini mendekati bobot bawaan, jadi peta hampir sama dengan
+          tampilan awalnya.
         </p>
       )}
-      {adaNol && !semuaSama && (
+      {adaNol && !samaDenganBawaan && (
         <p className="alokasi-catatan">
           Dimensi yang kamu beri 0 poin tidak ikut dinilai sama sekali.
         </p>

@@ -16,7 +16,14 @@
  */
 
 // Satuan yang tidak perlu diterjemahkan: pembaca langsung paham.
-const SATUAN_JELAS = new Set(["m", "rute", "titik", "Rp/bulan", "Rp/porsi"]);
+const SATUAN_JELAS = new Set([
+  "m",
+  "rute",
+  "titik",
+  "kategori",
+  "Rp/bulan",
+  "Rp/porsi",
+]);
 
 /**
  * Kata sifat per indikator, diurut dari persentil terendah ke tertinggi.
@@ -41,7 +48,7 @@ const SIFAT = {
   W3_penerangan: ["Sangat gelap", "Gelap", "Cukup terang", "Terang", "Sangat terang"],
   W4_banjir: ["Sangat rawan", "Rawan", "Cukup aman", "Aman", "Sangat aman"],
   W5_tekanan_lalin: ["Sangat padat", "Padat", "Cukup tenang", "Tenang", "Sangat tenang"],
-  W6_integritas_jalur: ["Hampir tidak ada", "Sedikit", "Cukup", "Baik", "Sangat baik"],
+  W6_integritas_jalur: ["Hampir tidak ada", "Terputus-putus", "Cukup utuh", "Relatif utuh", "Sangat utuh"],
 };
 
 /**
@@ -63,7 +70,7 @@ const PEMBANDING = {
   W3_penerangan: "terang",
   W4_banjir: "aman dari genangan",
   W5_tekanan_lalin: "tenang lalu lintasnya",
-  W6_integritas_jalur: "baik trotoarnya",
+  W6_integritas_jalur: "baik jalur pejalan kakinya",
 };
 
 /**
@@ -109,8 +116,14 @@ export function kalimatKonteks(kunci, data) {
   const kata = PEMBANDING[kunci];
   if (!kata) return null;
   const persen = Math.round(data.persentil * 100);
-  // Di ujung bawah, "lebih X dari 3% kawasan" terdengar aneh; balik kalimatnya.
-  if (persen <= 15) {
+  // Di bawah median kalimatnya DIBALIK, bukan hanya di ujung bawah.
+  //
+  // Ambang lama 15% membuat baris seperti "Sangat jarang - lebih rapat
+  // simpangnya dari 17% kawasan" lolos: label kualitatifnya negatif sementara
+  // kalimatnya berbunyi positif, dan pembaca harus menghitung sendiri bahwa
+  // 17% itu buruk. Di bawah 50 yang benar adalah menyebut mayoritas yang
+  // lebih baik, supaya arah label dan arah kalimat selalu sepakat.
+  if (persen < 50) {
     return `${100 - persen}% kawasan lain lebih ${kata}`;
   }
   return `lebih ${kata} dari ${persen}% kawasan`;
@@ -120,4 +133,64 @@ export function kalimatKonteks(kunci, data) {
 export function satuanAbstrak(satuan) {
   if (!satuan) return true;
   return !SATUAN_JELAS.has(satuan);
+}
+
+
+/**
+ * Baris indikator siap tampil, dipakai bersama panel Kawasan dan panel
+ * Bandingkan supaya keduanya tidak pernah menerjemahkan angka dengan aturan
+ * yang berbeda.
+ *
+ * Mengembalikan { utama, konteks, mentah } di mana:
+ *   utama   - yang ditampilkan secara bawaan. Label kualitatif untuk satuan
+ *             abstrak (indeks, NDVI, nW/sr/cm2), angka apa adanya untuk
+ *             satuan yang memang dipahami langsung (meter, rupiah, cacah).
+ *   konteks - kalimat persentil, mis. "lebih teduh dari 88% kawasan".
+ *   mentah  - angka + satuan asli, hanya untuk di balik toggle.
+ *
+ * Alasan memisahkan keduanya: menampilkan nilai mentah dan persentil
+ * bersamaan sering saling bertentangan di mata pembaca. "0,2 indeks —
+ * persentil 93" terbaca sebagai nilai buruk, padahal kawasan itu termasuk 7%
+ * terbaik; angka rendah itu hanya berarti indikatornya memang rendah di mana-
+ * mana. Yang menentukan baik-buruk adalah persentilnya, jadi itulah yang
+ * tampil lebih dulu.
+ */
+export function barisIndikator(kunci, data) {
+  if (!data || data.sumber === "tidak_tersedia" || data.nilai === null) {
+    return null;
+  }
+  const label = labelKualitatif(kunci, data);
+  const konteks = kalimatKonteks(kunci, data);
+  const abstrak = satuanAbstrak(data.satuan);
+  return { label, konteks, abstrak };
+}
+
+/**
+ * Muatan indikator yang dikirim ke model bahasa.
+ *
+ * Model TIDAK menerima nilai mentah, satuan teknis, atau nama kunci internal.
+ * Selama angka seperti "43,1 m" dan "23,9 nW/sr/cm2" masuk ke konteks, model
+ * akan mengulanginya apa adanya dan keluarannya berbunyi seperti pembacaan
+ * instrumen ("Indikator Jarak ke halte terdekat menunjukkan 43,1 m dengan
+ * persentil 99"). Itu bukan masalah prompt, melainkan masalah masukan.
+ *
+ * Yang dikirim: nama indikator, label kualitatif, dan persentil sebagai
+ * bilangan bulat 0-100. Cukup untuk menilai baik-buruk, tidak cukup untuk
+ * mengarang presisi.
+ */
+export function muatanIndikatorAI(kunci, data, nama) {
+  const tersedia =
+    data && data.sumber !== "tidak_tersedia" && data.nilai !== null;
+  return {
+    nama,
+    label: tersedia ? labelKualitatif(kunci, data) : null,
+    persentil:
+      tersedia && typeof data.persentil === "number"
+        ? Math.round(data.persentil * 100)
+        : null,
+    tersedia: Boolean(tersedia),
+    // Penanda kualitas data tetap dikirim supaya model bisa menghindari
+    // menyebut angka taksiran sebagai fakta.
+    estimasi: tersedia && data.sumber === "model",
+  };
 }

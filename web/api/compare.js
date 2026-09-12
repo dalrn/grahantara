@@ -1,11 +1,6 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
+import { NAMA_DIMENSI } from "./_namaDimensi.js";
 
-const NAMA_DIMENSI = {
-  connectivity: "Akses transportasi",
-  affordability: "Keterjangkauan",
-  amenity: "Kenyamanan",
-  walkability: "Kenyamanan berjalan kaki",
-};
 const DIMENSI = Object.keys(NAMA_DIMENSI);
 const AMBANG_SETARA = 0.02;
 
@@ -55,25 +50,38 @@ function arahBanding(nilaiA, nilaiB, persentilA, persentilB) {
   }
   let unggul = "tidak dapat dibandingkan";
   if (typeof persentilA === "number" && typeof persentilB === "number") {
-    const beda = persentilA - persentilB;
+    // Samakan skala dulu: pecahan 0-1 dan bilangan bulat 0-100 sama-sama sah.
+    const norm = (p) => (p <= 1 ? p : p / 100);
+    const beda = norm(persentilA) - norm(persentilB);
     unggul = beda > AMBANG_SETARA ? "A" : beda < -AMBANG_SETARA ? "B" : "setara";
   }
   return { bandingNilai, unggul };
 }
 
-const fmtPersentil = (p) => (typeof p === "number" ? Math.round(p * 100) : "NA");
+// Persentil bisa datang sebagai pecahan 0-1 (bentuk lama) atau bilangan bulat
+// 0-100 (muatanIndikatorAI). Keduanya diterima.
+const fmtPersentil = (p) =>
+  typeof p === "number" ? Math.round(p <= 1 ? p * 100 : p) : "NA";
 
-function barisData(nama, nilaiA, nilaiB, persentilA, persentilB, sumberA, sumberB, unavailableKedua) {
+// Baris indikator memakai LABEL KUALITATIF, bukan nilai mentah: alasannya
+// sama dengan explain-score.js — nilai mentah dan satuan teknis di konteks
+// membuat model mengulanginya apa adanya. Arah perbandingan tetap dihitung
+// server dari persentil, jadi polaritas tidak bergantung pada model.
+function barisData(nama, a, b, unavailableKedua) {
   if (unavailableKedua) {
     return `${nama}: tidak tersedia di kedua kawasan, dikeluarkan dari perbandingan`;
   }
-  const estimA = sumberA === "model" && nilaiA ? " (estimasi)" : "";
-  const estimB = sumberB === "model" && nilaiB ? " (estimasi)" : "";
-  const { bandingNilai, unggul } = arahBanding(nilaiA, nilaiB, persentilA, persentilB);
-  const teksA = nilaiA == null ? "tidak tersedia" : `${nilaiA}${estimA}`;
-  const teksB = nilaiB == null ? "tidak tersedia" : `${nilaiB}${estimB}`;
-  return `${nama}: A = ${teksA} (persentil ${fmtPersentil(persentilA)}), ` +
-         `B = ${teksB} (persentil ${fmtPersentil(persentilB)}) -> ${bandingNilai}, unggul: ${unggul}`;
+  const { unggul } = arahBanding(null, null, a.persentil, b.persentil);
+  const sisi = (ik) => {
+    if (!(ik.tersedia ?? ik.sumber !== "tidak_tersedia")) return "tidak tersedia";
+    const estim = ik.estimasi || ik.sumber === "model" ? " (angka taksiran)" : "";
+    const label = ik.label ?? "tidak berlabel";
+    const p = fmtPersentil(ik.persentil);
+    return p === "NA"
+      ? `${label}${estim}`
+      : `${label}, lebih baik daripada ${p}% kawasan lain${estim}`;
+  };
+  return `${nama}: A = ${sisi(a)}; B = ${sisi(b)} -> unggul: ${unggul}`;
 }
 
 function arahDimensi(a, b, kosongA, kosongB) {
@@ -99,14 +107,14 @@ function fallback(a, b, kosongA, kosongB, msLatensi) {
       .sort((x, y) => Math.abs(perDimensi[y].vA - perDimensi[y].vB) - Math.abs(perDimensi[x].vA - perDimensi[x].vB));
     const hasil = [];
     for (const d of menang.slice(0, 2)) {
-      hasil.push(`${NAMA_DIMENSI[d]} lebih tinggi di Kawasan ${sisi}, ${perDimensi[d].vA} berbanding ${perDimensi[d].vB}.`);
+      hasil.push(`${NAMA_DIMENSI[d]} lebih tinggi di Kawasan ${sisi}, ${Math.round(perDimensi[d].vA)} berbanding ${Math.round(perDimensi[d].vB)}.`);
     }
     if (hasil.length < 2) {
       const cadangan = DIMENSI.filter((d) => perDimensi[d].unggul !== sisi && perDimensi[d].unggul !== "tidak dapat dibandingkan")
         .sort((x, y) => Math.abs(perDimensi[x].vA - perDimensi[x].vB) - Math.abs(perDimensi[y].vA - perDimensi[y].vB));
       for (const d of cadangan) {
         if (hasil.length >= 2) break;
-        hasil.push(`${NAMA_DIMENSI[d]} hampir setara, ${perDimensi[d].vA} berbanding ${perDimensi[d].vB}.`);
+        hasil.push(`${NAMA_DIMENSI[d]} hampir setara, ${Math.round(perDimensi[d].vA)} berbanding ${Math.round(perDimensi[d].vB)}.`);
       }
     }
     return hasil;
@@ -156,21 +164,21 @@ export default async function handler(req, res) {
   // baris-baris data dengan arah yang SUDAH dihitung server
   const garis = [];
   const rSkor = arahBanding(b.a.skor, b.b.skor, b.a.skor, b.b.skor);
-  garis.push(`Skor total: A = ${b.a.skor}, B = ${b.b.skor} -> ${rSkor.bandingNilai}, unggul: ${rSkor.unggul}`);
+  garis.push(`Skor total: A = ${Math.round(b.a.skor)}, B = ${Math.round(b.b.skor)} -> ${rSkor.bandingNilai}, unggul: ${rSkor.unggul}`);
   const perDimensi = arahDimensi(b.a, b.b, kosongA, kosongB);
   for (const d of DIMENSI) {
     const r = perDimensi[d];
-    const teksA = r.kosongA ? "tidak tersedia" : b.a.subskor[d];
-    const teksB = r.kosongB ? "tidak tersedia" : b.b.subskor[d];
+    const teksA = r.kosongA ? "tidak tersedia" : Math.round(b.a.subskor[d]);
+    const teksB = r.kosongB ? "tidak tersedia" : Math.round(b.b.subskor[d]);
     garis.push(`${NAMA_DIMENSI[d]} (subskor): A = ${teksA}, B = ${teksB} -> ${r.bandingNilai}, unggul: ${r.unggul}`);
   }
   const n = Math.min(b.a.indikator.length, b.b.indikator.length);
   for (let i = 0; i < n; i++) {
     const ia = b.a.indikator[i];
     const ib = b.b.indikator[i];
-    const unavailableKedua = (ia.sumber === "tidak_tersedia" && ib.sumber === "tidak_tersedia") ||
-      (ia.nilai == null && ib.nilai == null);
-    garis.push(barisData(ia.nama, ia.nilai, ib.nilai, ia.persentil, ib.persentil, ia.sumber, ib.sumber, unavailableKedua));
+    const adaA = ia.tersedia ?? (ia.sumber !== "tidak_tersedia" && ia.nilai != null);
+    const adaB = ib.tersedia ?? (ib.sumber !== "tidak_tersedia" && ib.nilai != null);
+    garis.push(barisData(ia.nama, ia, ib, !adaA && !adaB));
   }
   const pengguna = `Bobot yang dipakai: ${DIMENSI.map((d) => `${NAMA_DIMENSI[d]} ${b.bobot?.[d] ?? "-"}`).join(" | ")}\n\nKawasan A: h3 ${b.a.h3_index} | Kawasan B: h3 ${b.b.h3_index}\n\n${garis.join("\n")}`;
 
@@ -189,6 +197,10 @@ Bila sebuah kawasan tidak unggul pada dimensi maupun indikator mana pun,
 tulis array keunggulannya KOSONG ([]) — jangan mengarang keunggulan.
 ATURAN:
 - Setiap kalimat WAJIB menyebut nama indikator atau dimensi yang diberikan.
+- DILARANG memulai kalimat dengan kata "Indikator".
+- DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya.
+- DILARANG menyebut angka berdesimal. Bulatkan, atau pakai kata-kata.
+- Maksimal dua kalimat per butir.
 - HANYA boleh memakai angka yang ada di data. DILARANG menghitung,
   menaksir, atau mengarang angka.
 - Arah perbandingan SUDAH DIHITUNG dan diberikan pada setiap baris data
@@ -196,14 +208,12 @@ ATURAN:
   DILARANG menyimpulkan sendiri kawasan mana yang lebih tinggi, lebih
   rendah, lebih murah, lebih dekat, atau lebih baik. Bila arah tertulis
   "unggul: B", kawasan yang unggul adalah B, tanpa kecuali.
-- Kata "lebih rendah" hanya boleh dipakai bila bandingNilai memang
-  menyatakan kawasan itu lebih rendah.
 - Indikator bertanda "tidak dapat dibandingkan" atau "tidak tersedia"
   DILARANG dijadikan keunggulan.
 - Dimensi yang bertanda "tidak dapat dibandingkan, unggul: tidak dapat
   dibandingkan" DILARANG dijadikan keunggulan salah satu kawasan.
-- Salin angka beserta satuannya PERSIS seperti diberikan, termasuk
-  posisi "Rp". Jangan menata ulang format.
+- Salin label kualitatif ("Rindang", "Sangat terang") apa adanya bila
+  dipakai. Jangan menggantinya dengan angka.
 - DILARANG menyebut nama tempat, jalan, kampus, atau kos tertentu.
 - DILARANG memberi saran finansial atau menyuruh pengguna menyewa.
 - "cocokUntuk" adalah tipe mahasiswa, contoh: "mahasiswa tanpa kendaraan",

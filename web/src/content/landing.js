@@ -104,22 +104,22 @@ export const TEKS = {
       amenity:
         "Kepadatan dan keragaman tempat makan, serta layanan harian seperti minimarket dan laundry.",
       walkability:
-        "Keteduhan, penerangan malam, kerapatan simpang, tekanan lalu lintas, dan ketersediaan trotoar.",
+        "Keteduhan, penerangan malam, kerapatan simpang, ketenangan lalu lintas, dan ketersediaan jalur pejalan kaki.",
     },
     catatan: (jumlah) =>
-      `Tiap grafik adalah sebaran subskor dimensi itu, dari rendah di kiri ke tinggi di kanan. Semuanya dihitung untuk seluruh ${jumlah} kawasan, kecuali Biaya yang hanya terisi di kawasan tersentuh survei harga kos.`,
+      `Tiap grafik adalah sebaran skor dimensi itu. Semuanya dihitung untuk seluruh ${jumlah} kawasan, kecuali Biaya yang hanya terisi di kawasan tersentuh survei harga kos.`,
   },
 
   data: {
     judul: "Dasar penilaiannya",
     catatan: [
-      "Skor adalah peringkat terhadap seluruh wilayah studi, bukan nilai absolut. Skor 70 berarti kawasan itu lebih baik daripada 70% kawasan lain di Sleman.",
+      "Skor adalah peringkat terhadap seluruh wilayah studi. Skor 70 berarti kawasan itu lebih baik daripada 70% kawasan lain di Sleman.",
       "Indikator yang datanya belum ada ditandai “tidak tersedia” dan dikeluarkan dari perhitungan, tidak dihitung sebagai nol. Kawasan tanpa data tidak dianggap buruk.",
     ],
     // `angka` diisi dari data saat render; hanya keterangannya yang statis.
     angka: {
       kawasan:
-        "kawasan dinilai, masing-masing seluas sekitar 0,1 km² atau selebar 380 meter",
+        "kawasan dinilai, masing-masing heksagon seluas ~0,1 km² atau selebar ~380 m",
       kampus:
         "kampus dalam cakupan, dari UGM dan UNY sampai Instiper dan STIE YKPN",
       indikator:

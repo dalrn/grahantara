@@ -1,7 +1,12 @@
 import { StorySection } from "./Motion";
 import { useEffect, useState } from "react";
 
-import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, LABEL_SUMBER } from "../lib/kamus";
+import {
+  KELOMPOK_INDIKATOR,
+  NAMA_INDIKATOR,
+  NAMA_DIMENSI,
+  LABEL_SUMBER,
+} from "../lib/kamus";
 import { BOBOT_DEFAULT } from "../config";
 
 const URUTAN_INDIKATOR = [
@@ -281,8 +286,8 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
             {denganKosong > 0 && (
               <li>
                 <b>Konsekuensi bagi pengguna.</b> Pada heksagon itu skor
-                dibentuk dari tiga dimensi yang tersisa, dan menggeser slider
-                Keterjangkauan tidak mengubah skornya.
+                dibentuk dari tiga dimensi yang tersisa, dan menggeser bobot
+                {" "}{NAMA_DIMENSI.affordability} tidak mengubah skornya.
               </li>
             )}
           </ul>
@@ -521,7 +526,7 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
             {jumlah !== null && (
               <li>
-                Keterjangkauan tidak tersedia pada{" "}
+                {NAMA_DIMENSI.affordability} tidak tersedia pada{" "}
                 {formatBilangan(jumlah - (indikator.A1_harga_kos?.punya ?? 0))}{" "}
                 dari {formatBilangan(jumlah)} heksagon karena harga sewa hanya
                 terdata di kawasan yang disurvei (
@@ -544,9 +549,9 @@ skor = 100 x PRODUK atas d di D dari (subskor_d/100 + 0,01)^(bobot_d / W)`}
               {formatBilangan(sebarPresisi.nama_kos ?? 0)}).
             </li>
             <li>
-              Penerangan kawasan memakai piksel VIIRS berukuran sekitar 464
-              meter, jadi hanya sah sebagai proksi tingkat kawasan, bukan
-              tingkat jalan.
+              {NAMA_INDIKATOR.W3_penerangan} memakai raster cahaya malam
+              beresolusi ratusan meter, jadi hanya sah sebagai proksi tingkat
+              kawasan, bukan tingkat jalan.
             </li>
             <li>
               Skor bersifat relatif terhadap wilayah studi, bukan nilai mutlak.

@@ -1,21 +1,6 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
+import { NAMA_DIMENSI } from "./_namaDimensi.js";
 
-const NAMA_DIMENSI = {
-  connectivity: "Akses transportasi",
-  affordability: "Keterjangkauan",
-  amenity: "Kenyamanan",
-  walkability: "Kenyamanan berjalan kaki",
-};
-
-function sumberLabel(sumber) {
-  const peta = {
-    survei: "survei", mapid_poi: "MAPID POI", mapid: "MAPID",
-    osm: "OpenStreetMap", sentinel2: "Sentinel-2", viirs: "VIIRS",
-    inarisk: "InaRISK", krl: "Jadwal KRL", model: "Estimasi model",
-    tidak_tersedia: "tidak tersedia",
-  };
-  return peta[sumber] ?? sumber;
-}
 
 function validasiBentuk(j) {
   if (!j || !Array.isArray(j.kekuatan) || j.kekuatan.length !== 2 ||
@@ -34,9 +19,9 @@ function fallback(subskor, kosong, msLatensi) {
   const ada = Object.entries(subskor).filter(([k]) => !kosong.has(k));
   const urut = ada.sort((a, b) => b[1] - a[1]);
   const kekuatan = urut.slice(0, 2).map(([k, n]) =>
-    `${NAMA_DIMENSI[k]} tergolong tinggi di kawasan ini, skor ${n}.`);
+    `${NAMA_DIMENSI[k]} tergolong kuat di kawasan ini, dengan nilai ${Math.round(n)} dari 100.`);
   const kelemahan = urut.length >= 2
-    ? [`${NAMA_DIMENSI[urut[urut.length - 1][0]]} tergolong rendah, skor ${urut[urut.length - 1][1]}.`]
+    ? [`${NAMA_DIMENSI[urut[urut.length - 1][0]]} tergolong lemah, dengan nilai ${Math.round(urut[urut.length - 1][1])} dari 100.`]
     : [];
   return {
     kekuatan,
@@ -77,22 +62,33 @@ export default async function handler(req, res) {
   }
 
   const mulai = Date.now();
+  // Model menerima LABEL KUALITATIF dan peringkat, bukan nilai mentah dan
+  // satuan teknis. Selama "43,1 m" atau "23,9 nW/sr/cm2" masuk ke konteks,
+  // model mengulanginya dan keluarannya berbunyi seperti pembacaan instrumen.
+  // Klien mengirim bentuk ini lewat muatanIndikatorAI (lib/bahasaIndikator.js);
+  // bentuk lama tetap diterima sebagai cadangan.
   const barisIndikator = b.indikator.map((ik) => {
-    const labelSumber = sumberLabel(ik.sumber);
-    if (ik.sumber === "tidak_tersedia") {
-      return `${ik.nama}: tidak tersedia`;
-    }
-    const nilai = ik.nilai ?? "tidak tersedia";
-    const persentil = typeof ik.persentil === "number" ? Math.round(ik.persentil * 100) : "-";
-    const estimasi = ik.sumber === "model" ? " (estimasi)" : "";
-    return `${ik.nama}: ${nilai} (persentil ${persentil}, sumber ${labelSumber}${estimasi})`;
+    const tersedia = ik.tersedia ?? ik.sumber !== "tidak_tersedia";
+    if (!tersedia) return `${ik.nama}: tidak tersedia`;
+    const persentil =
+      typeof ik.persentil === "number"
+        ? Math.round(ik.persentil <= 1 ? ik.persentil * 100 : ik.persentil)
+        : null;
+    const label = ik.label ?? "tidak berlabel";
+    const estimasi =
+      ik.estimasi || ik.sumber === "model" ? " (angka taksiran)" : "";
+    const peringkat =
+      persentil === null
+        ? ""
+        : `, lebih baik daripada ${persentil}% kawasan lain`;
+    return `${ik.nama}: ${label}${peringkat}${estimasi}`;
   }).join("\n");
 
   const pengguna = [
-    `Skor total: ${b.skor}`,
+    `Skor total: ${Math.round(b.skor)}`,
     `Subskor: ${wajibSub.map((k) => kosong.has(k)
       ? `${NAMA_DIMENSI[k]}: tidak tersedia, dikeluarkan dari perhitungan skor`
-      : `${NAMA_DIMENSI[k]} ${sub[k]}`).join(" | ")}`,
+      : `${NAMA_DIMENSI[k]} ${Math.round(sub[k])}`).join(" | ")}`,
     `Bobot: ${wajibSub.filter((k) => !kosong.has(k))
       .map((k) => `${NAMA_DIMENSI[k]} ${b.bobot?.[k] ?? "-"}`).join(" | ") || "-"}`,
     `Indikator:\n${barisIndikator}`,
@@ -110,10 +106,14 @@ Tepat dua kekuatan dan tepat satu kelemahan.
 ATURAN:
 - Setiap kalimat WAJIB menyebut nama indikator atau nama dimensi yang
   diberikan, apa adanya.
+- DILARANG memulai kalimat dengan kata "Indikator".
+- DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya,
+  misalnya "lebih teduh daripada sebagian besar kawasan lain".
+- DILARANG menyebut angka berdesimal. Bulatkan, atau lebih baik pakai
+  kata-kata.
+- Maksimal dua kalimat per butir.
 - HANYA boleh memakai angka yang ada di data yang diberikan. DILARANG
   menghitung, menaksir, atau mengarang angka baru.
-- Salin angka beserta satuannya PERSIS seperti diberikan, termasuk
-  posisi "Rp". Jangan menata ulang format angka atau satuan.
 - DILARANG menyebut indikator yang bertanda "tidak tersedia" sebagai
   kekuatan atau kelemahan. Boleh disebut sebagai keterbatasan data.
 - Dimensi bertanda "tidak tersedia, dikeluarkan dari perhitungan skor"
