@@ -280,7 +280,11 @@ export default function App() {
     if (tampilan === "metodologi") {
       return (
         <div className="h-screen w-screen overflow-hidden bg-slate-950">
-          <Metodologi onKembali={() => setTampilan("peta")} versi={versi} />
+          <Metodologi
+            onKembali={() => setTampilan("peta")}
+            onBeranda={() => setTampilan("beranda")}
+            versi={versi}
+          />
         </div>
       );
     }

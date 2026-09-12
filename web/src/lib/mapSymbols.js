@@ -22,13 +22,52 @@ function sprite(width, height, draw) {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-export function campusImage(name) {
+// Geometri sprite kampus. Dipisah sebagai konstanta supaya lebar kotak dan
+// posisi teks tidak bisa lagi berselisih.
+const KAMPUS_FONT = "700 13px 'Plus Jakarta Sans', sans-serif";
+const KAMPUS_TEKS_X = 33; // teks mulai setelah ikon toga
+const KAMPUS_PAD_KANAN = 12; // jarak teks ke tepi dalam kotak
+
+/**
+ * Lebar sprite dari LEBAR TEKS SEBENARNYA, bukan taksiran jumlah huruf.
+ *
+ * Sebelumnya `label.length * 9 + 36`, yang menganggap semua huruf selebar
+ * 9 px. Huruf kapital lebar seperti M dan W jauh melewati itu: "AMIKOM"
+ * meluber 1 px ke luar kotak dan "UGM" hanya menyisakan 3,6 px, sehingga
+ * keduanya tampak menempel di garis tepi. Diukur dengan measureText, jarak
+ * tepinya selalu tepat KAMPUS_PAD_KANAN.
+ */
+function lebarSpriteKampus(ctx, label) {
+  const teks = ctx.measureText(label).width;
+  return Math.max(70, Math.ceil(KAMPUS_TEKS_X + teks + KAMPUS_PAD_KANAN));
+}
+
+/**
+ * Sprite kampus. `sorot` menandai kampus TUJUAN pengguna.
+ *
+ * Kampus pilihan diberi KUNING TERANG, sedangkan kampus lain tetap
+ * krem-cokelat.
+ *
+ * Isian kuning saja TIDAK cukup membedakan: diukur, #ffd400 hanya berselisih
+ * 1,36:1 terhadap krem #fff8ed milik kampus lain, jadi dalam grayscale
+ * keduanya nyaris sama terang. Karena itu pembedanya bertumpu pada GARIS TEPI
+ * (cokelat tua #7a4a00, 2,8 px vs 1,5 px) dan tinta gelap, bukan pada warna
+ * isian. Tinta #2b2000 di atas kuning berkontras 11,2:1.
+ */
+export function campusImage(name, sorot = false) {
   const label = campusLabels[name] || name;
-  const width = Math.max(70, label.length * 9 + 36);
+  // Pengukur sekali pakai: lebar kanvas harus diketahui SEBELUM kanvas
+  // sprite dibuat, jadi tidak bisa memakai ctx milik sprite itu sendiri.
+  const pengukur = document.createElement("canvas").getContext("2d");
+  pengukur.font = KAMPUS_FONT;
+  const width = lebarSpriteKampus(pengukur, label);
+  const isi = sorot ? "#ffd400" : "#fff8ed";
+  const garis = sorot ? "#7a4a00" : "#9a4610";
+  const tinta = sorot ? "#2b2000" : "#9a4610";
   return sprite(width, 46, (ctx) => {
-    ctx.fillStyle = "#fff8ed";
-    ctx.strokeStyle = "#9a4610";
-    ctx.lineWidth = 1.5;
+    ctx.fillStyle = isi;
+    ctx.strokeStyle = garis;
+    ctx.lineWidth = sorot ? 2.8 : 1.5;
     ctx.beginPath();
     ctx.roundRect(2, 2, width - 4, 33, 10);
     ctx.fill();
@@ -40,7 +79,7 @@ export function campusImage(name) {
     ctx.fill();
     ctx.stroke();
     // Mortarboard silhouette.
-    ctx.fillStyle = "#9a4610";
+    ctx.fillStyle = tinta;
     ctx.beginPath();
     ctx.moveTo(10, 16);
     ctx.lineTo(19, 11);
@@ -49,9 +88,9 @@ export function campusImage(name) {
     ctx.closePath();
     ctx.fill();
     ctx.fillRect(14, 21, 10, 3);
-    ctx.font = "700 13px 'Plus Jakarta Sans', sans-serif";
+    ctx.font = KAMPUS_FONT;
     ctx.textBaseline = "middle";
-    ctx.fillText(label, 33, 19);
+    ctx.fillText(label, KAMPUS_TEKS_X, 19);
   });
 }
 

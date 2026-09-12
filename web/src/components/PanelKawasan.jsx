@@ -223,6 +223,29 @@ function BlokDimensi({
   );
 }
 
+/**
+ * Bobot yang dipakai, sebagai daftar berlabel.
+ *
+ * Tiap dimensi jadi satu baris nama + persen, dipisahkan garis tipis, dengan
+ * judul kecil di atasnya. Titik-tengah melayang hilang, dan pembaca bisa
+ * memindai satu dimensi tanpa membaca seluruh kalimat.
+ */
+function BlokBobot({ judul, daftar }) {
+  return (
+    <div className="blok-bobot">
+      <div className="blok-bobot-judul">{judul}</div>
+      <dl className="blok-bobot-daftar">
+        {daftar.map(({ label, persen }) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{persen}%</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 function formatTanggal(iso) {
   if (typeof iso !== "string") return null;
   const t = new Date(iso);
@@ -280,12 +303,23 @@ export default function PanelKawasan({
   // berbahasa Inggris yang tidak punya kunci di mana pun di antarmuka.
   // Angkanya dari metadata bila ada, bukan ditulis tangan.
   const bobotBawaanTampil = bobotBawaan ?? BOBOT_DEFAULT;
-  const teksBobotBawaan = DIMENSI_UI.map(({ kunci, label }) => {
+  // Daftar terstruktur, BUKAN satu kalimat panjang bertitik-tengah melayang.
+  // Versi lama berbunyi "pada bobot bawaan Akses transportasi 40% · Biaya 25%
+  // · ..." — mengalir tanpa jeda, dan titik pemisahnya menggantung di ujung
+  // baris saat teksnya terpotong.
+  // Bobot yang SEDANG dipakai bila pengguna sudah menggesernya. bobotKini
+  // datang sebagai pecahan ternormalisasi (jumlahnya 1).
+  const daftarBobotKini = bobotKini
+    ? DIMENSI_UI.map(({ kunci, label }) => ({
+        label,
+        persen: Math.round((bobotKini[kunci] ?? 0) * 100),
+      }))
+    : [];
+  const daftarBobot = DIMENSI_UI.map(({ kunci, label }) => {
     const v = bobotBawaanTampil[kunci] ?? 0;
     // bobotBawaan datang sebagai skala 0-100, BOBOT_DEFAULT sebagai pecahan.
-    const persen = v > 1 ? v : v * 100;
-    return `${label} ${Math.round(persen)}%`;
-  }).join(" · ");
+    return { label, persen: Math.round(v > 1 ? v : v * 100) };
+  });
 
   const toggle = (dimensi) => {
     setTerbuka((sebelum) => {
@@ -372,9 +406,10 @@ export default function PanelKawasan({
             >
               {formatSkor(skorKini)}
             </div>
-            <div className="text-xs text-slate-400">
-              Skor bawaan: {formatSkor(heksagon.skor)}
+            <div className="skor-pembanding">
+              Skor bawaan {formatSkor(heksagon.skor)}
             </div>
+            <BlokBobot judul="Bobot pilihanmu" daftar={daftarBobotKini} />
           </>
         ) : (
           <>
@@ -386,9 +421,7 @@ export default function PanelKawasan({
             >
               {formatSkor(heksagon.skor)}
             </div>
-            <div className="text-xs text-slate-400">
-              pada bobot bawaan {teksBobotBawaan}
-            </div>
+            <BlokBobot judul="Bobot bawaan" daftar={daftarBobot} />
           </>
         )}
         {!bobotDariMetadata && (

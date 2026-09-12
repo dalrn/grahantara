@@ -1375,6 +1375,56 @@ input[type="checkbox"] {
   z-index: 40;
   border-left: 1px solid #b6d9c833;
 }
+/* Bobot yang dipakai, sebagai daftar berlabel di dalam kotak sendiri.
+   Menggantikan kalimat panjang "pada bobot bawaan A 40% · B 25% · ..." yang
+   mengalir tanpa jeda dan titik pemisahnya menggantung saat teks terpotong. */
+.blok-bobot {
+  margin-top: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 8px 10px;
+}
+.blok-bobot-judul {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #7f9aa4;
+  margin-bottom: 4px;
+}
+.blok-bobot-daftar {
+  margin: 0;
+}
+.blok-bobot-daftar > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.blok-bobot-daftar > div:first-child {
+  border-top: none;
+}
+.blok-bobot-daftar dt {
+  font-size: 12px;
+  color: #cbd5e1;
+  min-width: 0;
+}
+.blok-bobot-daftar dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  white-space: nowrap;
+}
+.skor-pembanding {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
 .panel-tabs {
   display: flex;
   padding: 12px 16px;
@@ -1426,6 +1476,313 @@ input[type="checkbox"] {
 .compare-header > span:not(:first-child) {
   text-align: right;
 }
+/* --- Halaman Metodologi ---------------------------------------------------
+   Dua kolom di layar lebar: daftar isi menempel di kiri, isi di kanan. Di
+   bawah 1024 px daftar isi jadi satu blok di atas isi, tidak menempel. */
+.metodologi-ringkasan {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #101c2b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.metodologi-ringkasan p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cbd5e1;
+}
+.metodologi-ringkasan p:last-child {
+  margin-bottom: 0;
+}
+.metodologi-isi {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 32px;
+  margin-top: 28px;
+  align-items: start;
+}
+.metodologi-daftar {
+  position: sticky;
+  top: 16px;
+  font-size: 12px;
+}
+.daftar-judul {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+.daftar-kelompok {
+  margin-bottom: 14px;
+}
+.daftar-kelompok-judul {
+  display: block;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.metodologi-daftar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+.metodologi-daftar li {
+  margin: 2px 0;
+}
+.metodologi-daftar a {
+  display: block;
+  padding: 2px 0;
+  color: #64748b;
+  text-decoration: none;
+  line-height: 1.4;
+}
+.metodologi-daftar a:hover {
+  color: #cbd5e1;
+}
+/* Bagian yang sedang dibaca ditandai warna DAN ketebalan, bukan warna saja. */
+.metodologi-daftar a.is-aktif {
+  color: #7fc98a;
+  font-weight: 600;
+}
+.metodologi-kelompok {
+  margin: 36px 0 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7fc98a;
+}
+.metodologi-kelompok:first-child {
+  margin-top: 0;
+}
+/* Jarak antar bagian SAMA, tidak bergantung panjang isinya.
+   Menimpa .story-section yang membawa border-top dan padding asimetris:
+   di sini pemisah antar bagian sudah dikerjakan garis .metodologi-kelompok,
+   jadi garis tambahan per bagian hanya jadi derau. */
+.metodologi-bagian.story-section {
+  border-top: none;
+  padding: 0;
+  margin-top: 28px;
+}
+.metodologi-h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  scroll-margin-top: 16px;
+}
+.metodologi-h3 {
+  margin: 18px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7fc98a;
+}
+.metodologi-p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cbd5e1;
+}
+.metodologi-ul,
+.metodologi-ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cbd5e1;
+}
+.metodologi-ul > li,
+.metodologi-ol > li {
+  margin-bottom: 6px;
+}
+.metodologi-catatan {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #64748b;
+}
+/* Rumus sebagai notasi matematis, bukan blok kode setengah Indonesia. */
+.metodologi-rumus-blok {
+  margin: 12px 0 10px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #0f1b18;
+  border: 1px solid rgba(127, 201, 138, 0.25);
+  overflow-x: auto;
+}
+.rumus-baris {
+  display: block;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #d7f0dc;
+  white-space: nowrap;
+}
+.rumus-baris sub,
+.rumus-baris sup {
+  font-size: 0.68em;
+}
+.metodologi-simbol {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+.metodologi-simbol li {
+  margin-bottom: 3px;
+}
+.metodologi-simbol b {
+  color: #cbd5e1;
+}
+/* Tabel: satu gaya untuk seluruh halaman. */
+.metodologi-tabel {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+.metodologi-tabel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.metodologi-tabel th {
+  padding: 5px 8px 5px 0;
+  text-align: left;
+  font-weight: 600;
+  color: #94a3b8;
+  border-bottom: 1px solid #334155;
+  white-space: nowrap;
+}
+.metodologi-tabel td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid #1e293b;
+  vertical-align: top;
+}
+.metodologi-tabel .kanan {
+  text-align: right;
+  padding-right: 0;
+}
+.tabel-dimensi {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+.lencana-kosong {
+  display: inline-block;
+  border-radius: 4px;
+  background: rgba(153, 27, 27, 0.7);
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fee2e2;
+}
+/* Lipatan: tabel panjang dan definisi indikator tertutup secara bawaan. */
+.lipatan {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.lipatan-kepala {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #101c2b;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.lipatan-kepala:hover {
+  background: #16243450;
+  color: #fff;
+}
+.lipatan-isi {
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.definisi-dimensi {
+  margin-top: 14px;
+}
+.definisi-ringkas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.definisi-nama {
+  font-weight: 600;
+}
+.definisi-satuan {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 1px 6px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.definisi-estimasi {
+  border-radius: 4px;
+  background: rgba(161, 98, 7, 0.8);
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fef3c7;
+}
+.definisi-rinci {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 4px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.definisi-rinci dt {
+  color: #64748b;
+}
+.definisi-rinci dd {
+  margin: 0;
+  color: #cbd5e1;
+}
+@media (max-width: 1023px) {
+  .metodologi-isi {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .metodologi-daftar {
+    position: static;
+  }
+  .metodologi-daftar ul {
+    columns: 2;
+  }
+}
+@media (max-width: 520px) {
+  .definisi-rinci {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 0;
+  }
+  .definisi-rinci dt {
+    margin-top: 6px;
+    font-size: 11px;
+  }
+  .metodologi-daftar ul {
+    columns: 1;
+  }
+  .rumus-baris {
+    font-size: 14px;
+  }
+}
+
 .story-section {
   border-top: 1px solid #abc7b526;
   padding: 12px 0 28px;
