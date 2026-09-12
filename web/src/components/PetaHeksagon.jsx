@@ -99,6 +99,24 @@ function tambahTautanMaps(popup, coordinates) {
   isi.append(a);
 }
 
+/**
+ * Ekspresi `icon-image` lapisan kampus.
+ *
+ * Kampus tujuan pengguna memakai sprite tersorot. Dipilih lewat ekspresi atas
+ * nama kampus, BUKAN feature-state: MapLibre 4 tidak mendukung feature-state
+ * pada properti layout seperti icon-image (alasan yang sama membuat pin kos
+ * memakai StyleImage kanvas).
+ */
+function ekspresiIkonKampus(namaSorot) {
+  if (!namaSorot) return ["concat", "campus-", ["get", "nama"]];
+  return [
+    "concat",
+    "campus-",
+    ["case", ["==", ["get", "nama"], namaSorot], "sorot-", ""],
+    ["get", "nama"],
+  ];
+}
+
 function hargaPopup(kos) {
   if (typeof kos.harga_median !== "number") {
     return { harga: "harga tidak tercatat", lencana: null };
@@ -185,6 +203,10 @@ export default function PetaHeksagon({
   const pinHover = useRef(null);
   const pinSelected = useRef(null);
   const hexCoordinates = useRef(new Map());
+  // Geometri + pusat tiap heksagon, dan skor terkininya. Dipakai memilih
+  // kawasan terbaik di sekitar kampus tujuan tanpa membaca ulang source peta.
+  const geometriHeksagon = useRef(new Map());
+  const skorSaatIni = useRef(new Map());
   const indikatorPerH3 = useRef(new Map());
   const popupGerbang = useRef(null);
   const comparisonRef = useRef({ comparisonType, onCompareKos });
@@ -246,6 +268,17 @@ export default function PetaHeksagon({
         if (disposed) return;
         hexCoordinates.current = new Map(
           data.features.map((f) => [f.properties.h3_index, polygonCenter(f)]),
+        );
+        geometriHeksagon.current = new Map(
+          data.features.map((f) => [
+            f.properties.h3_index,
+            { geometry: f.geometry, pusat: polygonCenter(f) },
+          ]),
+        );
+        // Skor bawaan sebagai nilai awal; efek skorTerkini menimpanya begitu
+        // bobot pengguna dihitung.
+        skorSaatIni.current = new Map(
+          data.features.map((f) => [f.properties.h3_index, f.properties.skor]),
         );
         const skorArr = data.features.map((f) => f.properties.skor);
         // Math.min(...arr) menyebar 2.134 argumen; reduce lebih murah dan
@@ -416,6 +449,15 @@ export default function PetaHeksagon({
                   map.addImage(`campus-${name}`, campusImage(name), {
                     pixelRatio: 2,
                   });
+                // Varian tersorot untuk kampus tujuan pengguna. Didaftarkan
+                // sekaligus di sini: menambah gambar setelah layer berjalan
+                // memicu styleimagemissing dan penanda berkedip.
+                if (!map.hasImage(`campus-sorot-${name}`))
+                  map.addImage(
+                    `campus-sorot-${name}`,
+                    campusImage(name, true),
+                    { pixelRatio: 2 },
+                  );
               }
             } else map.addImage("bus-stop", busImage(), { pixelRatio: 2 });
             map.addLayer({
@@ -424,7 +466,7 @@ export default function PetaHeksagon({
               source: `titik-${def.id}`,
               layout: {
                 "icon-image": campus
-                  ? ["concat", "campus-", ["get", "nama"]]
+                  ? ekspresiIkonKampus(fokusRef.current?.nama ?? null)
                   : "bus-stop",
                 "icon-size": campus
                   ? ["interpolate", ["linear"], ["zoom"], 10, 1, 17, 1.15]
@@ -1014,12 +1056,21 @@ export default function PetaHeksagon({
       // Lebar tiap layer naik saat ruasnya disorot dari daftar langkah
       // (feature-state `sorot`), supaya hubungan baris <-> garis terbaca
       // tanpa teks apa pun.
-      const lebarRute = (dasar, sorot) => [
-        "case",
-        ["boolean", ["feature-state", "sorot"], false],
-        ["interpolate", ["linear"], ["zoom"], 11, sorot[0], 16, sorot[1]],
-        ["interpolate", ["linear"], ["zoom"], 11, dasar[0], 16, dasar[1]],
-      ];
+      //
+      // Susunannya SATU `interpolate` zoom dengan `case` di tiap perhentian,
+      // bukan `case` yang membungkus dua `interpolate`: MapLibre menolak
+      // ekspresi dengan lebih dari satu subekspresi zoom ("Only one
+      // zoom-based step or interpolate subexpression may be used"), dan
+      // layernya gagal dibuat sama sekali.
+      const lebarRute = (dasar, sorot) => {
+        const pada = (i) => [
+          "case",
+          ["boolean", ["feature-state", "sorot"], false],
+          sorot[i],
+          dasar[i],
+        ];
+        return ["interpolate", ["linear"], ["zoom"], 11, pada(0), 16, pada(1)];
+      };
       map.addLayer({
         id: "rute-garis-bus",
         type: "line",
@@ -1105,6 +1156,102 @@ export default function PetaHeksagon({
       }
     }
   }, [rute, loadState]);
+
+  // Kampus tujuan disorot, dan kawasan terbaik di sekitarnya diberi garis
+  // kuning. Keduanya bergantung pada `fokus`, jadi satu efek saja.
+  //
+  // "Terbaik di sekitar" sengaja RELATIF terhadap tetangga kampus itu, bukan
+  // ambang skor global: di sekitar kampus yang kawasannya rata-rata lemah,
+  // ambang global tidak akan menyorot apa pun dan pengguna kehilangan
+  // petunjuk justru di tempat yang paling ia butuhkan.
+  useEffect(() => {
+    const map = peta.current;
+    if (!map || loadState === "loading" || loadState === "error") return;
+
+    if (map.getLayer("titik-kampus")) {
+      map.setLayoutProperty(
+        "titik-kampus",
+        "icon-image",
+        ekspresiIkonKampus(fokus?.nama ?? null),
+      );
+    }
+
+    const kosong = { type: "FeatureCollection", features: [] };
+    if (!map.getSource("disarankan")) {
+      map.addSource("disarankan", { type: "geojson", data: kosong });
+      // Casing gelap DI BAWAH garis kuning, alasan yang sama dengan garis
+      // rute: kuning #f0d45e di atas isi heksagon kelas tengah (yang juga
+      // #f0d45e) berkontras 1,00:1 — benar-benar tidak terlihat. Dengan alas
+      // gelap, garisnya terbaca di atas kelas warna apa pun.
+      map.addLayer({
+        id: "disarankan-casing",
+        type: "line",
+        source: "disarankan",
+        layout: { "line-join": "round" },
+        paint: {
+          "line-color": ruteColors.casing,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 12, 4.5, 16, 7],
+          "line-opacity": 0.85,
+        },
+      });
+      map.addLayer({
+        id: "disarankan-garis",
+        type: "line",
+        source: "disarankan",
+        layout: { "line-join": "round" },
+        paint: {
+          "line-color": "#f0d45e",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 12, 1.8, 16, 3.2],
+          "line-opacity": 1,
+        },
+      });
+      // Di atas heksagon tapi DI BAWAH lapisan titik, supaya garisnya tidak
+      // menutupi penanda kampus dan pin kos.
+      const diBawah = ID_LAYER_TITIK.find((id) => map.getLayer(id));
+      if (diBawah) {
+        map.moveLayer("disarankan-casing", diBawah);
+        map.moveLayer("disarankan-garis", diBawah);
+      }
+    }
+
+    if (!fokus?.pusat || !geometriHeksagon.current.size) {
+      map.getSource("disarankan").setData(kosong);
+      return;
+    }
+
+    // Tetangga dalam radius sekitar 1,5 km dari kampus — sejalan dengan
+    // ZOOM_KAMPUS yang memperlihatkan kawasan seluas itu.
+    const [lonK, latK] = fokus.pusat;
+    const dekat = [];
+    for (const [h3, info] of geometriHeksagon.current) {
+      const skor = skorSaatIni.current?.get(h3);
+      if (!Number.isFinite(skor) || !info.pusat) continue;
+      // Derajat -> meter kasar; cukup untuk menyaring radius.
+      const dx = (info.pusat[0] - lonK) * 111320 * Math.cos((latK * Math.PI) / 180);
+      const dy = (info.pusat[1] - latK) * 110540;
+      const jarak = Math.hypot(dx, dy);
+      if (jarak <= 1500) dekat.push({ h3, skor, geometry: info.geometry });
+    }
+    if (!dekat.length) {
+      map.getSource("disarankan").setData(kosong);
+      return;
+    }
+    // Sepertiga teratas di sekitar kampus itu, maksimal lima, dan hanya yang
+    // benar-benar di atas median tetangganya.
+    dekat.sort((a, b) => b.skor - a.skor);
+    const median = dekat[Math.floor(dekat.length / 2)].skor;
+    const pilih = dekat
+      .slice(0, Math.max(1, Math.min(5, Math.ceil(dekat.length / 3))))
+      .filter((d) => d.skor > median);
+    map.getSource("disarankan").setData({
+      type: "FeatureCollection",
+      features: pilih.map((d) => ({
+        type: "Feature",
+        properties: { h3_index: d.h3 },
+        geometry: d.geometry,
+      })),
+    });
+  }, [fokus, loadState, skorTerkini]);
 
   // Pin yang dijatuhkan pengguna lewat klik kanan. Satu source + satu layer,
   // datanya diganti saat pinnya berpindah; tidak menambah/menghapus layer.
@@ -1272,12 +1419,15 @@ export default function PetaHeksagon({
         return;
       }
       const { h3, n } = mesin.current;
+      const skorBaru = new Map();
       for (let i = 0; i < n; i++) {
         map.setFeatureState(
           { source: "heksagon", id: h3[i] },
           { skorHitung: skorTerkini[i] },
         );
+        skorBaru.set(h3[i], skorTerkini[i]);
       }
+      skorSaatIni.current = skorBaru;
       const urut = [...skorTerkini].sort((a, b) => a - b);
       const ambang = hitungKuintil(urut);
       const minSkor = urut[0];
