@@ -1,9 +1,15 @@
 import { PanelMotion, Collapse } from "./Motion";
 import { useEffect, useState } from "react";
 
-import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR } from "../lib/kamus";
+import {
+  KELOMPOK_INDIKATOR,
+  NAMA_INDIKATOR,
+  DIMENSI_UI,
+  LABEL_SUMBER,
+} from "../lib/kamus";
 import { warnaTeksSkor } from "../lib/kelas";
-import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
+import { formatSkor, formatCoordinates } from "../lib/format";
+import { muatanIndikatorAI } from "../lib/bahasaIndikator";
 import { BOBOT_DEFAULT } from "../config";
 import BarisIndikator, { Lencana } from "./BarisIndikator";
 
@@ -46,17 +52,9 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
       const indikator = [];
       for (const kelompok of KELOMPOK_INDIKATOR) {
         for (const k of kelompok.kunci) {
-          const ik = heksagon.indikator?.[k];
-          indikator.push({
-            nama: NAMA_INDIKATOR[k] ?? k,
-            nilai:
-              ik && ik.nilai !== null && ik.nilai !== undefined
-                ? formatNilai(ik.nilai, ik.satuan)
-                : null,
-            persentil:
-              ik && typeof ik.persentil === "number" ? ik.persentil : null,
-            sumber: ik?.sumber ?? null,
-          });
+          indikator.push(
+            muatanIndikatorAI(k, heksagon.indikator?.[k], NAMA_INDIKATOR[k] ?? k),
+          );
         }
       }
       const r = await fetch("/api/explain-score", {
@@ -87,11 +85,11 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
 
   return (
     <div className="border-t border-white/10 py-3">
-      <div className="text-sm font-semibold text-white">Insight</div>
+      <div className="text-sm font-semibold text-white">Ringkasan</div>
       {!narasi && !memuat && !galat && (
         <button
           onClick={kirim}
-          className="mt-2 w-full rounded bg-sky-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-sky-500"
+          className="tombol-aksi mt-2 w-full rounded px-2 py-1.5 text-xs font-semibold"
         >
           Jelaskan kawasan ini
         </button>
@@ -148,6 +146,7 @@ function BlokDimensi({
   kosong,
   terbuka,
   onToggle,
+  angkaMentah,
 }) {
   const nilai = subskor?.[kelompok.dimensi];
   const kosongDimensi = kosong.has(kelompok.dimensi) || !Number.isFinite(nilai);
@@ -211,7 +210,12 @@ function BlokDimensi({
       <Collapse open={terbuka}>
         <div className="mt-2 divide-y divide-white/5">
           {kelompok.kunci.map((k) => (
-            <BarisIndikator key={k} kunci={k} data={indikator?.[k]} />
+            <BarisIndikator
+              key={k}
+              kunci={k}
+              data={indikator?.[k]}
+              angkaMentah={angkaMentah}
+            />
           ))}
         </div>
       </Collapse>
@@ -236,6 +240,7 @@ export default function PanelKawasan({
   versi,
   dihitungPada,
   bobotDariMetadata,
+  bobotBawaan,
   skorKini,
   bobotKini,
   ambangSkor,
@@ -248,15 +253,39 @@ export default function PanelKawasan({
   );
 
   const [activeTab, setActiveTab] = useState("Ringkasan");
+  // Satu toggle untuk SELURUH panel, bukan satu per baris.
+  const [angkaMentah, setAngkaMentah] = useState(false);
   useEffect(() => setActiveTab("Ringkasan"), [heksagon?.h3_index]);
   if (!heksagon) return null;
 
   const kosong = daftarKosong(heksagon.dimensi_kosong);
-  const KATA_DIMENSI = ["", "Satu", "Dua", "Tiga", "Empat"];
+  // Sebut NAMA dimensinya, bukan hanya jumlahnya: "Satu dimensi tidak punya
+  // data" memaksa pengguna pindah tab hanya untuk tahu dimensi mana. Kalimat
+  // soal pembagian bobot digabung ke sini karena keduanya menjelaskan satu
+  // hal yang sama.
+  const namaKosong = DIMENSI_UI.filter(({ kunci }) => kosong.has(kunci)).map(
+    ({ label }) => label,
+  );
+  const daftarNamaKosong =
+    namaKosong.length <= 1
+      ? (namaKosong[0] ?? "")
+      : `${namaKosong.slice(0, -1).join(", ")} dan ${namaKosong[namaKosong.length - 1]}`;
   const catatanKosong =
-    kosong.size > 0
-      ? `${KATA_DIMENSI[kosong.size] ?? kosong.size} dimensi tidak punya data dan dikeluarkan dari perhitungan. Bobotnya dibagi ke dimensi lain.`
+    namaKosong.length > 0
+      ? `${daftarNamaKosong} tidak punya data di kawasan ini, jadi ${namaKosong.length > 1 ? "keduanya dikeluarkan" : "dimensi itu dikeluarkan"} dari perhitungan dan bobotnya dibagi ke dimensi lain.`
       : null;
+
+  // Bobot bawaan ditulis dengan nama dimensi lengkap dan persentase, bukan
+  // singkatan "C 0,40 / A 0,25 / M 0,20 / W 0,15": itu nama variabel internal
+  // berbahasa Inggris yang tidak punya kunci di mana pun di antarmuka.
+  // Angkanya dari metadata bila ada, bukan ditulis tangan.
+  const bobotBawaanTampil = bobotBawaan ?? BOBOT_DEFAULT;
+  const teksBobotBawaan = DIMENSI_UI.map(({ kunci, label }) => {
+    const v = bobotBawaanTampil[kunci] ?? 0;
+    // bobotBawaan datang sebagai skala 0-100, BOBOT_DEFAULT sebagai pecahan.
+    const persen = v > 1 ? v : v * 100;
+    return `${label} ${Math.round(persen)}%`;
+  }).join(" · ");
 
   const toggle = (dimensi) => {
     setTerbuka((sebelum) => {
@@ -268,6 +297,25 @@ export default function PanelKawasan({
   };
 
   const pakaiBobotAnda = skorKini !== null && bobotKini !== null;
+
+  // Sumber unik yang benar-benar dipakai di kawasan ini, untuk baris ringkas
+  // di bawah daftar indikator. "model" tidak ikut: penandanya sudah ada di
+  // barisnya sendiri sebagai lencana "Estimasi".
+  const daftarSumber = [
+    ...new Set(
+      KELOMPOK_INDIKATOR.flatMap((kel) => kel.kunci)
+        .map((k) => heksagon.indikator?.[k])
+        .filter(
+          (ik) =>
+            ik &&
+            ik.nilai !== null &&
+            ik.sumber &&
+            ik.sumber !== "tidak_tersedia" &&
+            ik.sumber !== "model",
+        )
+        .map((ik) => LABEL_SUMBER[ik.sumber] ?? ik.sumber),
+    ),
+  ];
 
   return (
     <PanelMotion className="detail-panel absolute inset-x-0 bottom-0 z-20 flex h-[70dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[380px] md:rounded-none">
@@ -299,9 +347,19 @@ export default function PanelKawasan({
         aria-label={activeTab}
         className="flex-1 overflow-y-auto px-4 pb-4"
       >
-        <div className="select-text pt-2 font-mono text-xs text-slate-400">
-          Titik tengah: {formatCoordinates(heksagon.coordinates)}
+        {/* Nama desa/kelurahan dari basemap, bukan koordinat: lintang-bujur
+            tidak berarti apa-apa bagi pembaca, dan huruf monospace membuatnya
+            makin terbaca sebagai kode. Koordinat turun ke balik toggle angka
+            mentah. Kalau basemap belum memuat nama tempat, koordinat tetap
+            tampil sebagai cadangan — tapi sebagai teks biasa. */}
+        <div className="select-text pt-2 text-xs text-slate-400">
+          {heksagon.namaTempat ?? formatCoordinates(heksagon.coordinates)}
         </div>
+        {angkaMentah && heksagon.namaTempat && (
+          <div className="select-text text-xs text-slate-500">
+            Titik tengah: {formatCoordinates(heksagon.coordinates)}
+          </div>
+        )}
         {pakaiBobotAnda ? (
           <>
             <div className="text-xs text-slate-400">Skor dengan bobot Anda</div>
@@ -329,7 +387,7 @@ export default function PanelKawasan({
               {formatSkor(heksagon.skor)}
             </div>
             <div className="text-xs text-slate-400">
-              pada bobot bawaan C 0,40 / A 0,25 / M 0,20 / W 0,15
+              pada bobot bawaan {teksBobotBawaan}
             </div>
           </>
         )}
@@ -356,6 +414,15 @@ export default function PanelKawasan({
 
         {activeTab !== "Ringkasan" && (
           <div>
+            {/* Subskor dan skor komposit adalah DUA SKALA BERBEDA. Subskor
+                membentang hampir 0-100, sedangkan skor komposit yang diwarnai
+                di peta terkumpul di tengah karena rata-rata geometrik menarik
+                nilai ekstrem ke tengah. Tanpa keterangan ini, subskor 88 di
+                sebelah legenda yang berhenti di 75 terbaca seperti kesalahan. */}
+            <p className="mt-2 text-xs leading-snug text-slate-500">
+              Subskor dinilai per dimensi, jadi rentangnya lebih lebar daripada
+              rentang skor gabungan di legenda peta.
+            </p>
             {KELOMPOK_INDIKATOR.map((kelompok) => (
               <BlokDimensi
                 key={kelompok.dimensi}
@@ -364,12 +431,35 @@ export default function PanelKawasan({
                 indikator={heksagon.indikator}
                 bobot={bobotKini}
                 kosong={kosong}
+                angkaMentah={angkaMentah}
                 terbuka={
                   activeTab === "16 Indikator" && terbuka.has(kelompok.dimensi)
                 }
                 onToggle={() => toggle(kelompok.dimensi)}
               />
             ))}
+          </div>
+        )}
+
+        {activeTab !== "Ringkasan" && (
+          <div className="mt-3 border-t border-white/10 pt-2">
+            <label className="toggle-mentah">
+              <input
+                type="checkbox"
+                checked={angkaMentah}
+                onChange={(e) => setAngkaMentah(e.target.checked)}
+              />
+              Tampilkan angka mentah
+            </label>
+            {/* Sumber data diringkas SATU baris di bawah daftar, bukan 16
+                lencana di tiap baris. "Sentinel-2" tidak berarti apa-apa bagi
+                mahasiswa baru dan hanya jadi kebisingan bila diulang. Sumber
+                per indikator muncul bersama angka mentah. */}
+            {daftarSumber.length > 0 && (
+              <p className="mt-2 text-xs leading-snug text-slate-500">
+                Sumber data kawasan ini: {daftarSumber.join(", ")}.
+              </p>
+            )}
           </div>
         )}
 

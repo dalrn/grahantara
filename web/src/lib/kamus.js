@@ -1,32 +1,60 @@
-export const KELOMPOK_INDIKATOR = [
-  {
-    dimensi: "connectivity",
-    label: "Akses transportasi",
-    kunci: ["C1_jarak_halte", "C2_rute_unik", "C3_keterjangkauan_kampus", "C4_jarak_krl"],
-  },
-  {
-    dimensi: "affordability",
-    label: "Keterjangkauan",
-    kunci: ["A1_harga_kos", "A2_harga_makan"],
-  },
-  {
-    dimensi: "amenity",
-    label: "Kenyamanan",
-    kunci: ["M1_kepadatan_makan", "M2_keragaman", "M3_keramaian", "M4_layanan_harian"],
-  },
-  {
-    dimensi: "walkability",
-    label: "Kenyamanan berjalan kaki",
-    kunci: [
-      "W1_kerapatan_simpang",
-      "W2_keteduhan",
-      "W3_penerangan",
-      "W4_banjir",
-      "W5_tekanan_lalin",
-      "W6_integritas_jalur",
-    ],
-  },
+// SUMBER TUNGGAL label, urutan, dan warna keempat dimensi untuk SELURUH
+// antarmuka: beranda, panel Bobot, panel Kawasan Terpilih, panel Bandingkan,
+// legenda, dan halaman Metodologi.
+//
+// Sebelumnya ada dua himpunan nama yang berbeda — DIMENSI_UI di beranda
+// ("Biaya", "Fasilitas") dan KELOMPOK_INDIKATOR.label di panel detail
+// ("Keterjangkauan", "Kenyamanan") — dengan alasan yang satu lebih teknis
+// daripada yang lain. Akibatnya dua dari empat dimensi berganti nama saat
+// pengguna pindah halaman, dan di panel detail "Kenyamanan" (amenity)
+// berdampingan dengan "Kenyamanan berjalan kaki" (walkability): dua dimensi
+// berbeda dengan nama nyaris identik. Semua turunan di bawah sekarang
+// membaca dari sini; jangan menulis ulang nama dimensi di komponen mana pun.
+export const DIMENSI_UI = [
+  { kunci: "connectivity", label: "Akses transportasi", warna: "#5379a5" },
+  { kunci: "affordability", label: "Biaya", warna: "#319b98" },
+  { kunci: "amenity", label: "Fasilitas", warna: "#94ca91" },
+  { kunci: "walkability", label: "Lingkungan jalan kaki", warna: "#b08fd4" },
 ];
+
+// Peta kunci -> label, diturunkan dari DIMENSI_UI. Dipakai di tempat yang
+// hanya memegang kunci dimensi (mis. daftar dimensi_kosong).
+export const NAMA_DIMENSI = Object.fromEntries(
+  DIMENSI_UI.map(({ kunci, label }) => [kunci, label]),
+);
+
+// Indikator per dimensi. `label` SELALU diturunkan dari DIMENSI_UI supaya
+// panel detail dan beranda tidak pernah menyebut dimensi yang sama dengan
+// dua nama berbeda.
+const KUNCI_INDIKATOR = {
+  connectivity: [
+    "C1_jarak_halte",
+    "C2_rute_unik",
+    "C3_keterjangkauan_kampus",
+    "C4_jarak_krl",
+  ],
+  affordability: ["A1_harga_kos", "A2_harga_makan"],
+  amenity: [
+    "M1_kepadatan_makan",
+    "M2_keragaman",
+    "M3_keramaian",
+    "M4_layanan_harian",
+  ],
+  walkability: [
+    "W1_kerapatan_simpang",
+    "W2_keteduhan",
+    "W3_penerangan",
+    "W4_banjir",
+    "W5_tekanan_lalin",
+    "W6_integritas_jalur",
+  ],
+};
+
+export const KELOMPOK_INDIKATOR = DIMENSI_UI.map(({ kunci, label }) => ({
+  dimensi: kunci,
+  label,
+  kunci: KUNCI_INDIKATOR[kunci],
+}));
 
 export const NAMA_INDIKATOR = {
   C1_jarak_halte: "Jarak ke halte terdekat",
@@ -41,14 +69,14 @@ export const NAMA_INDIKATOR = {
   M4_layanan_harian: "Ragam layanan harian",
   W1_kerapatan_simpang: "Kerapatan simpang jalan",
   W2_keteduhan: "Keteduhan jalur",
-  W3_penerangan: "Penerangan kawasan",
+  W3_penerangan: "Penerangan malam",
   W4_banjir: "Keamanan dari genangan",
   // Pipeline menyimpan `1 - tekanan` (lihat 30_indicators/04_w5_lalin.py),
   // jadi nilai tinggi = lalu lintas TENANG. Label lama "Tekanan lalu lintas"
   // membalik artinya bagi pembaca: nilai 0,7 tampak "lebih padat" padahal
   // justru lebih tenang. Skornya sendiri sudah benar sejak awal.
   W5_tekanan_lalin: "Ketenangan lalu lintas",
-  W6_integritas_jalur: "Integritas jalur pejalan",
+  W6_integritas_jalur: "Jalur pejalan kaki",
 };
 
 // viirs dan inarisk hanya muncul pada berkas data lama; sejak 2026-09-11
@@ -65,26 +93,3 @@ export const LABEL_SUMBER = {
   model: "Estimasi model",
   tidak_tersedia: "Tidak tersedia",
 };
-
-export const NAMA_DIMENSI = {
-  connectivity: "Akses transportasi",
-  affordability: "Keterjangkauan",
-  amenity: "Kenyamanan",
-  walkability: "Kenyamanan berjalan kaki",
-};
-
-// SUMBER TUNGGAL label, urutan, dan warna keempat dimensi untuk kontrol yang
-// dilihat pengguna: kartu prioritas di beranda dan slider bobot di /peta.
-// Keduanya wajib memakai kata dan urutan yang sama, kalau tidak pilihan di
-// beranda terasa tidak mendarat di peta.
-//
-// Sengaja terpisah dari KELOMPOK_INDIKATOR.label, yang dipakai panel detail,
-// pembanding, dan metodologi dengan istilah yang lebih teknis
-// ("Keterjangkauan", "Kenyamanan"). Label di sini dipilih supaya terbaca oleh
-// mahasiswa baru.
-export const DIMENSI_UI = [
-  { kunci: "connectivity", label: "Akses transportasi", warna: "#5379a5" },
-  { kunci: "affordability", label: "Biaya", warna: "#319b98" },
-  { kunci: "amenity", label: "Fasilitas", warna: "#94ca91" },
-  { kunci: "walkability", label: "Lingkungan jalan kaki", warna: "#b08fd4" },
-];

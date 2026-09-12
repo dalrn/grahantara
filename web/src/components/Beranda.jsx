@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { DAFTAR_KAMPUS } from "../kampus.js";
 import { DIMENSI_UI } from "../lib/kamus";
+import { BOBOT_DEFAULT } from "../config";
 import { TEKS } from "../content/landing.js";
 import AngkaNaik from "./AngkaNaik.jsx";
 
@@ -31,16 +32,26 @@ const DIMENSI = DIMENSI_UI.map((d) => [
 // sama dengan jatah poin di panel bobot halaman peta:
 //   dua terpilih  -> 40/40/10/10
 //   satu terpilih -> 55/15/15/15
-//   "semuanya sama" -> 25 merata
+//   "semuanya sama" -> bobot bawaan (40/25/20/15), BUKAN 25 merata
 const BOBOT_DIPILIH = 40;
 const BOBOT_SISA = 10;
-const BOBOT_SETARA = 25;
 const MAKS_PILIH = 2;
 
-function bobotDariPilihan(pilihan, setara) {
+// "Semuanya sama penting bagiku" berarti "aku tidak punya preferensi khusus",
+// dan jawaban yang benar untuk itu adalah bobot bawaan produk — bukan
+// pembagian rata.
+//
+// Sebelumnya opsi ini (dan melanjutkan tanpa memilih apa pun) mengirim 25
+// merata, sehingga jalur yang terasa PASIF diam-diam MEMBUANG bobot bawaan
+// hasil metodologi. Pengguna melihat peta yang berbeda dari peta bawaan
+// tanpa pernah diberi tahu, dan panel bobot menyalakan catatan "bobot pilihan
+// Anda" untuk orang yang merasa tidak memilih apa-apa. Pembagian rata juga
+// menyiratkan keempat dimensi sama pentingnya, padahal metodologi menyatakan
+// sebaliknya. Sekarang jalur ini sejalan dengan "Jelajahi peta tanpa mengisi".
+function bobotDariPilihan(pilihan, setara, bawaan) {
   const b = {};
   if (setara || pilihan.length === 0) {
-    for (const { kunci } of DIMENSI_UI) b[kunci] = BOBOT_SETARA;
+    for (const { kunci } of DIMENSI_UI) b[kunci] = bawaan[kunci];
     return b;
   }
   // Satu pilihan saja: sisanya dibagi rata agar totalnya tetap 100.
@@ -141,6 +152,20 @@ export default function Beranda({
   const stub =
     meta && typeof meta.versi === "string" && meta.versi.startsWith("stub");
 
+  // Bobot bawaan dari metadata berkas data (pecahan 0-1) ke skala 0-100 yang
+  // dipakai App. metadata.json sudah diunduh di atas, jadi tidak ada
+  // permintaan jaringan tambahan. BOBOT_DEFAULT hanya cadangan.
+  const bobotBawaan = (() => {
+    const b = {};
+    for (const { kunci } of DIMENSI_UI) {
+      const m = meta?.bobot_default?.[kunci];
+      b[kunci] = Number.isFinite(m)
+        ? Math.round(m * 100)
+        : Math.round(BOBOT_DEFAULT[kunci] * 100);
+    }
+    return b;
+  })();
+
   // Dua dimensi berbobot tertinggi dari hasil AI jadi pilihan awal tahap 2.
   const pilihanDariBobot = (bobot) => {
     if (!bobot) return [];
@@ -218,7 +243,7 @@ export default function Beranda({
   };
 
   const bobotFinal = () =>
-    bobotDariPilihan(pilihan, setara || pilihan.length === 0);
+    bobotDariPilihan(pilihan, setara || pilihan.length === 0, bobotBawaan);
   const kuotaPenuh = !setara && pilihan.length >= MAKS_PILIH;
   const persen = persenBobot(bobotFinal());
 

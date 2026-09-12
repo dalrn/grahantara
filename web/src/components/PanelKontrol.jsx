@@ -12,12 +12,13 @@ import Legenda from "./Legenda";
 // bobot.
 const TAB = [
   { id: "legenda", label: "Legenda" },
-  { id: "bobot", label: "Bobot" },
+  { id: "bobot", label: "Prioritas" },
   { id: "lapisan", label: "Lapisan" },
 ];
 
 export default function PanelKontrol({
   bobot,
+  bobotBawaan,
   onBobotBerubah,
   onKembalikanBawaan,
   lapisanAktif,
@@ -78,6 +79,7 @@ export default function PanelKontrol({
           {aktif === "bobot" && (
             <PanelBobot
               bobot={bobot}
+              bobotBawaan={bobotBawaan}
               onBobotBerubah={onBobotBerubah}
               onKembalikanBawaan={onKembalikanBawaan}
             />

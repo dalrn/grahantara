@@ -4,13 +4,14 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { GAYA_BASEMAP_MAPID, WARNA_KELAS } from "../config";
-import { bandingColors } from "../design";
+import { bandingColors, ruteColors } from "../design";
 import { hitungKuintil, ekspresiWarna, labelKelas } from "../lib/kelas";
 import { siapkanMesin } from "../lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 import { prepareBasemap } from "../lib/basemap";
 import { busImage, campusImage, polygonCenter } from "../lib/mapSymbols";
 import { formatCoordinates } from "../lib/format";
+import { tautanGoogleMaps } from "../lib/tautanPeta";
 import { namaTempatTerdekat } from "../lib/namaTempat";
 
 const BATAS = [
@@ -74,6 +75,28 @@ function ekspresiWarnaTerkini(ambang) {
     ambang[3],
     WARNA_KELAS[4],
   ];
+}
+
+/**
+ * Tambahkan tautan "Buka di Google Maps" ke isi sebuah popup.
+ *
+ * Berlaku untuk SEMUA jenis titik (kos, halte, kampus, gerbang, KRL, dan pin
+ * yang dijatuhkan pengguna), bukan hanya kos. Dibuat sebagai elemen, bukan
+ * string HTML, supaya href-nya tidak pernah lewat jalur innerHTML.
+ */
+function tambahTautanMaps(popup, coordinates) {
+  const url = tautanGoogleMaps(coordinates);
+  if (!url) return;
+  const isi = popup.getElement()?.querySelector(".maplibregl-popup-content");
+  if (!isi) return;
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  // noopener: jangan beri halaman tujuan akses ke window ini.
+  a.rel = "noopener noreferrer";
+  a.className = "popup-tautan-maps";
+  a.textContent = "Buka di Google Maps";
+  isi.append(a);
 }
 
 function hargaPopup(kos) {
@@ -145,6 +168,9 @@ export default function PetaHeksagon({
   onMintaRute,
   onPilihGerbang,
   rute,
+  ruasSorot,
+  pinJatuh,
+  onPinJatuh,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -167,6 +193,8 @@ export default function PetaHeksagon({
   ruteRef.current = { onMintaRute, onPilihGerbang, adaRute: Boolean(rute) };
   const fokusRef = useRef(fokus);
   fokusRef.current = fokus;
+  const pinJatuhRef = useRef({ onPinJatuh, onMintaRute });
+  pinJatuhRef.current = { onPinJatuh, onMintaRute };
   const [loadState, setLoadState] = useState("loading");
   const layerVisibility = useRef(lapisanAktif);
   layerVisibility.current = lapisanAktif;
@@ -482,16 +510,60 @@ export default function PetaHeksagon({
         setLoadState(
           hasilFetch.some((r) => r.status === "rejected") ? "partial" : "ready",
         );
+        return true;
       } catch (error) {
         if (!disposed && error.name !== "AbortError") setLoadState("error");
+        // Kembalikan false, jangan menelan kegagalan diam-diam: pemanggil
+        // perlu tahu supaya boleh mencoba lagi. AbortError termasuk gagal —
+        // justru itu kasus yang paling sering terjadi di StrictMode.
+        return false;
       }
     };
-    // MapLibre tidak memicu "load" lagi bila gaya sudah selesai dimuat saat
-    // handler didaftarkan (terjadi pada mount kedua React StrictMode, dan
-    // saat gaya terlayani dari cache). Tanpa cabang ini, peta berhenti di
-    // kartu "Menyiapkan peta" selamanya.
-    if (map.isStyleLoaded()) muatData();
-    else map.once("load", muatData);
+    // Peta pernah macet di kartu "Menyiapkan peta kawasan..." pada 3 dari 4
+    // pemuatan, tanpa satu pun layer terbentuk dan tanpa pesan galat.
+    //
+    // Sebabnya dua peristiwa yang sama-sama bisa tidak pernah datang:
+    //   - `isStyleLoaded()` tetap false SELAMANYA begitu permintaan sprite,
+    //     glyph, atau style.json dibatalkan, walau style sudah punya layer
+    //     lengkap. Di StrictMode pembongkaran mount pertama membatalkan
+    //     permintaan milik mount kedua, jadi ini rutin terjadi di dev.
+    //   - `once("load")` hanya menyala sekali dan tidak menyala lagi bila
+    //     style sudah selesai sebelum handler terdaftar.
+    //
+    // Jadi jangan bergantung pada satu peristiwa: coba langsung, lalu tunggu
+    // "load" SEKALIGUS "styledata" sebagai jaring pengaman. Syaratnya cukup
+    // "style sudah punya layer", karena hanya itu yang dibutuhkan
+    // addSource/addLayer. Pola ini sama dengan yang sudah terbukti di
+    // PetaHero.jsx; di sana sudah diperbaiki, di sini belum.
+    let sudahMuat = false;
+    let percobaan = 0;
+    let ulangTimer = null;
+    const muatSekali = () => {
+      if (sudahMuat || disposed) return;
+      if (!map.getStyle()?.layers?.length) return;
+      sudahMuat = true;
+      // Kalau muatData GAGAL, lepas kembali kuncinya supaya `styledata`
+      // berikutnya boleh mencoba lagi. Tanpa ini peta terjebak permanen:
+      // `sudahMuat` sudah true padahal tidak ada satu pun source terbentuk,
+      // jadi setiap percobaan berikutnya ditolak dan kartu "Menyiapkan peta"
+      // tidak pernah hilang. Terpantau pada 3 dari 6 pemuatan.
+      muatData().then((berhasil) => {
+        if (berhasil || disposed) return;
+        // Jangan hanya menunggu `styledata` berikutnya: setelah permintaan
+        // dibatalkan, peristiwa itu belum tentu datang lagi, dan peta
+        // terjebak di kartu "Menyiapkan peta" sampai pengguna memuat ulang.
+        // Jadwalkan percobaan ulang sendiri, dengan jeda naik (300/900/2700
+        // ms) supaya kegagalan menetap tidak berubah jadi perulangan panas.
+        sudahMuat = false;
+        if (percobaan >= 3) return;
+        const jeda = 300 * 3 ** percobaan;
+        percobaan += 1;
+        ulangTimer = setTimeout(muatSekali, jeda);
+      });
+    };
+    muatSekali();
+    map.on("load", muatSekali);
+    map.on("styledata", muatSekali);
 
     // popup titik (handler didaftarkan lebih dulu)
     map.on("touchstart", "titik-kos", (e) => {
@@ -684,6 +756,9 @@ export default function PetaHeksagon({
             });
           content.append(tombol);
         }
+        // Semua jenis titik dapat tautan ini, bukan hanya kos. Ditaruh
+        // paling akhir supaya selalu jadi baris terbawah popup.
+        tambahTautanMaps(popup, koordinatFitur(e));
       });
       map.on("mousemove", `titik-${def.id}`, (e) => {
         if (def.id === "gerbang" && e.features?.length) {
@@ -731,6 +806,56 @@ export default function PetaHeksagon({
         map.getCanvas().style.cursor = "";
       });
     }
+
+    // Klik kanan di mana pun: jatuhkan satu pin. Pin ini bisa dipakai untuk
+    // rute ke kampus dan dibuka di Google Maps, sama seperti pin kos — jadi
+    // fitur rute tidak lagi terbatas pada 31 kos hasil survei.
+    //
+    // Handler `contextmenu` untuk "titik-kos" sudah ada (menahan menu saat
+    // tekan-lama di ponsel) dan didaftarkan lebih dulu, jadi yang ini hanya
+    // menangani klik kanan di luar pin kos.
+    map.on("contextmenu", (e) => {
+      const diAtasTitik = map.queryRenderedFeatures(e.point, {
+        layers: ID_LAYER_TITIK.filter((id) => map.getLayer(id)),
+      });
+      if (diAtasTitik.length) return;
+      const c = [e.lngLat.lng, e.lngLat.lat];
+      // Di luar wilayah studi tidak ada skor kawasan, jadi pin di sana
+      // menyesatkan. Batasnya sama dengan BATAS peta.
+      if (
+        c[0] < BATAS[0][0] ||
+        c[0] > BATAS[1][0] ||
+        c[1] < BATAS[0][1] ||
+        c[1] > BATAS[1][1]
+      )
+        return;
+      const titik = { coordinates: c, nama: "Titik pilihanmu", kind: "pin" };
+      pinJatuhRef.current.onPinJatuh?.(titik);
+
+      activePopup?.remove();
+      const popup = new maplibregl.Popup({ closeButton: true, offset: 14 })
+        .setLngLat(c)
+        .setHTML(
+          `<div class="text-sm"><b>Titik pilihanmu</b><br/>` +
+            `<span class="text-slate-300">${escapeHTML(formatCoordinates(c))}</span></div>`,
+        )
+        .addTo(map);
+      activePopup = popup;
+      const isi = popup
+        .getElement()
+        .querySelector(".maplibregl-popup-content");
+      const tombol = document.createElement("button");
+      tombol.type = "button";
+      tombol.className =
+        "tombol-aksi mt-3 w-full rounded-lg px-3 py-2 text-sm font-bold";
+      tombol.textContent = "Rute ke kampus";
+      tombol.addEventListener("click", () => {
+        pinJatuhRef.current.onMintaRute?.(titik);
+        popup.remove();
+      });
+      isi.append(tombol);
+      tambahTautanMaps(popup, c);
+    });
 
     map.on("mousemove", "heksagon-isi", (e) => {
       if (!e.features?.length) return;
@@ -822,6 +947,7 @@ export default function PetaHeksagon({
 
     return () => {
       disposed = true;
+      clearTimeout(ulangTimer);
       cancelHold();
       map.getCanvas().removeEventListener("touchcancel", cancelHold);
       controller.abort();
@@ -860,8 +986,40 @@ export default function PetaHeksagon({
     const kosong = { type: "FeatureCollection", features: [] };
     if (!map.getSource("rute")) {
       map.addSource("rute", { type: "geojson", data: kosong });
+      // Casing gelap di bawah kedua warna rute. Garis kuning jalan kaki
+      // nyaris tidak terlihat di atas heksagon kuning-zaitun tanpa ini.
+      // Satu layer untuk kedua moda: warnanya sama, jadi tidak perlu dipisah.
+      map.addLayer({
+        id: "rute-casing",
+        type: "line",
+        source: "rute",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ruteColors.casing,
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            11,
+            6,
+            16,
+            10,
+          ],
+          "line-opacity": 0.75,
+        },
+      });
       // line-dasharray tidak menerima ekspresi data, jadi ruas bus dan ruas
       // jalan kaki dipisah menjadi dua layer dengan filter.
+      //
+      // Lebar tiap layer naik saat ruasnya disorot dari daftar langkah
+      // (feature-state `sorot`), supaya hubungan baris <-> garis terbaca
+      // tanpa teks apa pun.
+      const lebarRute = (dasar, sorot) => [
+        "case",
+        ["boolean", ["feature-state", "sorot"], false],
+        ["interpolate", ["linear"], ["zoom"], 11, sorot[0], 16, sorot[1]],
+        ["interpolate", ["linear"], ["zoom"], 11, dasar[0], 16, dasar[1]],
+      ];
       map.addLayer({
         id: "rute-garis-bus",
         type: "line",
@@ -869,8 +1027,9 @@ export default function PetaHeksagon({
         filter: ["==", ["get", "mode"], "bus"],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "#38bdf8",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 11, 3, 16, 6],
+          "line-color": ruteColors.bus,
+          "line-width": lebarRute([3, 6], [6, 10]),
+          "line-width-transition": { duration: 150 },
           "line-opacity": 0.95,
         },
       });
@@ -881,8 +1040,9 @@ export default function PetaHeksagon({
         filter: ["!=", ["get", "mode"], "bus"],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "#facc15",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 11, 3, 16, 6],
+          "line-color": ruteColors.jalan,
+          "line-width": lebarRute([3, 6], [6, 10]),
+          "line-width-transition": { duration: 150 },
           "line-dasharray": [2, 1.4],
           "line-opacity": 0.95,
         },
@@ -895,10 +1055,17 @@ export default function PetaHeksagon({
     }
 
     const features = rute.ruas
+      // Indeks asli disimpan SEBELUM filter: rute.langkah[i] harus sejajar
+      // dengan ruas ke-i, dan menyaring dulu akan menggeser penomorannya.
+      .map((r, i) => ({ ...r, indeks: i }))
       .filter((r) => Array.isArray(r.geometri) && r.geometri.length >= 2)
       .map((r) => ({
         type: "Feature",
-        properties: { mode: r.mode },
+        // `id` wajib ada di level fitur (bukan properties) supaya
+        // setFeatureState bisa menargetkannya. Indeksnya sejajar dengan
+        // rute.langkah, jadi baris ke-i di panel menyorot ruas ke-i.
+        id: r.indeks,
+        properties: { mode: r.mode, indeks: r.indeks },
         geometry: { type: "LineString", coordinates: r.geometri },
       }));
     map.getSource("rute").setData({
@@ -938,6 +1105,66 @@ export default function PetaHeksagon({
       }
     }
   }, [rute, loadState]);
+
+  // Pin yang dijatuhkan pengguna lewat klik kanan. Satu source + satu layer,
+  // datanya diganti saat pinnya berpindah; tidak menambah/menghapus layer.
+  useEffect(() => {
+    const map = peta.current;
+    if (!map || loadState === "loading" || loadState === "error") return;
+
+    const kosong = { type: "FeatureCollection", features: [] };
+    if (!map.getSource("pin-jatuh")) {
+      map.addSource("pin-jatuh", { type: "geojson", data: kosong });
+      map.addLayer({
+        id: "pin-jatuh-titik",
+        type: "circle",
+        source: "pin-jatuh",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            11,
+            6,
+            16,
+            9,
+          ],
+          "circle-color": "#f8fafc",
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#0b1b16",
+        },
+      });
+    }
+    if (!pinJatuh?.coordinates) {
+      map.getSource("pin-jatuh").setData(kosong);
+      return;
+    }
+    map.getSource("pin-jatuh").setData({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: pinJatuh.coordinates },
+        },
+      ],
+    });
+  }, [pinJatuh, loadState]);
+
+  // Sorot satu ruas rute saat barisnya disentuh di panel. Lewat
+  // feature-state, bukan menulis ulang source: datanya tidak berubah, hanya
+  // tampilannya.
+  useEffect(() => {
+    const map = peta.current;
+    if (!map?.getSource("rute")) return;
+    const n = rute?.ruas?.length ?? 0;
+    for (let i = 0; i < n; i++) {
+      map.setFeatureState(
+        { source: "rute", id: i },
+        { sorot: i === ruasSorot },
+      );
+    }
+  }, [ruasSorot, rute]);
 
   // visibilitas layer titik mengikuti lapisanAktif
   useEffect(() => {

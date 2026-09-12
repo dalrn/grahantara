@@ -14,7 +14,7 @@ import { labelKelas } from "./lib/kelas";
 import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "./lib/kamus";
-import { formatNilai } from "./lib/format";
+import { muatanIndikatorAI } from "./lib/bahasaIndikator";
 import { fokusDariProfil } from "./lib/fokusKampus";
 
 const BAWAAN_MENTAH = {
@@ -55,14 +55,15 @@ function bobotMetadataKeMentah(meta) {
 function ringkasPrioritas(profil) {
   const dipilih = Array.isArray(profil?.prioritas) ? profil.prioritas : [];
   if (dipilih.length === 0) {
-    return "Semua dimensi diberi bobot setara sesuai pilihanmu. Geser slider untuk menyesuaikan.";
+    // Tanpa prioritas, beranda mengirim bobot BAWAAN, bukan bobot setara.
+    return "Kamu belum memilih prioritas, jadi peta memakai bobot bawaan. Atur poin di tab Prioritas untuk menyesuaikan.";
   }
   const nama = dipilih
     .map((k) => DIMENSI_UI.find((d) => d.kunci === k)?.label)
     .filter(Boolean);
   if (nama.length === 0) return null;
   const daftar = nama.length === 1 ? nama[0] : `${nama[0]} dan ${nama[1]}`;
-  return `Slider disetel ke prioritasmu: ${daftar}. Geser untuk menyesuaikan.`;
+  return `Bobot disetel ke prioritasmu: ${daftar}. Atur poin di tab Prioritas untuk menyesuaikan.`;
 }
 
 const DIMENSI_KUNCI = [
@@ -83,6 +84,10 @@ export default function App() {
   const [kosRute, setKosRute] = useState(null);
   const [rute, setRute] = useState(null);
   const [gerbangRute, setGerbangRute] = useState(null);
+  // Indeks ruas rute yang sedang disorot dari daftar langkah di panel rute.
+  const [ruasSorot, setRuasSorot] = useState(null);
+  // Pin yang dijatuhkan pengguna lewat klik kanan di peta.
+  const [pinJatuh, setPinJatuh] = useState(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
   const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
@@ -177,20 +182,12 @@ export default function App() {
       skor: d.skor,
       subskor: d.subskor,
       dimensiKosong: d.dimensi_kosong ?? [],
+      // Label kualitatif + persentil, bukan nilai mentah: lihat alasannya di
+      // muatanIndikatorAI (lib/bahasaIndikator.js).
       indikator: KELOMPOK_INDIKATOR.flatMap((kel) =>
-        kel.kunci.map((k) => {
-          const ik = d.indikator?.[k];
-          return {
-            nama: NAMA_INDIKATOR[k] ?? k,
-            nilai:
-              ik && ik.nilai !== null && ik.nilai !== undefined
-                ? formatNilai(ik.nilai, ik.satuan)
-                : null,
-            persentil:
-              ik && typeof ik.persentil === "number" ? ik.persentil : null,
-            sumber: ik?.sumber ?? null,
-          };
-        }),
+        kel.kunci.map((k) =>
+          muatanIndikatorAI(k, d.indikator?.[k], NAMA_INDIKATOR[k] ?? k),
+        ),
       ),
     });
     fetch("/api/compare", {
@@ -218,14 +215,17 @@ export default function App() {
     setKosRute(null);
     setRute(null);
     setGerbangRute(null);
+    setRuasSorot(null);
   };
 
-  const mintaRute = (kos) => {
+  // Menerima pin APA PUN yang punya `coordinates` dan `nama`: pin kos, pin
+  // yang dijatuhkan pengguna, atau titik lain. rencanaRute hanya butuh itu.
+  const mintaRute = (titik) => {
     setHeksagonTerpilih(null);
     setModeBanding(false);
     setRute(null);
     setGerbangRute(null);
-    setKosRute(kos);
+    setKosRute(titik);
   };
 
   // Gerbang dipilih di peta: rute diarahkan ke pintu itu, bukan titik tengah.
@@ -393,6 +393,7 @@ export default function App() {
           )}
           <PanelKontrol
             bobot={bobot}
+            bobotBawaan={bobotBawaan}
             onBobotBerubah={ubahBobot}
             onKembalikanBawaan={kembalikanBawaan}
             lapisanAktif={lapisanAktif}
@@ -453,6 +454,9 @@ export default function App() {
               onMintaRute={mintaRute}
               onPilihGerbang={pilihGerbang}
               rute={rute}
+              ruasSorot={ruasSorot}
+              pinJatuh={pinJatuh}
+              onPinJatuh={setPinJatuh}
               lapisanAktif={lapisanAktif}
               onJumlahLapisan={setJumlahLapisan}
               modeBanding={modeBanding}
@@ -469,6 +473,7 @@ export default function App() {
               gerbang={gerbangRute}
               onGerbangReset={() => setGerbangRute(null)}
               onRute={setRute}
+              onSorotRuas={setRuasSorot}
               onTutup={tutupRute}
             />
           )}
@@ -480,6 +485,7 @@ export default function App() {
                 versi={versi}
                 dihitungPada={dihitungPada}
                 bobotDariMetadata={bobotDariMetadata}
+                bobotBawaan={bobotBawaan}
                 skorKini={skorTerpilih}
                 bobotKini={
                   bedaDariBawaan ? normalisasiBobot(bobot).bobot : null
