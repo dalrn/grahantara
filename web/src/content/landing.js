@@ -46,7 +46,7 @@ export const TEKS = {
   form: {
     // Tahap 1 — menulis.
     tulis: {
-      judul: "Kawasan seperti apa yang kamu cari?",
+      judul: "Kawasan bagaimana yang kamu cari?",
       labelTextarea: "Ceritakan kebutuhanmu",
       placeholder:
         "maba UGM, budget sekitar 800 ribu, pengennya deket halte soalnya belum bawa motor",

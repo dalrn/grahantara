@@ -778,16 +778,12 @@ export default function PetaHeksagon({
             popup.remove();
           });
           content.append(tombolRute);
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className =
-            "mt-2 w-full rounded-lg bg-emerald-400 px-3 py-2 text-sm font-bold text-slate-950";
-          button.textContent = "Bandingkan kos ini";
-          button.addEventListener("click", () => {
-            comparisonRef.current.onCompareKos(kosData);
-            popup.remove();
-          });
-          content.append(button);
+          // TIDAK ADA tombol "Bandingkan kos ini" di sini. Membandingkan
+          // butuh DUA kos, jadi tombol di popup satu kos menjanjikan sesuatu
+          // yang belum bisa terjadi dan memaksa pengguna menebak langkah
+          // berikutnya. Jalurnya lewat mode Bandingkan di navigasi, yang
+          // memang menuntun memilih dua. Pintasannya tetap ada
+          // (Ctrl+klik / tekan lama), disebut di panel Lapisan.
         }
         if (def.id === "gerbang") {
           const content = popup

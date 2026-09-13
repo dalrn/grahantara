@@ -92,6 +92,27 @@ export const SOROT_POI = {
   layanan: ["apotek", "minimarket", "warung"],
 };
 
+/**
+ * Kategori tempat yang disebut spesifik -> penekanan indikator.
+ *
+ * Ini yang membuat catatan tambahan BENAR-BENAR memengaruhi peta, bukan
+ * sekadar tercatat di kartu konfirmasi. "Dekat apotek" dan "banyak tempat
+ * makan" keduanya ada di dimensi Fasilitas, tetapi menuntut indikator yang
+ * berbeda: yang pertama layanan harian, yang kedua kepadatan dan keragaman
+ * tempat makan.
+ *
+ * Batasnya jujur: apotek, minimarket, dan warung sama-sama menyusun SATU
+ * indikator gabungan (M4 layanan harian), jadi ketiganya menghasilkan
+ * penekanan yang sama. Yang membedakan apotek dari minimarket hanyalah
+ * daftar tempat di panel (SOROT_POI), bukan skornya.
+ */
+export const PENEKANAN_KATEGORI = {
+  makan: "makan",
+  warung: "layanan",
+  minimarket: "layanan",
+  apotek: "layanan",
+};
+
 // Sebaran subskor tiap dimensi atas seluruh wilayah studi. Salinan klien dari
 // api/_sebaran.js (dibangkitkan scripts/buat_sebaran.mjs).
 //

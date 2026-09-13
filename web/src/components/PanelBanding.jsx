@@ -6,6 +6,7 @@ import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "../lib/kamus";
 import { formatNilai, formatSkor, formatCoordinates } from "../lib/format";
 import { warnaTeksSkor } from "../lib/kelas";
 import { bandingColors } from "../design";
+import { SEBARAN_DIMENSI, AMBANG_SELISIH } from "../config";
 import {
   labelKualitatif,
   kalimatKonteks,
@@ -93,7 +94,27 @@ export default function PanelBanding({
     selisih === null ? null : selisih > 0.05 ? "A" : selisih < -0.05 ? "B" : null;
 
   // Tiga selisih dimensi terbesar, jadi kalimat alasan.
-  const alasan = (() => {
+  // Tiap selisih dinilai terhadap SIMPANGAN BAKU dimensinya, bukan dibaca
+  // apa adanya. Simpangan bakunya berbeda sampai 3,4 kali antar dimensi:
+  // selisih 7 poin hampir satu sd di Lingkungan jalan kaki (sd 7,6) tetapi
+  // hanya 0,27 sd di Biaya (sd 25,6). Menampilkan keduanya seolah sama besar
+  // membuat pengguna mengira dua kawasan berbeda jauh padahal tidak.
+  const nilaiSelisih = (kunci, beda) => {
+    const sd = SEBARAN_DIMENSI[kunci]?.simpanganBaku;
+    if (!sd) return { rasio: null, tingkat: null };
+    const rasio = Math.abs(beda) / sd;
+    return {
+      rasio,
+      tingkat:
+        rasio >= AMBANG_SELISIH.BESAR
+          ? "selisih besar"
+          : rasio >= AMBANG_SELISIH.SEDANG
+            ? "selisih sedang"
+            : "selisih kecil",
+    };
+  };
+
+  const semuaSelisih = (() => {
     if (!a || !b) return [];
     const keluar = [];
     for (const { kunci, label } of DIMENSI_UI) {
@@ -101,14 +122,22 @@ export default function PanelBanding({
       const vB = b.subskor?.[kunci];
       if (kosongA.has(kunci) || kosongB.has(kunci)) continue;
       if (!Number.isFinite(vA) || !Number.isFinite(vB)) continue;
-      const d = vA - vB;
-      if (Math.abs(d) < 1) continue;
-      keluar.push({ kunci, label, beda: d });
+      const beda = vA - vB;
+      keluar.push({ kunci, label, beda, ...nilaiSelisih(kunci, beda) });
     }
-    return keluar
-      .sort((x, y) => Math.abs(y.beda) - Math.abs(x.beda))
-      .slice(0, 3);
+    return keluar;
   })();
+
+  // Dua kawasan praktis setara bila SELURUH selisihnya kecil. Kasus ini butuh
+  // kalimat yang berbeda, bukan mengumumkan pemenang dari selisih 0,3 poin.
+  const praktisSetara =
+    semuaSelisih.length > 0 &&
+    semuaSelisih.every((x) => x.tingkat === "selisih kecil");
+
+  const alasan = semuaSelisih
+    .filter((x) => x.tingkat !== "selisih kecil")
+    .sort((x, y) => (y.rasio ?? 0) - (x.rasio ?? 0))
+    .slice(0, 3);
 
   // AI dipanggil otomatis begitu dua kawasan lengkap; vonis non-AI sudah
   // tampil lebih dulu sehingga tidak ada layar kosong.
@@ -264,7 +293,9 @@ export default function PanelBanding({
         {/* 1a. VONIS lebih dulu, bukan tabel angka. */}
         <div className="vonis">
           <p className="vonis-kalimat">
-            {pemenang === null
+            {praktisSetara
+              ? "Kedua kawasan praktis setara: seluruh selisih dimensinya kecil dibandingkan sebaran wilayah studi. Pilih berdasarkan hal di luar cakupan analisis ini, misalnya kondisi bangunan atau kecocokan pribadi."
+              : pemenang === null
               ? "Kedua kawasan hampir setara dengan bobot yang kamu pakai."
               : `Kawasan ${pemenang} lebih cocok secara keseluruhan${
                   alasan[0]
@@ -302,7 +333,8 @@ export default function PanelBanding({
               <li key={x.kunci}>
                 <strong>Kawasan {x.beda > 0 ? "A" : "B"}</strong> unggul di{" "}
                 {x.label.toLowerCase()} (selisih {fmtAngka(Math.abs(x.beda))}{" "}
-                poin).
+                poin
+                {x.tingkat ? `, ${x.tingkat}` : ""}).
               </li>
             ))}
           </ul>
@@ -377,10 +409,17 @@ export default function PanelBanding({
                   ) : (
                     fmtAngka(v)
                   );
+                const sig = semuaSelisih.find((x) => x.kunci === kel.dimensi);
                 return (
                   <div key={kel.dimensi} className="compare-row">
                     <span className="w-36 shrink-0 text-slate-300">
                       {kel.label}
+                      {/* Tanpa ini, selisih 7 poin di dua dimensi berbeda
+                          terbaca sama besar padahal simpangan bakunya
+                          berbeda 3,4 kali. */}
+                      {sig?.tingkat && (
+                        <span className="sig-label"> {sig.tingkat}</span>
+                      )}
                     </span>
                     {/* Sel unggul ditebalkan dan diberi latar tipis, bukan
                         ditandai simbol tanpa legenda. */}
