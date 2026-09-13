@@ -91,3 +91,23 @@ export const SOROT_POI = {
   makan: ["makan"],
   layanan: ["apotek", "minimarket", "warung"],
 };
+
+// Sebaran subskor tiap dimensi atas seluruh wilayah studi. Salinan klien dari
+// api/_sebaran.js (dibangkitkan scripts/buat_sebaran.mjs).
+//
+// Dipakai panel Bandingkan untuk menilai apakah sebuah selisih BERARTI.
+// Simpangan bakunya berbeda sampai 3,4 kali antar dimensi: selisih 7 poin
+// hampir satu simpangan baku di Lingkungan jalan kaki (sd 7,6) tetapi hanya
+// 0,27 di Biaya (sd 25,6). Tanpa pembanding ini, panel menampilkan kedua
+// selisih itu seolah sama besarnya.
+export const SEBARAN_DIMENSI = {
+  connectivity: { median: 41.05, simpanganBaku: 21.75 },
+  affordability: { median: 51.71, simpanganBaku: 25.63 },
+  amenity: { median: 52.45, simpanganBaku: 23.5 },
+  walkability: { median: 50.1, simpanganBaku: 7.56 },
+};
+
+// Ambang selisih dalam satuan simpangan baku, sama dengan lapisan temuan
+// (api/_temuan.js AMBANG) supaya panel dan ringkasan AI tidak pernah
+// menyebut satu selisih dengan dua istilah berbeda.
+export const AMBANG_SELISIH = { BESAR: 0.8, SEDANG: 0.3 };

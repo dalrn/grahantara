@@ -2,8 +2,27 @@
 // langsung pada rate limit server publik dari tiap browser, dan agar hasil
 // bisa di-cache di edge.
 
-const OSRM = "https://router.project-osrm.org";
-const PROFIL_SAH = new Set(["foot", "driving"]);
+// Tiap profil punya SERVER SENDIRI, bukan satu server dengan banyak profil.
+//
+// router.project-osrm.org hanya memuat profil MOBIL. Path /foot/ diterima
+// tanpa galat, tapi hasilnya identik dengan /driving/ — terukur: jarak dan
+// durasi sama persis sampai desimal, dan rute di jalan satu arah tetap
+// memutar walau pejalan kaki tidak terikat arah itu. Akibatnya rute "jalan
+// kaki" mengikuti aturan lalu lintas yang tidak relevan bagi pejalan kaki
+// dan melewatkan gang tembus.
+//
+// routing.openstreetmap.de menyediakan mesin terpisah per profil. Terukur di
+// sabuk kampus Sleman, rutenya sampai 533 m LEBIH PENDEK daripada profil
+// mobil karena memakai jalur pejalan yang memang ada.
+//
+// Catatan: path-nya tetap /route/v1/driving/ untuk SEMUA profil — itu nama
+// path bawaan OSRM, sedangkan profil sebenarnya ditentukan oleh server yang
+// dipanggil (routed-foot / routed-car). Bukan salah tulis.
+const SERVER = {
+  foot: "https://routing.openstreetmap.de/routed-foot",
+  driving: "https://routing.openstreetmap.de/routed-car",
+};
+const PROFIL_SAH = new Set(Object.keys(SERVER));
 const BATAS = { lonMin: 110.2, lonMax: 110.6, latMin: -7.95, latMax: -7.55 };
 
 function koordinat(teks) {
@@ -34,7 +53,7 @@ export default async function handler(req, res) {
   }
 
   const url =
-    `${OSRM}/route/v1/${profil}/${dari};${ke}` +
+    `${SERVER[profil]}/route/v1/driving/${dari};${ke}` +
     `?overview=full&geometries=geojson&alternatives=false&steps=false`;
 
   const batal = AbortSignal.timeout(7000);

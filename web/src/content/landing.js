@@ -24,7 +24,7 @@ export const TEKS = {
   },
 
   hero: {
-    judul: "Peta kawasan untuk memilih kos di Sleman.",
+    judul: "Peta kawasan untuk memilih tempat tinggal di Sleman.",
     // jumlah datang dari metadata.json, bukan ditulis tangan.
     pembuka: (jumlah) =>
       `Grahantara menilai ${jumlah} kawasan di sabuk kampus Sleman. Tentukan yang paling penting bagimu dan bandingkan langsung kawasannya di peta.`,
@@ -46,7 +46,7 @@ export const TEKS = {
   form: {
     // Tahap 1 — menulis.
     tulis: {
-      judul: "Kos seperti apa yang kamu cari?",
+      judul: "Kawasan seperti apa yang kamu cari?",
       labelTextarea: "Ceritakan kebutuhanmu",
       placeholder:
         "maba UGM, budget sekitar 800 ribu, pengennya deket halte soalnya belum bawa motor",

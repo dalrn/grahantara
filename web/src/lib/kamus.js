@@ -56,6 +56,21 @@ export const KELOMPOK_INDIKATOR = DIMENSI_UI.map(({ kunci, label }) => ({
   kunci: KUNCI_INDIKATOR[kunci],
 }));
 
+/**
+ * Keterangan pengukuran untuk indikator yang tanpa itu ambigu.
+ *
+ * "Jarak ke halte terdekat 483 m" tidak memberi tahu diukur dari MANA. Semua
+ * jarak dihitung dari titik tengah heksagon, bukan dari kos atau dari tepi
+ * kawasan, dan selisihnya bisa ratusan meter di sel selebar ~380 m.
+ */
+export const KETERANGAN_UKUR = {
+  C1_jarak_halte: "dari titik tengah kawasan",
+  C4_jarak_krl: "dari titik tengah kawasan",
+  M1_kepadatan_makan: "dalam radius 800 m dari titik tengah",
+  M2_keragaman: "dalam radius 800 m dari titik tengah",
+  M4_layanan_harian: "dalam radius 800 m dari titik tengah",
+};
+
 export const NAMA_INDIKATOR = {
   C1_jarak_halte: "Jarak ke halte terdekat",
   C2_rute_unik: "Jumlah rute unik terjangkau",
