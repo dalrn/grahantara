@@ -1,4 +1,5 @@
 import { StorySection } from "./Motion";
+import TanyaMetode from "./TanyaMetode.jsx";
 import { useEffect, useState } from "react";
 
 import {
@@ -51,6 +52,7 @@ const KELOMPOK = [
       { id: "skala", judul: "Skala skor dan subskor" },
       { id: "batasan", judul: "Batasan" },
       { id: "ai", judul: "Peran AI" },
+      { id: "tanya", judul: "Tanya tentang metode" },
     ],
   },
 ];
@@ -1008,6 +1010,10 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 merespons, halaman tetap berjalan dengan ringkasan yang disusun
                 tanpa AI dan diberi label demikian.
               </p>
+            </Bagian>
+
+            <Bagian id="tanya" judul="Tanya tentang metode ini">
+              <TanyaMetode />
             </Bagian>
           </div>
         </div>

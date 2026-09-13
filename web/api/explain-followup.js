@@ -1,29 +1,8 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
 import { NAMA_DIMENSI } from "./_namaDimensi.js";
+import { PENGETAHUAN_PROYEK } from "./_pengetahuan.js";
 
 const DIMENSI = ["connectivity", "affordability", "amenity", "walkability"];
-
-// Blok pengetahuan proyek untuk prompt sistem. Konstanta statis; bukan bacaan
-// berkas repo lain saat runtime.
-const PENGETAHUAN_PROYEK = `- Grahantara menilai kelayakan kawasan hunian kos untuk mahasiswa di sabuk
-  kampus Sleman, DIY. Premisnya: memilih tempat tinggal adalah keputusan
-  mobilitas.
-- Wilayah studi dibagi 2.134 heksagon H3 resolusi 9.
-- Empat dimensi: Akses transportasi (bobot bawaan 40), Biaya (25),
-  Fasilitas (20), Lingkungan jalan kaki (15). Total 16 indikator.
-- Skor memakai RATA-RATA GEOMETRIK BERBOBOT, bukan aritmetik. Satu dimensi
-  yang sangat rendah menjatuhkan skor total. Alasannya: kos dengan warung
-  melimpah tapi tanpa akses transit tetap salah pilihan bagi mahasiswa
-  tanpa kendaraan.
-- Setiap indikator dinilai dengan peringkat persentil terhadap seluruh
-  heksagon wilayah studi, bukan terhadap nilai maksimum teoretis.
-- Dimensi yang seluruh indikatornya tidak tersedia DIKELUARKAN dari
-  perhitungan, dan bobotnya dibagi ulang ke dimensi lain.
-- Pengguna dapat menggeser bobot antar-dimensi. Bobot antar-indikator
-  di dalam satu dimensi tetap dan tidak bisa diubah.
-- Grahantara TIDAK menyimpan nama kos, alamat, nomor kontak, nama jalan,
-  atau nama tempat usaha. Yang ada hanya skor dan indikator per kawasan.
-- Penjelasan lengkap metode ada di halaman Metodologi aplikasi.`;
 
 // Kata kunci fallback deterministik: pertanyaan -> dimensi.
 const KATA_DIMENSI = [
