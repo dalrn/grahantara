@@ -51,6 +51,11 @@ function fallback(teks, msLatensi) {
     anggaran: cocokAnggaran(teks),
     bobot,
     ringkas: "Diproses tanpa AI karena layanan tidak merespons.",
+    // Tanpa AI, memisahkan bagian "ekstra" dari teks bebas tidak bisa
+    // dilakukan andal. Lebih baik tidak menampilkan catatan sama sekali
+    // daripada menampilkan seluruh prompt lagi.
+    catatanEkstra: null,
+    penekanan: null,
     sumber: "fallback",
     bobotDiganti: false,
     msLatensi,
@@ -78,7 +83,13 @@ function validasiKetat(raw, msLatensi) {
     anggaran = raw.anggaran;
   }
   const ringkas = typeof raw?.ringkas === "string" ? raw.ringkas.slice(0, 200) : "";
-  return { kampus, anggaran, bobot, ringkas, sumber: "llm", bobotDiganti, msLatensi };
+  const catatanEkstra =
+    typeof raw?.catatanEkstra === "string" && raw.catatanEkstra.trim()
+      ? raw.catatanEkstra.trim().slice(0, 120)
+      : null;
+  const PENEKANAN_SAH = new Set(["makan", "layanan", "transit"]);
+  const penekanan = PENEKANAN_SAH.has(raw?.penekanan) ? raw.penekanan : null;
+  return { kampus, anggaran, bobot, ringkas, catatanEkstra, penekanan, sumber: "llm", bobotDiganti, msLatensi };
 }
 
 export default async function handler(req, res) {
@@ -108,7 +119,9 @@ Bentuk keluaran:
   "anggaran": <angka rupiah per bulan, atau null>,
   "bobot": { "connectivity": <0-100>, "affordability": <0-100>,
              "amenity": <0-100>, "walkability": <0-100> },
-  "ringkas": "<satu kalimat Indonesia, maksimal 20 kata>"
+  "ringkas": "<satu kalimat Indonesia, maksimal 20 kata>",
+  "catatanEkstra": "<lihat aturan di bawah, atau null>",
+  "penekanan": "<salah satu: makan, layanan, transit, atau null>"
 }
 Daftar kampus yang sah: ${DAFTAR_KAMPUS.join(", ")}
 Arti dimensi:
@@ -119,7 +132,30 @@ Arti dimensi:
 Bobot mencerminkan penekanan pengguna. Bila pengguna tidak menyebut suatu
 dimensi, beri nilai sedang, bukan nol.
 Bila kampus tidak disebut atau tidak ada di daftar, isi null.
-Bila anggaran tidak disebut, isi null. Jangan menebak angka.`;
+Bila anggaran tidak disebut, isi null. Jangan menebak angka.
+
+"catatanEkstra" adalah bagian kebutuhan pengguna yang TIDAK tertampung di
+kampus, anggaran, maupun bobot dimensi. Kartu konfirmasi sudah menampilkan
+ketiganya lewat kontrolnya sendiri, jadi mengulanginya di catatan hanya
+membuat pengguna membaca dua kali.
+  - Ringkas jadi satu frasa pendek, maksimal 12 kata, huruf kecil.
+  - DILARANG menyebut ulang nama kampus, angka anggaran, atau dimensi yang
+    sudah tercermin di bobot.
+  - Yang layak masuk: penekanan yang lebih spesifik daripada nama dimensi
+    (misalnya "yang penting banyak tempat makan" saat pengguna bilang
+    fasilitas lain tidak penting), batasan waktu tempuh, atau syarat lain
+    yang tidak punya kontrol sendiri.
+  - Bila seluruh kebutuhannya sudah tertampung kontrol, isi null.
+
+"penekanan" dipakai bila pengguna menyebut SATU hal spesifik di dalam sebuah
+dimensi dan mengecilkan sisanya. Tanpa ini, "yang penting banyak tempat
+makan, fasilitas lain tidak penting" hanya menaikkan seluruh dimensi
+Fasilitas, termasuk apotek dan minimarket yang justru ia bilang tidak penting.
+  - "makan"    = menekankan tempat makan / warung / kuliner saja
+  - "layanan"  = menekankan minimarket, apotek, layanan harian saja
+  - "transit"  = menekankan halte dan rute bus saja, bukan stasiun KRL
+  - null       = tidak ada penekanan sespesifik itu
+Isi null bila pengguna hanya menyebut dimensinya secara umum.`;
     const isi = await panggilDeepseek({ sistem, pengguna: teks });
     const parsed = parseJsonLonggar(isi);
     if (parsed === null) throw new Error("JSON tidak terparse");

@@ -12,6 +12,7 @@ import { prepareBasemap } from "../lib/basemap";
 import { busImage, campusImage, polygonCenter } from "../lib/mapSymbols";
 import { formatCoordinates } from "../lib/format";
 import { tautanGoogleMaps } from "../lib/tautanPeta";
+import { adalahSentuh } from "../lib/perangkat";
 import { namaTempatTerdekat } from "../lib/namaTempat";
 
 const BATAS = [
@@ -189,6 +190,11 @@ export default function PetaHeksagon({
   ruasSorot,
   pinJatuh,
   onPinJatuh,
+  onPetaMuat,
+  onDisarankan,
+  onKosDibuka,
+  modePin = false,
+  onModePin,
 }) {
   const wadah = useRef(null);
   const peta = useRef(null);
@@ -217,6 +223,14 @@ export default function PetaHeksagon({
   fokusRef.current = fokus;
   const pinJatuhRef = useRef({ onPinJatuh, onMintaRute });
   pinJatuhRef.current = { onPinJatuh, onMintaRute };
+  const kosDibukaRef = useRef(onKosDibuka);
+  kosDibukaRef.current = onKosDibuka;
+  // Mode menjatuhkan pin dikendalikan induk, supaya tombolnya bisa duduk di
+  // baris navigasi bersama kontrol peta lain. Jalan pintas klik kanan /
+  // tekan lama tetap bekerja tanpa mode ini.
+  const modePinRef = useRef(false);
+  modePinRef.current = modePin;
+  const setModePin = (v) => onModePin?.(typeof v === "function" ? v(modePinRef.current) : v);
   const [loadState, setLoadState] = useState("loading");
   const layerVisibility = useRef(lapisanAktif);
   layerVisibility.current = lapisanAktif;
@@ -552,6 +566,7 @@ export default function PetaHeksagon({
         setLoadState(
           hasilFetch.some((r) => r.status === "rejected") ? "partial" : "ready",
         );
+        onPetaMuat?.();
         return true;
       } catch (error) {
         if (!disposed && error.name !== "AbortError") setLoadState("error");
@@ -684,6 +699,7 @@ export default function PetaHeksagon({
         );
         activePopup?.remove();
         if (def.id === "kos") {
+          kosDibukaRef.current?.();
           if (pinSelected.current)
             map.setFeatureState(
               { source: "titik-kos", id: pinSelected.current },
@@ -925,6 +941,19 @@ export default function PetaHeksagon({
       map.getCanvas().style.cursor = "";
     });
     map.on("click", "heksagon-isi", (e) => {
+      // Mode menjatuhkan pin menyala: klik biasa menaruh pin, bukan memilih
+      // kawasan. Mode mati sendiri setelah satu pin, supaya pengguna tidak
+      // terjebak di dalamnya.
+      if (modePinRef.current) {
+        const c = [e.lngLat.lng, e.lngLat.lat];
+        pinJatuhRef.current.onPinJatuh?.({
+          coordinates: c,
+          nama: "Titik pilihanmu",
+          kind: "pin",
+        });
+        setModePin(false);
+        return;
+      }
       // klik titik tidak boleh memicu seleksi heksagon
       if (e.originalEvent && ID_LAYER_TITIK.length) {
         const titik = map.queryRenderedFeatures(e.point, {
@@ -1215,6 +1244,7 @@ export default function PetaHeksagon({
     }
 
     if (!fokus?.pusat || !geometriHeksagon.current.size) {
+      onDisarankan?.(false);
       map.getSource("disarankan").setData(kosong);
       return;
     }
@@ -1233,6 +1263,7 @@ export default function PetaHeksagon({
       if (jarak <= 1500) dekat.push({ h3, skor, geometry: info.geometry });
     }
     if (!dekat.length) {
+      onDisarankan?.(false);
       map.getSource("disarankan").setData(kosong);
       return;
     }
@@ -1243,6 +1274,7 @@ export default function PetaHeksagon({
     const pilih = dekat
       .slice(0, Math.max(1, Math.min(5, Math.ceil(dekat.length / 3))))
       .filter((d) => d.skor > median);
+    onDisarankan?.(pilih.length > 0);
     map.getSource("disarankan").setData({
       type: "FeatureCollection",
       features: pilih.map((d) => ({
@@ -1500,10 +1532,22 @@ export default function PetaHeksagon({
     <>
       <div
         ref={wadah}
-        className="absolute inset-0"
+        className={`absolute inset-0${modePin ? " peta-mode-pin" : ""}`}
         style={{ position: "absolute" }}
         aria-label="Peta kawasan Sleman"
       />
+      {modePin && (
+        <div className="pin-mode-pita" role="status">
+          <span>
+            {adalahSentuh()
+              ? "Ketuk satu titik di peta untuk menaruh pin."
+              : "Klik satu titik di peta untuk menaruh pin."}
+          </span>
+          <button type="button" onClick={() => setModePin(false)}>
+            Batal
+          </button>
+        </div>
+      )}
       {(loadState === "loading" || loadState === "error") && (
         <div className="loading-map">
           <div

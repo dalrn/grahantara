@@ -11,6 +11,10 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:temuan": "node tests/test-temuan.mjs",
+    "test:petunjuk": "node tests/test-petunjuk.mjs",
+    "buat:sebaran": "node scripts/buat_sebaran.mjs",
+    "buat:poi": "python scripts/buat_poi.py",
     "test:ui": "node tests/ui-interactions.mjs && node tests/map-symbols-comparison.mjs",
     "test:ui:edge": "node tests/ui-edge-cases.mjs"
   },

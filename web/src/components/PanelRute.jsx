@@ -5,8 +5,6 @@ import { KOORDINAT_KAMPUS } from "../lib/fokusKampus";
 import { rencanaRute, lengkapiGeometri } from "../lib/rute";
 import { ruteColors } from "../design";
 
-const IKON = { jalan: "🚶", bus: "🚌" };
-
 /**
  * Potongan garis pendek yang menyalin gaya garis di peta: biru penuh untuk
  * bus, kuning putus-putus untuk jalan kaki, keduanya di atas alas gelap yang
@@ -200,7 +198,13 @@ export default function PanelRute({
                 onBlur={() => onSorotRuas?.(null)}
               >
                 <ContohGaris mode={l.mode} />
-                <span aria-hidden="true">{IKON[l.mode]}</span>
+                {/* Moda ditulis sebagai KATA, bukan emoji: emoji tidak terbaca
+                    pembaca layar dan tampilannya berbeda di tiap sistem.
+                    Potongan garis di sebelahnya sudah membawa warna dan
+                    gayanya. */}
+                <span className="langkah-moda">
+                  {l.mode === "bus" ? "Bus" : "Jalan"}
+                </span>
                 <span className="min-w-0">
                   <span className="text-slate-200">{l.teks}</span>
                   <span className="block text-slate-500">

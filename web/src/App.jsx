@@ -11,11 +11,30 @@ import PanelRute from "./components/PanelRute";
 import Beranda from "./components/Beranda";
 import Metodologi from "./components/Metodologi";
 import { labelKelas } from "./lib/kelas";
-import { normalisasiBobot, hitungSemua } from "./lib/mesinSkor";
+import {
+  normalisasiBobot,
+  hitungSemua,
+  logSubskorDitekan,
+} from "./lib/mesinSkor";
+import { PENEKANAN, DIMENSI_PENEKANAN } from "./config";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "./lib/kamus";
 import { muatanIndikatorAI } from "./lib/bahasaIndikator";
 import { fokusDariProfil } from "./lib/fokusKampus";
+import {
+  petunjukBerikut,
+  catatTampil,
+  tandaiSelesai,
+  lewatiSemua,
+  resetPetunjuk,
+} from "./lib/petunjuk";
+import { TEKS_PETUNJUK } from "./content/petunjuk.js";
+import {
+  adalahSentuh,
+  pintasBandingKos,
+  pintasJatuhkanPin,
+} from "./lib/perangkat";
+import KartuPetunjuk from "./components/KartuPetunjuk";
 
 const BAWAAN_MENTAH = {
   connectivity: 40,
@@ -88,6 +107,22 @@ export default function App() {
   const [ruasSorot, setRuasSorot] = useState(null);
   // Pin yang dijatuhkan pengguna lewat klik kanan di peta.
   const [pinJatuh, setPinJatuh] = useState(null);
+  const [modePin, setModePin] = useState(false);
+  // Penekanan antar-indikator dari beranda (mis. "makan").
+  const [penekanan, setPenekanan] = useState(null);
+  // --- pengenalan progresif -------------------------------------------------
+  // Keadaan yang memicu petunjuk. Semuanya TINDAKAN pengguna, bukan waktu.
+  const [petunjukAktif, setPetunjukAktif] = useState(null);
+  const [adaDisarankan, setAdaDisarankan] = useState(false);
+  const [kawasanDibuka, setKawasanDibuka] = useState(() => new Set());
+  const [kosDibuka, setKosDibuka] = useState(false);
+  const [tabRinciDibuka, setTabRinciDibuka] = useState(false);
+  const [pernahBanding, setPernahBanding] = useState(false);
+  const [pernahUbahBobot, setPernahUbahBobot] = useState(false);
+  const [pernahRute, setPernahRute] = useState(false);
+  const [pernahMetodologi, setPernahMetodologi] = useState(false);
+  const [petaSiap, setPetaSiap] = useState(false);
+  const [versiPetunjuk, setVersiPetunjuk] = useState(0);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
   const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
@@ -130,6 +165,7 @@ export default function App() {
   };
 
   const compareKos = (kos) => {
+    setPernahBanding(true);
     setModeBanding(true);
     setComparisonType("kos");
     setHeksagonTerpilih(null);
@@ -221,6 +257,7 @@ export default function App() {
   // Menerima pin APA PUN yang punya `coordinates` dan `nama`: pin kos, pin
   // yang dijatuhkan pengguna, atau titik lain. rencanaRute hanya butuh itu.
   const mintaRute = (titik) => {
+    setPernahRute(true);
     setHeksagonTerpilih(null);
     setModeBanding(false);
     setRute(null);
@@ -238,27 +275,90 @@ export default function App() {
     setGalatBanding(null);
   };
 
+  // Timpaan log-subskor bila pengguna menekankan indikator tertentu.
+  // Dihitung ulang hanya saat penekanan atau datanya berubah, bukan tiap
+  // gerakan slider.
+  const timpaL = useRef(null);
+  useEffect(() => {
+    if (!mesin.current || !penekanan || !PENEKANAN[penekanan]) {
+      timpaL.current = null;
+      return;
+    }
+    const d = DIMENSI_PENEKANAN[penekanan];
+    const L = logSubskorDitekan(mesin.current, d, PENEKANAN[penekanan]);
+    timpaL.current = L ? { [d]: L } : null;
+  }, [penekanan, skorTerkini === null]);
+
   // debounce 120 ms: normalisasi -> hitungSemua -> skorTerkini
   useEffect(() => {
     if (!mesin.current) return;
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const { bobot: ternormalisasi } = normalisasiBobot(bobot);
-      setSkorTerkini(hitungSemua(mesin.current, ternormalisasi));
+      setSkorTerkini(
+        hitungSemua(mesin.current, ternormalisasi, timpaL.current),
+      );
     }, 120);
   }, [bobot]);
+
+  // Evaluasi petunjuk. Dijalankan ulang tiap kali keadaan pemicunya berubah,
+  // TIDAK pernah karena timer. Hanya satu petunjuk boleh tampil, dan selama
+  // satu masih tampil, evaluasi berikutnya tidak menggantinya.
+  useEffect(() => {
+    if (tampilan !== "peta") return;
+    if (petunjukAktif) return;
+    const p = petunjukBerikut({
+      petaSiap,
+      adaDisarankan,
+      jumlahKawasanDibuka: kawasanDibuka.size,
+      pernahBanding,
+      bobotBawaan: !bedaDariBawaan && !profilTerakhir,
+      pernahUbahBobot,
+      kosDibuka,
+      pernahRute,
+      tabRinciDibuka,
+      pernahMetodologi,
+    });
+    if (!p) return;
+    catatTampil(p.id);
+    setPetunjukAktif(p);
+    // bedaDariBawaan sengaja tidak jadi dependensi langsung: nilainya
+    // diturunkan dari `bobot`, yang sudah ada di daftar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    tampilan, petaSiap, adaDisarankan, kawasanDibuka, pernahBanding,
+    bobot, pernahUbahBobot, kosDibuka, pernahRute, tabRinciDibuka,
+    pernahMetodologi, petunjukAktif, versiPetunjuk,
+  ]);
+
+  const tutupPetunjuk = () => {
+    if (petunjukAktif) tandaiSelesai(petunjukAktif.id);
+    setPetunjukAktif(null);
+  };
+  const lewatiSemuaPetunjuk = () => {
+    lewatiSemua();
+    setPetunjukAktif(null);
+  };
+  const ulangiPetunjuk = () => {
+    resetPetunjuk();
+    setPetunjukAktif(null);
+    // Paksa evaluasi ulang: keadaan pemicunya mungkin tidak berubah.
+    setVersiPetunjuk((v) => v + 1);
+  };
 
   // Panel bobot memakai alokasi poin, jadi keempat dimensi selalu disetel
   // sekaligus sebagai satu objek. Skor memakai bobot RELATIF (w / Sigma-w);
   // nilai yang disimpan tetap skala 0-100 supaya mesin skor tidak berubah.
-  const ubahBobot = (baru) =>
-    setBobot(() => {
+  const ubahBobot = (baru) => {
+    setPernahUbahBobot(true);
+    return setBobot(() => {
       const hasil = {};
       for (const k of DIMENSI_KUNCI) {
         hasil[k] = Math.max(0, Math.min(100, Math.round(baru[k] ?? 0)));
       }
       return hasil;
     });
+  };
   const kembalikanBawaan = () => setBobot(bobotBawaan);
   const toggleLapisan = (id) =>
     setLapisanAktif((l) => ({ ...l, [id]: !l[id] }));
@@ -268,6 +368,20 @@ export default function App() {
     Math.abs(bobot.affordability - bobotBawaan.affordability) > 0.5 ||
     Math.abs(bobot.amenity - bobotBawaan.amenity) > 0.5 ||
     Math.abs(bobot.walkability - bobotBawaan.walkability) > 0.5;
+
+  // Panel kawasan dibuka: catat h3-nya (Set, jadi kawasan yang sama dibuka
+  // dua kali tidak dihitung dua).
+  const pilihHeksagon = (props) => {
+    setHeksagonTerpilih(props);
+    if (props?.h3_index) {
+      setKawasanDibuka((s) => {
+        if (s.has(props.h3_index)) return s;
+        const baru = new Set(s);
+        baru.add(props.h3_index);
+        return baru;
+      });
+    }
+  };
 
   const skorTerpilih = (() => {
     if (!heksagonTerpilih || !mesin.current || !skorTerkini) return null;
@@ -298,6 +412,7 @@ export default function App() {
             onProfil={(profil) => {
               setProfilTerakhir(profil);
               setBobot(skorProfilKeBobot(profil, bobotBawaan));
+              setPenekanan(profil?.penekanan ?? null);
               setFokusPeta(fokusDariProfil(profil));
               if (!pitaPernahTampil) {
                 setPitaPrioritas(ringkasPrioritas(profil));
@@ -308,6 +423,7 @@ export default function App() {
             onLewati={() => {
               setProfilTerakhir(null);
               setBobot(bobotBawaan);
+              setPenekanan(null);
               setFokusPeta(null);
               setPitaPrioritas(null);
               setTampilan("peta");
@@ -344,12 +460,6 @@ export default function App() {
             >
               ← Beranda
             </button>
-            <button
-              onClick={() => setTampilan("metodologi")}
-              className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
-            >
-              Metodologi
-            </button>
             {modeBanding ? (
               <button
                 onClick={keluarBanding}
@@ -359,9 +469,11 @@ export default function App() {
               </button>
             ) : (
               <button
+                data-petunjuk="nav-banding"
                 onClick={() => {
                   setHeksagonTerpilih(null);
                   setModeBanding(true);
+                  setPernahBanding(true);
                   changeComparisonType("kawasan");
                 }}
                 className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
@@ -369,6 +481,37 @@ export default function App() {
                 Bandingkan
               </button>
             )}
+            <button
+              data-petunjuk="nav-metodologi"
+              onClick={() => {
+                setPernahMetodologi(true);
+                setTampilan("metodologi");
+              }}
+              className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-300 ring-1 ring-slate-700 hover:text-white"
+            >
+              Metodologi
+            </button>
+            {/* Wajib ada: tanpa ini rangkaian petunjuk tidak bisa didemokan
+                dua kali dan tidak bisa diuji ulang setelah sekali dilihat. */}
+            <button
+              onClick={ulangiPetunjuk}
+              title="Tampilkan ulang petunjuk pengenalan"
+              className="rounded bg-slate-900/85 px-3 py-1 text-xs text-slate-400 ring-1 ring-slate-700 hover:text-white"
+            >
+              Ulangi petunjuk
+            </button>
+            {/* Kontrol menjatuhkan pin duduk di baris navigasi, bukan di
+                sudut kanan bawah: di sana ia bertabrakan dengan pita
+                "Bandingkan kawasan" dan popup koordinat. Jalan pintasnya
+                disebut di tooltip tombol ini, sesuai perangkat. */}
+            <button
+              onClick={() => setModePin((v) => !v)}
+              aria-pressed={modePin}
+              title={`Jatuhkan pin di peta — pintasan: ${pintasJatuhkanPin(adalahSentuh())}`}
+              className={`tombol-pin${modePin ? " is-aktif" : ""}`}
+            >
+              {modePin ? "Batalkan pin" : "Jatuhkan pin"}
+            </button>
           </div>
           {modeBanding && (
             <div className="comparison-controls absolute left-2 right-2 top-14 z-30 rounded-xl bg-slate-900/95 p-2 text-xs text-slate-200 shadow-lg md:left-auto md:right-14 md:w-80">
@@ -390,7 +533,7 @@ export default function App() {
               </div>
               <p className="px-1 pt-2">
                 {comparisonType === "kos"
-                  ? "Pilih dua pin rumah. Pintasan: Ctrl+klik, atau tekan lama di HP."
+                  ? `Pilih dua pin rumah. Pintasan: ${pintasBandingKos(adalahSentuh())}.`
                   : "Klik dua heksagon di peta."}
               </p>
             </div>
@@ -416,7 +559,7 @@ export default function App() {
             }
           >
             <PetaHeksagon
-              onPilih={setHeksagonTerpilih}
+              onPilih={pilihHeksagon}
               onStatusBasemap={setBasemapAktif}
               onPetaSiap={({
                 versi: v,
@@ -461,6 +604,11 @@ export default function App() {
               ruasSorot={ruasSorot}
               pinJatuh={pinJatuh}
               onPinJatuh={setPinJatuh}
+              onPetaMuat={() => setPetaSiap(true)}
+              onDisarankan={setAdaDisarankan}
+              onKosDibuka={() => setKosDibuka(true)}
+              modePin={modePin}
+              onModePin={setModePin}
               lapisanAktif={lapisanAktif}
               onJumlahLapisan={setJumlahLapisan}
               modeBanding={modeBanding}
@@ -482,6 +630,30 @@ export default function App() {
             />
           )}
           <AnimatePresence>
+            {petunjukAktif &&
+              (() => {
+                const t = TEKS_PETUNJUK[petunjukAktif.id]?.({
+                  kampus: fokusPeta?.nama ?? null,
+                  bobotBawaan: !bedaDariBawaan,
+                  sentuh: adalahSentuh(),
+                });
+                if (!t) return null;
+                return (
+                  <KartuPetunjuk
+                    key={petunjukAktif.id}
+                    judul={t.judul}
+                    isi={t.isi}
+                    posisi={t.posisi}
+                    onTutup={tutupPetunjuk}
+                    // "Lewati semua" HANYA di petunjuk pertama.
+                    onLewatiSemua={
+                      petunjukAktif.id === "p1_disarankan"
+                        ? lewatiSemuaPetunjuk
+                        : undefined
+                    }
+                  />
+                );
+              })()}
             {!modeBanding && heksagonTerpilih && (
               <PanelKawasan
                 key="kawasan"
@@ -496,6 +668,7 @@ export default function App() {
                 }
                 ambangSkor={ambangSkor}
                 onTutup={() => setHeksagonTerpilih(null)}
+                onTabRinci={() => setTabRinciDibuka(true)}
                 narasiCache={narasiCache}
                 simpanNarasi={(h3, hasil) =>
                   setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
