@@ -67,17 +67,6 @@ function bobotDariPilihan(pilihan, setara, bawaan) {
   return b;
 }
 
-// Persentase relatif: angka yang benar-benar dipakai skor.
-function persenBobot(bobot) {
-  const total = DIMENSI_UI.reduce((a, { kunci }) => a + (bobot[kunci] ?? 0), 0);
-  const out = {};
-  for (const { kunci } of DIMENSI_UI) {
-    out[kunci] =
-      total > 0 ? Math.round(((bobot[kunci] ?? 0) / total) * 100) : 25;
-  }
-  return out;
-}
-
 // Rentang anggaran dari survei kos: 30 kos terdata, Rp 350.000-1.400.000.
 // Slider dibulatkan ke luar supaya ujungnya tidak terasa mentok.
 const ANGGARAN_MIN = 300000;
@@ -113,6 +102,14 @@ export default function Beranda({
   // Dimensi yang TIDAK berhasil diisi dari narasi; dipakai untuk penanda halus.
   const [tidakTerbaca, setTidakTerbaca] = useState([]);
   const [ringkasAI, setRingkasAI] = useState(null);
+  // Bagian kebutuhan yang TIDAK tertampung kontrol lain. Bukan seluruh prompt.
+  const [catatanEkstra, setCatatanEkstra] = useState(null);
+  // Penekanan antar-indikator dari AI-1, mis. "makan" untuk pengguna yang
+  // bilang fasilitas lain tidak penting.
+  const [penekanan, setPenekanan] = useState(null);
+  // Jenis tempat yang disebut spesifik ("dekat apotek"), dipakai panel
+  // kawasan untuk menampilkan tempat itu lebih dulu.
+  const [kategoriPoi, setKategoriPoi] = useState([]);
   const [pesanBaca, setPesanBaca] = useState(null);
   // Nama dimensi yang cakupannya belum penuh, dilaporkan SebaranDimensi dari
   // data. Dipakai kalimat cakupan di bawah grafik.
@@ -207,9 +204,14 @@ export default function Beranda({
       if (dipilih.length === 0) luput.push("prioritas");
       setTidakTerbaca(luput);
       setRingkasAI(hasil.ringkas ?? null);
+      setCatatanEkstra(hasil.catatanEkstra ?? null);
+      setPenekanan(hasil.penekanan ?? null);
+      setKategoriPoi(Array.isArray(hasil.kategoriPoi) ? hasil.kategoriPoi : []);
     } else {
       setTidakTerbaca([]);
       setRingkasAI(null);
+      setCatatanEkstra(null);
+      setPenekanan(null);
     }
     setPesanBaca(pesan ?? null);
     setTahap("konfirmasi");
@@ -248,7 +250,6 @@ export default function Beranda({
   const bobotFinal = () =>
     bobotDariPilihan(pilihan, setara || pilihan.length === 0, bobotBawaan);
   const kuotaPenuh = !setara && pilihan.length >= MAKS_PILIH;
-  const persen = persenBobot(bobotFinal());
 
   const kePeta = () => {
     onProfil({
@@ -256,6 +257,8 @@ export default function Beranda({
       anggaran: adaAnggaran ? anggaran : null,
       bobot: bobotFinal(),
       ringkas: ringkasAI,
+      penekanan,
+      kategoriPoi,
       sumber: "beranda",
       teks: teks.trim(),
       // Dibaca App untuk memberi tahu peta apa yang dipilih di beranda.
@@ -297,10 +300,7 @@ export default function Beranda({
 
         <header className="home-nav">
           <a href="#" className="brand" aria-label={TEKS.nav.labelBeranda}>
-            <span className="brand-mark" aria-hidden="true">
-              <img src="/grahantara-mark.svg" alt="" width="40" height="47" />
-            </span>
-            grahantara
+            <img className="brand-wordmark" src="/grahantara-wordmark.svg" alt="Grahantara" width="170" height="70" />
           </a>
           <nav>
             <span className="nav-active" aria-current="page">
@@ -500,9 +500,6 @@ export default function Beranda({
                               {aktif ? ikonCentang : null}
                             </span>
                             <span className="pilih-nama">{label}</span>
-                            <span className="pilih-persen">
-                              {persen[kunci]}%
-                            </span>
                           </button>
                         );
                       })}
@@ -531,12 +528,16 @@ export default function Beranda({
                     </div>
                   </fieldset>
 
-                  {teks.trim() && (
+                  {/* Hanya bagian yang TIDAK tertampung kontrol di atasnya.
+                      Mengulang seluruh catatan membuat pengguna membaca hal
+                      yang sama dua kali: kampus, anggaran, dan prioritas
+                      sudah punya kontrolnya sendiri. */}
+                  {catatanEkstra && (
                     <div className="bidang">
                       <span className="bidang-label">
                         {TEKS.form.konfirmasi.catatanmu}
                       </span>
-                      <p className="catatan-asli">{teks.trim()}</p>
+                      <p className="catatan-asli">{catatanEkstra}</p>
                     </div>
                   )}
                 </div>
@@ -626,7 +627,7 @@ export default function Beranda({
 
         <footer className="home-footer">
           <div className="footer-brand">
-            <strong>{TEKS.footer.nama}</strong>
+            <img className="brand-wordmark" src="/grahantara-wordmark.svg" alt={TEKS.footer.nama} width="170" height="70" loading="lazy" />
             <span>{TEKS.footer.deskripsi}</span>
           </div>
           <nav className="footer-nav">

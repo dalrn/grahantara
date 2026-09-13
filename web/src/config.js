@@ -43,3 +43,51 @@ export const BOBOT_INDIKATOR = {
   W5_tekanan_lalin: 0.15,
   W6_integritas_jalur: 0.2,
 };
+
+// Penekanan antar-indikator DI DALAM satu dimensi, dipilih AI-1 dari kalimat
+// pengguna. Nilainya pengali bobot indikator, bukan bobot itu sendiri.
+//
+// Alasannya: "yang penting banyak tempat makan, fasilitas lain tidak
+// penting" sebelumnya hanya menaikkan seluruh dimensi Fasilitas — termasuk
+// apotek dan minimarket yang justru dikecilkan pengguna. Terukur: 20 kawasan
+// teratas berubah 60% antara bobot campuran dan penekanan tempat makan.
+export const PENEKANAN = {
+  makan: {
+    M1_kepadatan_makan: 2.5,
+    M2_keragaman: 1.5,
+    M3_keramaian: 0.5,
+    M4_layanan_harian: 0.2,
+  },
+  layanan: {
+    M1_kepadatan_makan: 0.3,
+    M2_keragaman: 0.3,
+    M4_layanan_harian: 3,
+  },
+  transit: {
+    C1_jarak_halte: 2,
+    C2_rute_unik: 1.5,
+    C3_keterjangkauan_kampus: 1.5,
+    C4_jarak_krl: 0.2,
+  },
+};
+
+// Dimensi yang disentuh tiap penekanan.
+export const DIMENSI_PENEKANAN = {
+  makan: "amenity",
+  layanan: "amenity",
+  transit: "connectivity",
+};
+
+// Kategori POI yang DISOROT untuk tiap penekanan, dipakai daftar tempat di
+// panel kawasan.
+//
+// Bobot indikator saja tidak cukup menjawab "dekat apotek": M4 layanan harian
+// adalah SATU indikator gabungan (apotek + minimarket + warung), jadi
+// menaikkan bobotnya menaikkan ketiganya sekaligus. Yang bisa dibedakan
+// adalah daftar tempatnya — di situ apotek, minimarket, dan warung memang
+// tercatat terpisah. Jadi penekanan menentukan kategori mana yang tampil
+// lebih dulu dan tidak terpotong oleh batas daftar.
+export const SOROT_POI = {
+  makan: ["makan"],
+  layanan: ["apotek", "minimarket", "warung"],
+};

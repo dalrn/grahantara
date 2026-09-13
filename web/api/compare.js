@@ -1,5 +1,7 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
-import { NAMA_DIMENSI } from "./_namaDimensi.js";
+import { NAMA_DIMENSI, KELOMPOK_NAMA } from "./_namaDimensi.js";
+import { temuanBanding } from "./_temuan.js";
+import { kalimatTemuan } from "./_kalimatTemuan.js";
 
 const DIMENSI = Object.keys(NAMA_DIMENSI);
 const AMBANG_SETARA = 0.02;
@@ -180,6 +182,18 @@ export default async function handler(req, res) {
     const adaB = ib.tersedia ?? (ib.sumber !== "tidak_tersedia" && ib.nilai != null);
     garis.push(barisData(ia.nama, ia, ib, !adaA && !adaB));
   }
+  const { temuan } = temuanBanding({
+    a: b.a,
+    b: b.b,
+    bobot: b.bobot,
+    kelompok: KELOMPOK_NAMA,
+  });
+  if (temuan.length) {
+    garis.push("");
+    garis.push("TEMUAN (sudah dihitung, salin apa adanya):");
+    for (const t of temuan) garis.push(kalimatTemuan(t));
+  }
+
   const pengguna = `Bobot yang dipakai: ${DIMENSI.map((d) => `${NAMA_DIMENSI[d]} ${b.bobot?.[d] ?? "-"}`).join(" | ")}\n\nKawasan A: h3 ${b.a.h3_index} | Kawasan B: h3 ${b.b.h3_index}\n\n${garis.join("\n")}`;
 
   const sistem = `Kamu membandingkan dua kawasan hunian kos untuk mahasiswa di Sleman, DIY.
@@ -196,13 +210,25 @@ Hingga dua keunggulan untuk masing-masing kawasan; pilih dua yang terkuat.
 Bila sebuah kawasan tidak unggul pada dimensi maupun indikator mana pun,
 tulis array keunggulannya KOSONG ([]) — jangan mengarang keunggulan.
 ATURAN:
-- Setiap kalimat WAJIB menyebut nama indikator atau dimensi yang diberikan.
+- Setiap kalimat WAJIB berlabuh pada TEMUAN atau indikator yang diberikan.
+  Kalimat yang menyampaikan sebuah temuan TIDAK perlu menyebut nama
+  indikator — cukup menyampaikan isi temuannya.
+- Utamakan menyampaikan TEMUAN; baris data hanya bahan pendukung.
 - DILARANG memulai kalimat dengan kata "Indikator".
 - DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya.
 - DILARANG menyebut angka berdesimal. Bulatkan, atau pakai kata-kata.
 - Maksimal dua kalimat per butir.
-- HANYA boleh memakai angka yang ada di data. DILARANG menghitung,
-  menaksir, atau mengarang angka.
+- DILARANG menghitung sendiri. SELURUH perbandingan besaran, selisih, dan
+  posisi relatif SUDAH dihitung dan diberikan sebagai temuan atau baris
+  data. Kamu menyalin temuan, bukan menghitungnya. Angka yang tidak ada di
+  data yang diberikan DILARANG dipakai.
+- Bila ada temuan bertanda PEMENANG KALAH DI PRIORITAS, temuan itu WAJIB
+  muncul di "simpulan".
+- Bila ada temuan bertanda KEDUA KAWASAN PRAKTIS SETARA, JANGAN menonjolkan
+  pemenang. Sarankan memilih berdasarkan hal di luar cakupan analisis ini,
+  misalnya kondisi bangunan atau kecocokan pribadi.
+- Bila sebuah keunggulan ditandai KEUNGGULAN TIPIS atau KEUNGGULAN DARI
+  TAKSIRAN, sebutkan keterbatasan itu DI KALIMAT YANG SAMA.
 - Arah perbandingan SUDAH DIHITUNG dan diberikan pada setiap baris data
   sebagai "-> ... , unggul: ...". Salin arah itu apa adanya.
   DILARANG menyimpulkan sendiri kawasan mana yang lebih tinggi, lebih

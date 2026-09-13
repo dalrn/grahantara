@@ -148,6 +148,19 @@ input[type="checkbox"] {
   height: 34px;
   flex-shrink: 0;
 }
+.brand-wordmark {
+  display: block;
+  width: 170px;
+  height: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+@media (max-width: 767px) {
+  .brand-wordmark {
+    width: 126px;
+    height: 52px;
+  }
+}
 .brand-mark img {
   display: block;
   width: 100%;
@@ -1297,6 +1310,16 @@ input[type="checkbox"] {
     transparent 5px 8px
   );
 }
+.langkah-moda {
+  flex-shrink: 0;
+  width: 2.6rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-top: 1px;
+}
 .rute-keterangan {
   margin-top: 6px;
   font-size: 11px;
@@ -1318,6 +1341,192 @@ input[type="checkbox"] {
 }
 .langkah-rute:focus-visible {
   box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* --- Pengenalan progresif -------------------------------------------------
+   Kartu kecil yang menempel pada elemen yang dimaksud. BUKAN modal, BUKAN
+   overlay: peta tetap bisa dipakai selagi kartu tampil. Tidak ada animasi
+   berdenyut — kartunya muncul sekali lalu diam. */
+.kartu-petunjuk {
+  position: absolute;
+  z-index: 40;
+  width: min(19rem, calc(100vw - 1.5rem));
+  border-radius: 12px;
+  background: #0f2a22;
+  border: 1px solid #46a35a;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  padding: 10px 12px 12px;
+  color: #eef8eb;
+}
+.kartu-petunjuk-kepala {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kartu-petunjuk-judul {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9fe0ad;
+}
+.kartu-petunjuk-tutup {
+  flex-shrink: 0;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: 13px;
+  color: #8aa79a;
+}
+.kartu-petunjuk-tutup:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.kartu-petunjuk-isi {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #cfe6d6;
+}
+.kartu-petunjuk-kaki {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+/* Dua jalan keluar yang SENGAJA dibedakan tampilannya: yang menonjol hanya
+   menutup kartu ini, yang samar mematikan seluruh rangkaian. Pengguna tidak
+   boleh mengira tombol tutup biasa akan mematikan semuanya. */
+.petunjuk-tombol-utama {
+  border-radius: 8px;
+  background: #46a35a;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #08150d;
+}
+.petunjuk-tombol-utama:hover {
+  background: #56b96b;
+}
+.petunjuk-tombol-lewati {
+  font-size: 11px;
+  color: #8aa79a;
+  text-decoration: underline;
+}
+.petunjuk-tombol-lewati:hover {
+  color: #cfe6d6;
+}
+/* Kartu petunjuk TIDAK BOLEH memblokir peta di bawahnya. Kartunya melayang
+   di atas kanvas, jadi tanpa ini ia menangkap klik yang dimaksudkan untuk
+   kontrol peta — terpantau memblokir tombol "Jatuhkan pin". Hanya isi
+   kartunya yang menerima pointer; area di luar teks dan tombol tembus. */
+.kartu-petunjuk {
+  pointer-events: none;
+}
+.kartu-petunjuk-kepala,
+.kartu-petunjuk-isi,
+.kartu-petunjuk-kaki,
+.kartu-petunjuk button {
+  pointer-events: auto;
+}
+
+.kartu-petunjuk--tengah-atas {
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.kartu-petunjuk--nav {
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.kartu-petunjuk--kiri-atas {
+  top: 56px;
+  left: 0.5rem;
+}
+.kartu-petunjuk--kanan-bawah {
+  bottom: 5.5rem;
+  right: 0.5rem;
+}
+@media (min-width: 768px) {
+  .kartu-petunjuk--kiri-atas {
+    top: 3.25rem;
+    left: 1rem;
+  }
+  .kartu-petunjuk--kanan-bawah {
+    bottom: 1rem;
+    right: 25rem;
+  }
+}
+/* Layar sempit: panel kiri dan kanan tidak tampil bersamaan, dan kartu tidak
+   boleh menutupi kontrol yang ditunjuknya. Semua kartu turun ke bawah layar,
+   di atas panel detail tapi tidak menimpa navigasi atas. */
+@media (max-width: 767px) {
+  .kartu-petunjuk {
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    transform: none;
+  }
+  .kartu-petunjuk--tengah-atas,
+  .kartu-petunjuk--nav,
+  .kartu-petunjuk--kiri-atas {
+    top: auto;
+    bottom: 0.75rem;
+  }
+  .kartu-petunjuk--kanan-bawah {
+    bottom: 0.75rem;
+  }
+}
+
+/* Kontrol menjatuhkan pin. */
+/* Kontrol menjatuhkan pin. Duduk sebaris dengan navigasi peta (lihat
+   App.jsx), bukan melayang di sudut kanan bawah tempat ia bertabrakan
+   dengan pita "Bandingkan kawasan". Tanpa emoji. */
+.tombol-pin {
+  border-radius: 0.25rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+.tombol-pin:hover {
+  color: #fff;
+}
+.tombol-pin.is-aktif {
+  background: #ffd400;
+  border-color: #7a4a00;
+  color: #2b2000;
+  font-weight: 700;
+}
+/* Kursor berubah saat mode menyala, jadi keadaannya terbaca di peta itu
+   sendiri, bukan hanya di tombolnya. */
+.peta-mode-pin .maplibregl-canvas {
+  cursor: crosshair;
+}
+.pin-mode-pita {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: 3.25rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  background: #ffd400;
+  color: #2b2000;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  max-width: calc(100vw - 1rem);
+}
+.pin-mode-pita button {
+  text-decoration: underline;
+  font-weight: 700;
+  color: #2b2000;
 }
 
 .route-panel {
@@ -1378,6 +1587,108 @@ input[type="checkbox"] {
 /* Bobot yang dipakai, sebagai daftar berlabel di dalam kotak sendiri.
    Menggantikan kalimat panjang "pada bobot bawaan A 40% · B 25% · ..." yang
    mengalir tanpa jeda dan titik pemisahnya menggantung saat teks terpotong. */
+/* Daftar tempat makan dan layanan di dalam satu kawasan. */
+.poi-daftar {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+.poi-ringkas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+/* Kategori yang diminta pengguna: dibedakan warna DAN ketebalan, bukan
+   warna saja. */
+.poi-lencana.is-sorot {
+  background: rgba(255, 212, 0, 0.16);
+  border-color: rgba(255, 212, 0, 0.5);
+  color: #ffe066;
+  font-weight: 700;
+}
+.poi-catatan--sorot {
+  color: #cbb26a;
+}
+.poi-catatan--nihil {
+  color: #d8a0a0;
+}
+.poi-lencana {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+.poi-daftar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.poi-daftar li {
+  display: flex;
+  gap: 7px;
+  padding: 5px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.poi-daftar li:first-child {
+  border-top: none;
+}
+.poi-titik {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.poi-titik--makan {
+  background: #f0d45e;
+}
+.poi-titik--warung {
+  background: #9bcf5f;
+}
+.poi-titik--minimarket {
+  background: #38bdf8;
+}
+.poi-titik--apotek {
+  background: #e857b8;
+}
+.poi-isi {
+  min-width: 0;
+}
+.poi-nama {
+  display: block;
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.35;
+}
+.poi-jenis {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #7f9aa4;
+}
+.poi-alamat {
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #64748b;
+}
+.poi-lainnya {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #7fc98a;
+  text-decoration: underline;
+}
+.poi-catatan {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
 .blok-bobot {
   margin-top: 10px;
   border-radius: 8px;
