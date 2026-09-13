@@ -963,8 +963,16 @@ export default function PetaHeksagon({
       }
       if (!e.features?.length) return;
       const id = e.features[0].properties.h3_index;
-      if (modeRef.current) {
-        if (comparisonRef.current.comparisonType === "kos") return;
+      // Ctrl/Cmd+klik membandingkan kawasan TANPA perlu masuk mode banding
+      // lebih dulu. Sebelumnya jalan pintas ini hanya bekerja untuk pin kos,
+      // padahal panel Lapisan dan pita mode banding sama-sama menyebutnya
+      // sebagai pintasan perbandingan kawasan.
+      const pintasBanding =
+        Boolean(e.originalEvent?.ctrlKey || e.originalEvent?.metaKey) &&
+        comparisonRef.current.comparisonType !== "kos";
+      if (modeRef.current || pintasBanding) {
+        if (comparisonRef.current.comparisonType === "kos" && !pintasBanding)
+          return;
         // MapLibre menyerikan objek bersarang jadi string JSON; pulihkan.
         const props = { ...e.features[0].properties };
         if (typeof props.subskor === "string") {
