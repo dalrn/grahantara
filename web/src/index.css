@@ -148,6 +148,21 @@ input[type="checkbox"] {
   height: 34px;
   flex-shrink: 0;
 }
+.brand-wordmark {
+  display: block;
+  width: 170px;
+  height: 70px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+@media (max-width: 767px) {
+  .brand-wordmark {
+    width: 126px;
+    height: 52px;
+  }
+}
 .brand-mark img {
   display: block;
   width: 100%;

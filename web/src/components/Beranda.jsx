@@ -300,10 +300,7 @@ export default function Beranda({
 
         <header className="home-nav">
           <a href="#" className="brand" aria-label={TEKS.nav.labelBeranda}>
-            <span className="brand-mark" aria-hidden="true">
-              <img src="/grahantara-mark.svg" alt="" width="40" height="47" />
-            </span>
-            grahantara
+            <img className="brand-wordmark" src="/grahantara-wordmark.svg" alt="Grahantara" width="170" height="70" />
           </a>
           <nav>
             <span className="nav-active" aria-current="page">
@@ -630,7 +627,7 @@ export default function Beranda({
 
         <footer className="home-footer">
           <div className="footer-brand">
-            <strong>{TEKS.footer.nama}</strong>
+            <img className="brand-wordmark" src="/grahantara-wordmark.svg" alt={TEKS.footer.nama} width="170" height="70" loading="lazy" />
             <span>{TEKS.footer.deskripsi}</span>
           </div>
           <nav className="footer-nav">
