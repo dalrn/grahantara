@@ -7,17 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
  * `scripts/buat_tekstur_jalan.py` dari graf yang sama yang dipakai pipeline
  * (`data/interim/walk_graph.graphml`). Tidak ada penggambaran ulang saat
  * runtime: komponen ini hanya mengambil berkas statis lalu menyisipkannya.
- *
- * SATU lapisan untuk seluruh halaman, dipasang di level root beranda:
- *   - absolute, tinggi mengikuti tinggi DOKUMEN (bukan viewport), sehingga
- *     ikut menggulir bersama konten. Bukan position: fixed.
- *   - rasio aspek SVG dipertahankan; kalau dokumen lebih tinggi daripada satu
- *     salinan SVG, salinan berikutnya ditumpuk vertikal. Sambungannya tidak
- *     terlihat pada opasitas latar.
- *
- * Disisipkan sebagai elemen <svg>, bukan background-image: pada lebar 1600
- * unit, garis tipis jadi sub-piksel saat diskalakan CSS dan hilang sama
- * sekali. Sebagai elemen, ketebalan tiap kelas jalan diatur CSS.
  */
 
 // Rasio viewBox berkas (1600 x 2256). Dipakai menghitung berapa salinan

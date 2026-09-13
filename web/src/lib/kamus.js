@@ -2,9 +2,9 @@
 // antarmuka: beranda, panel Bobot, panel Kawasan Terpilih, panel Bandingkan,
 // legenda, dan halaman Metodologi.
 //
-// Sebelumnya ada dua himpunan nama yang berbeda — DIMENSI_UI di beranda
+// Sebelumnya ada dua himpunan nama yang berbeda, DIMENSI_UI di beranda
 // ("Biaya", "Fasilitas") dan KELOMPOK_INDIKATOR.label di panel detail
-// ("Keterjangkauan", "Kenyamanan") — dengan alasan yang satu lebih teknis
+// ("Keterjangkauan", "Kenyamanan"), dengan alasan yang satu lebih teknis
 // daripada yang lain. Akibatnya dua dari empat dimensi berganti nama saat
 // pengguna pindah halaman, dan di panel detail "Kenyamanan" (amenity)
 // berdampingan dengan "Kenyamanan berjalan kaki" (walkability): dua dimensi

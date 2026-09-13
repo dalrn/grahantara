@@ -1,21 +1,6 @@
 /**
  * Lapisan temuan: penalaran yang DIHITUNG di server, deterministik, dan bisa
  * diuji tanpa memanggil API mana pun.
- *
- * Alasannya: model bahasa dilarang menghitung (supaya tidak mengarang angka),
- * tapi kalimat yang berguna hampir selalu butuh hasil hitungan — "selisihnya
- * bisa diabaikan" adalah pengurangan, "termasuk rendah di Sleman" adalah
- * perbandingan terhadap sebaran. Selama keduanya dilarang, model hanya bisa
- * menyebut ulang angka yang sudah tampil di panel.
- *
- * Jalan keluarnya bukan melonggarkan larangan, melainkan MEMINDAHKAN
- * penalarannya ke sini. Model menerima temuan sebagai fakta jadi dan hanya
- * menuliskannya dengan enak dibaca — pola yang sama dengan `arahBanding` di
- * compare.js, yang sudah lebih dulu menghitung arah perbandingan di server
- * supaya model tidak menyimpulkan polaritas sendiri.
- *
- * Tiap temuan berbentuk { jenis, ... data pendukung }. Semua `jenis`
- * didaftarkan di JENIS di bawah.
  */
 import { SEBARAN, KUANTIL } from "./_sebaran.js";
 import { NAMA_DIMENSI } from "./_namaDimensi.js";
@@ -61,18 +46,6 @@ export const AMBANG = {
  * Dampak nyata satu simpangan baku tiap dimensi terhadap SKOR AKHIR, dalam
  * poin. Diukur dari data: menaikkan subskor dimensi itu sebesar 1 sd, lalu
  * menghitung ulang rata-rata geometrik berbobot pada seluruh 2.134 heksagon.
- *
- *   connectivity   +1sd (21,75 poin) -> skor akhir +7,57
- *   affordability  +1sd (25,63 poin) -> skor akhir +6,51
- *   amenity        +1sd (23,50 poin) -> skor akhir +4,21
- *   walkability    +1sd ( 7,56 poin) -> skor akhir +0,98
- *
- * PENTING: rasio simpangan baku mengukur KELANGKAAN, bukan DAMPAK. Selisih
- * 7 poin di Lingkungan jalan kaki itu langka (hampir 1 sd), tetapi hanya
- * menggerakkan skor akhir sekitar 1 poin karena bobotnya 15% dan skor
- * dihitung dari nilai mentah, bukan nilai terstandardisasi. Angka ini dipakai
- * untuk MENGURUTKAN temuan, supaya temuan yang langka tapi nyaris tak
- * berdampak tidak menggeser temuan yang benar-benar menggerakkan peringkat.
  */
 export const DAMPAK_PER_SD = {
   connectivity: 7.57,
@@ -122,7 +95,7 @@ function tingkat(p) {
 /**
  * Dimensi mana yang diberi poin terbanyak pengguna.
  *
- * Mengembalikan null bila keempatnya sama rata — dalam keadaan itu pengguna
+ * Mengembalikan null bila keempatnya sama rata, dalam keadaan itu pengguna
  * tidak benar-benar memilih apa pun, jadi tidak ada "prioritas" yang bisa
  * dilanggar.
  */
@@ -172,7 +145,7 @@ const PRIORITAS_JENIS = {
 /**
  * Kekuatan sinyal sebuah temuan, dipakai mengurutkan di dalam satu tingkat
  * prioritas. Ditimbang DAMPAK dimensi terhadap skor akhir, bukan hanya
- * kelangkaannya — temuan di Lingkungan jalan kaki yang langka tapi hampir
+ * kelangkaannya, temuan di Lingkungan jalan kaki yang langka tapi hampir
  * tidak menggerakkan skor tidak boleh menggeser temuan di Akses transportasi.
  */
 function kekuatan(t) {

@@ -1,19 +1,9 @@
 /**
  * SUMBER TUNGGAL seluruh teks yang tampil di halaman beranda.
  *
- * Strukturnya mengikuti struktur halaman dari atas ke bawah — nav, hero,
- * kartu form (tahap 1 lalu tahap 2), bagian dimensi, bagian data, footer —
+ * Strukturnya mengikuti struktur halaman dari atas ke bawah, nav, hero,
+ * kartu form (tahap 1 lalu tahap 2), bagian dimensi, bagian data, footer -
  * supaya bisa ditelusuri dari apa yang terlihat di layar ke tempatnya di kode.
- *
- * Yang TIDAK ada di sini, dan memang tidak boleh dipindahkan ke sini:
- *   - Angka yang berasal dari data: jumlah kawasan, versi, dan tanggal
- *     dihitung dibaca dari `public/data/metadata.json` saat runtime.
- *   - Persentase bobot: dihitung dari pilihan pengguna di `Beranda.jsx`.
- *   - Nama dan urutan dimensi: `src/lib/kamus.js` (DIMENSI_UI), dipakai
- *     bersama oleh beranda dan slider di halaman peta.
- *   - Daftar kampus: `src/kampus.js`.
- *
- * Fungsi (bukan string) dipakai bila kalimatnya menyisipkan angka dari data.
  */
 export const TEKS = {
   nav: {
@@ -44,9 +34,9 @@ export const TEKS = {
   },
 
   form: {
-    // Tahap 1 — menulis.
+    // Tahap 1, menulis.
     tulis: {
-      judul: "Kawasan bagaimana yang kamu cari?",
+      judul: "Kawasan seperti apa yang kamu cari?",
       labelTextarea: "Ceritakan kebutuhanmu",
       placeholder:
         "maba UGM, budget sekitar 800 ribu, pengennya deket halte soalnya belum bawa motor",
@@ -61,7 +51,7 @@ export const TEKS = {
       lewatiKePilihan: "Lebih suka memilih daripada menulis",
     },
 
-    // Tahap 2 — konfirmasi hasil pembacaan.
+    // Tahap 2, konfirmasi hasil pembacaan.
     konfirmasi: {
       judul: "Periksa dulu",
       dariCatatan: "Ini hasil pembacaan catatanmu. Ubah yang belum tepat.",

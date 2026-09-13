@@ -66,7 +66,7 @@ const fmtPersentil = (p) =>
   typeof p === "number" ? Math.round(p <= 1 ? p * 100 : p) : "NA";
 
 // Baris indikator memakai LABEL KUALITATIF, bukan nilai mentah: alasannya
-// sama dengan explain-score.js — nilai mentah dan satuan teknis di konteks
+// sama dengan explain-score.js, nilai mentah dan satuan teknis di konteks
 // membuat model mengulanginya apa adanya. Arah perbandingan tetap dihitung
 // server dari persentil, jadi polaritas tidak bergantung pada model.
 function barisData(nama, a, b, unavailableKedua) {
@@ -208,11 +208,11 @@ Bentuk keluaran:
 }
 Hingga dua keunggulan untuk masing-masing kawasan; pilih dua yang terkuat.
 Bila sebuah kawasan tidak unggul pada dimensi maupun indikator mana pun,
-tulis array keunggulannya KOSONG ([]) — jangan mengarang keunggulan.
+tulis array keunggulannya KOSONG ([]), jangan mengarang keunggulan.
 ATURAN:
 - Setiap kalimat WAJIB berlabuh pada TEMUAN atau indikator yang diberikan.
   Kalimat yang menyampaikan sebuah temuan TIDAK perlu menyebut nama
-  indikator — cukup menyampaikan isi temuannya.
+  indikator, cukup menyampaikan isi temuannya.
 - Utamakan menyampaikan TEMUAN; baris data hanya bahan pendukung.
 - DILARANG memulai kalimat dengan kata "Indikator".
 - DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya.

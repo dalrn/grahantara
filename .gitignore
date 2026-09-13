@@ -38,3 +38,26 @@ data/*.tif
 
 # cache unduhan osmnx/overpass
 cache/
+
+# catatan kerja internal: tidak ikut dipublikasikan
+CLAUDE.md
+web/CLAUDE.md
+web/UI_UX_NOTES.md
+docs/ARCHITECTURE.md
+docs/PIPELINE_LOG.md
+docs/FRONTEND_TASKS.md
+docs/PANDUAN_UJI_PENGGUNA.md
+docs/SURVEI_ANOMALI.md
+docs/MAPID_EXPORT_LIST.md
+docs/MAPID_PENGGUNAAN.md
+docs/MAPID_UNDUH.md
+
+# berkas kerja sementara di akar
+kos_koordinat_untuk_dicek.csv
+kos_pengganti_isian.xlsx
+mapid_data.txt
+
+# skrip uji sekali pakai
+web/_*.mjs
+web/test-results/
+

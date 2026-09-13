@@ -127,7 +127,7 @@ Tepat dua kekuatan dan tepat satu kelemahan.
 ATURAN:
 - Setiap kalimat WAJIB berlabuh pada TEMUAN atau indikator yang diberikan.
   Kalimat yang menyampaikan sebuah temuan TIDAK perlu menyebut nama
-  indikator — cukup menyampaikan isi temuannya.
+  indikator, cukup menyampaikan isi temuannya.
 - Utamakan menyampaikan TEMUAN. Bagian "Indikator" dan "konteks" hanya
   bahan pendukung; menyebut ulang angkanya tanpa menambah makna tidak
   berguna bagi pembaca yang sudah melihat panel.
@@ -145,7 +145,7 @@ ATURAN:
   kalimat ringkas.
 - Bila sebuah keunggulan ditandai bertumpu pada satu indikator, atau
   berasal dari angka taksiran, sebutkan keterbatasan itu DI KALIMAT YANG
-  SAMA — jangan dipisah jadi kalimat sendiri.
+  SAMA, jangan dipisah jadi kalimat sendiri.
 - DILARANG menyebut indikator yang bertanda "tidak tersedia" sebagai
   kekuatan atau kelemahan. Boleh disebut sebagai keterbatasan data.
 - Dimensi bertanda "tidak tersedia, dikeluarkan dari perhitungan skor"

@@ -4,7 +4,7 @@
  *     node tests/test-temuan.mjs
  *
  * Menguji LOGIKA TEMUAN, bukan keluaran model: tidak ada panggilan API di
- * sini, dan hasilnya deterministik. Itu memang inti gagasannya — penalaran
+ * sini, dan hasilnya deterministik. Itu memang inti gagasannya, penalaran
  * dipindahkan ke tempat yang bisa diuji.
  *
  * Kawasan uji dibuat tangan, bukan diambil dari data nyata, supaya tiap kasus
@@ -318,7 +318,7 @@ uji("keunggulan disumbang indikator estimasi -> TERTANDAI", () => {
 
 uji("PENJAGAAN: rasio sd kecil tapi skor total berbeda -> BUKAN setara", () => {
   // Seluruh selisih dimensi di bawah ambang sd, tetapi skor akhirnya berbeda
-  // 3 poin — cukup terlihat di panel, jadi tidak boleh disebut setara.
+  // 3 poin, cukup terlihat di panel, jadi tidak boleh disebut setara.
   const t = temuanBanding({
     a: kawasan(48.0, { connectivity: 47, affordability: 58, amenity: 57, walkability: 51 }, indikatorSeragam(0.5)),
     b: kawasan(45.0, { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 }, indikatorSeragam(0.5)),

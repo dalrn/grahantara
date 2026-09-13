@@ -16,7 +16,7 @@ const priceSource = (kos) =>
   kos?.sumber_harga === "model" ? "Estimasi" : kos?.sumber_harga || empty;
 
 // Nilai enum dari basis data. Tanpa peta ini, "ruas_terkait" bocor apa adanya
-// ke layar — dirapikan tanda bacanya saja tetap tidak menjelaskan artinya.
+// ke layar, dirapikan tanda bacanya saja tetap tidak menjelaskan artinya.
 const PRESISI = {
   nama_kos: "Tepat di titik kos",
   pusat_kawasan: "Perkiraan, dipusatkan ke kawasan",
@@ -172,7 +172,7 @@ export default function PanelBandingKos({
               className="text-lg font-bold"
               style={{ color: warnaTeksSkor(skor, ambangSkor) ?? undefined }}
             >
-              {Number.isFinite(skor) ? formatSkor(skor) : "—"}
+              {Number.isFinite(skor) ? formatSkor(skor) : "-"}
               <span className="ml-1 text-xs font-normal text-slate-400">
                 skor kawasan
               </span>
@@ -205,7 +205,7 @@ export default function PanelBandingKos({
         </p>
       )}
 
-      {/* Vonis dulu, tabel di balik tombol — sama dengan panel kawasan. */}
+      {/* Vonis dulu, tabel di balik tombol, sama dengan panel kawasan. */}
       {complete && vonis && (
         <div className="vonis mb-3">
           <p className="vonis-kalimat">{vonis}</p>

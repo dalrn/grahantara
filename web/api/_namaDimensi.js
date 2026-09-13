@@ -1,7 +1,7 @@
 // Salinan server dari DIMENSI_UI di web/src/lib/kamus.js.
 //
 // Folder api/ adalah fungsi serverless Vercel dan TIDAK boleh mengimpor dari
-// src/, jadi nama dimensi disalin ke sini — pola yang sama dengan
+// src/, jadi nama dimensi disalin ke sini, pola yang sama dengan
 // _daftarKampus.js. Berkas berawalan garis bawah tidak diperlakukan Vercel
 // sebagai endpoint.
 //

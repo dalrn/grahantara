@@ -10,7 +10,7 @@ import { ruteColors } from "../design";
  * bus, kuning putus-putus untuk jalan kaki, keduanya di atas alas gelap yang
  * sama dengan casing di peta.
  *
- * Ini yang menggantikan legenda terpisah — pemetaan warna ke moda terbaca
+ * Ini yang menggantikan legenda terpisah, pemetaan warna ke moda terbaca
  * langsung dari daftar langkah. Pembedanya bukan warna saja: penuh versus
  * putus-putus tetap terbaca dalam grayscale.
  */

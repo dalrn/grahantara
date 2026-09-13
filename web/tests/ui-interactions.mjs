@@ -20,17 +20,6 @@ page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => {
   if (m.type() === "error") errors.push(m.text());
 });
-// Expose the real map in this test response only; production source is untouched.
-await page.route("**/src/components/PetaHeksagon.jsx*", async (route) => {
-  const response = await route.fetch();
-  await route.fulfill({
-    response,
-    body: (await response.text()).replace(
-      "peta.current = map;",
-      "peta.current = map; window.__qaMap = map;",
-    ),
-  });
-});
 await page.goto(process.env.UI_TEST_URL || "http://127.0.0.1:5178");
 await page.screenshot({
   path: "test-results/qa-home-desktop.png",
@@ -51,7 +40,7 @@ await page.getByRole("button", { name: "Lanjut", exact: true }).click();
 await page.getByRole("button", { name: "Lihat peta", exact: true }).waitFor();
 // Prioritas disetel eksplisit supaya nilai yang diharapkan di slider peta
 // tidak bergantung pada tebakan model. Kosongkan dulu: saat kuota dua sudah
-// penuh, opsi yang belum terpilih memang disabled — itu perilaku yang
+// penuh, opsi yang belum terpilih memang disabled, itu perilaku yang
 // disengaja, jadi klik langsung akan menggantung.
 // Nama aksesibel tombol memuat persentasenya juga ("Biaya 40%"), jadi
 // pencocokan lewat .pilih-nama, bukan getByRole exact.

@@ -7,21 +7,9 @@ export const KOTAK_PER_DIMENSI = 6;
 
 /**
  * Rentang kondisi nyata tiap dimensi di Sleman, dari persentil 5 ke 95
- * subskor (bukan minimum/maksimum — satu kawasan ekstrem akan membuat
+ * subskor (bukan minimum/maksimum, satu kawasan ekstrem akan membuat
  * rentangnya terlihat lebih lebar daripada yang benar-benar dihadapi
  * pengguna).
- *
- * Angkanya MEDIAN indikator pada 5% kawasan terbawah dan 5% teratas tiap
- * dimensi, dihitung dari hexagons.geojson versi 1.0:
- *
- *   connectivity  p5 24,7  p95 88,4   halte 4.553 m / 0 rute / tidak terjangkau
- *                                     -> halte 167 m / 5 rute / rute langsung
- *   affordability p5  3,3  p95 95,1   Rp 1,4 juta -> Rp 575 ribu
- *   amenity       p5 10,7  p95 78,5   0 tempat makan -> 56 tempat makan, 3 layanan
- *   walkability   p5 38,4  p95 60,1   teduh 0,26 / terang 4 / trotoar 0,11
- *                                     -> teduh 0,39 / terang 15 / trotoar 0,14
- *
- * Diterjemahkan ke satuan yang dipahami orang, bukan angka subskor.
  */
 const RENTANG = {
   connectivity: {
@@ -89,7 +77,7 @@ export default function AlokasiPoin({
     }
     // Poin tidak cukup. Kalau `pinjamDariLain` aktif (panel peta, yang selalu
     // dibuka dalam keadaan 12 poin terpakai), kekurangannya diambil dari
-    // dimensi lain mulai dari yang paling besar — tanpa ini klik pertama di
+    // dimensi lain mulai dari yang paling besar, tanpa ini klik pertama di
     // panel itu tidak pernah berbuat apa-apa dan terasa macet.
     if (pinjamDariLain) {
       const hasil = { ...nilai, [kunci]: diminta };
@@ -147,7 +135,7 @@ export default function AlokasiPoin({
   };
 
   // Pintasan ke alokasi terdekat dengan bobot bawaan. Dalam 12 poin, 40/25/
-  // 20/15 jatuh ke 5-3-2-2 = 41,7/25/16,7/16,7 — mendekati, tidak persis.
+  // 20/15 jatuh ke 5-3-2-2 = 41,7/25/16,7/16,7, mendekati, tidak persis.
   // Labelnya menyebut "mendekati" karena memang begitu adanya.
   const kePendekatanBawaan = () => {
     if (!alokasiBawaan) return;

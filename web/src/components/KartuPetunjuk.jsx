@@ -5,7 +5,7 @@ import { motionTokens } from "../design";
  * Kartu petunjuk kecil yang menempel pada elemen yang dimaksud.
  *
  * BUKAN modal dan BUKAN overlay gelap: peta tetap bisa dipakai selagi kartu
- * tampil. Itu syaratnya — petunjuk yang memblokir memaksa pengguna membaca
+ * tampil. Itu syaratnya, petunjuk yang memblokir memaksa pengguna membaca
  * sebelum ia punya alasan, dan itu persis yang hendak dihindari.
  *
  * `posisi` menentukan tempat menempelnya, memakai kelas CSS bernama supaya

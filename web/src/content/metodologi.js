@@ -1,28 +1,16 @@
 /**
  * SUMBER TUNGGAL teks panjang halaman Metodologi.
  *
- * Dipisahkan dari komponen karena isinya definisi 16 indikator — kalau
+ * Dipisahkan dari komponen karena isinya definisi 16 indikator, kalau
  * ditulis inline, komponennya jadi ribuan baris dan sulit disunting oleh
  * orang yang hanya ingin memperbaiki satu kalimat.
- *
- * Yang TIDAK ada di sini, dan memang tidak boleh dipindahkan ke sini:
- *   - Angka cakupan, jumlah heksagon, versi, tanggal: dibaca dari
- *     `public/data/hexagons.geojson` saat runtime. Semua kalimat tentang
- *     cakupan WAJIB dihasilkan dari data, jangan ditulis manual — kalimat
- *     manual jadi basi begitu datanya berubah.
- *   - Nama indikator dan dimensi: `src/lib/kamus.js`.
- *   - Bobot: `metadata.bobot_default` pada berkas data.
- *
- * Angka validasi model di PENJELASAN_MODEL berasal dari docstring
- * `pipeline/30_indicators/07_w6_integritas.py`; kalau pipeline dijalankan
- * ulang dengan fitur berbeda, angka di sini ikut diperbarui.
  */
 
 /**
  * Definisi tiap indikator: apa yang diukur, cara hitungnya, cakupan
  * spasialnya, dan arah mana yang lebih baik.
  *
- * `arah` selalu menyebut arti NILAI YANG DISIMPAN, bukan nama indikatornya —
+ * `arah` selalu menyebut arti NILAI YANG DISIMPAN, bukan nama indikatornya -
  * penting untuk W5, yang menyimpan `1 - tekanan` sehingga nilai tinggi
  * berarti lalu lintas TENANG, bukan padat.
  */
@@ -64,7 +52,7 @@ export const DEFINISI = {
     cakupan: "Kos hasil survei lapangan.",
     arah: "Makin murah, makin tinggi nilainya.",
     catatan:
-      "Indikator ini TIDAK dimodelkan. Validasi silang leave-one-out atas label harga memberi R² negatif untuk Ridge maupun RandomForest — keduanya lebih buruk daripada sekadar menebak rata-rata. Sebabnya struktural: sebagian besar ragam harga terjadi antar-kos di jalan yang sama (ukuran kamar, kamar mandi dalam, usia bangunan), dan tidak satu pun dari itu bersifat spasial.",
+      "Indikator ini TIDAK dimodelkan. Validasi silang leave-one-out atas label harga memberi R² negatif untuk Ridge maupun RandomForest, keduanya lebih buruk daripada sekadar menebak rata-rata. Sebabnya struktural: sebagian besar ragam harga terjadi antar-kos di jalan yang sama (ukuran kamar, kamar mandi dalam, usia bangunan), dan tidak satu pun dari itu bersifat spasial.",
   },
   A2_harga_makan: {
     ukur: "Harga satu porsi makan di warung sekitar kawasan.",
@@ -84,11 +72,11 @@ export const DEFINISI = {
   M2_keragaman: {
     ukur: "Seberapa beragam jenis tempat makan, bukan hanya berapa banyak.",
     rumus:
-      "Indeks keragaman Shannon atas kategori tempat makan, dinormalisasi dengan dibagi log(jumlah kategori yang hadir) sehingga hasilnya berada di 0–1.",
+      "Indeks keragaman Shannon atas kategori tempat makan, dinormalisasi dengan dibagi log(jumlah kategori yang hadir) sehingga hasilnya berada di 0 sampai 1.",
     cakupan: "Radius 800 m, kategori sama dengan kepadatan tempat makan.",
     arah: "Makin merata sebaran antar kategori, makin tinggi nilainya.",
     catatan:
-      "Satu kategori saja bernilai 0 — tidak ada keragaman. Tanpa tempat makan sama sekali, hasilnya kosong dan bukan 0: tidak ada yang bisa diukur keragamannya.",
+      "Satu kategori saja bernilai 0, tidak ada keragaman. Tanpa tempat makan sama sekali, hasilnya kosong dan bukan 0: tidak ada yang bisa diukur keragamannya.",
   },
   M3_keramaian: {
     ukur: "Seberapa ramai kawasan dilalui orang.",
@@ -100,7 +88,7 @@ export const DEFINISI = {
     ukur:
       "Kelengkapan layanan sehari-hari: apotek, minimarket, dan warung kelontong.",
     rumus:
-      "Jumlah kategori yang HADIR dibagi 3. Bukan cacah toko — dua minimarket tetap dihitung satu kategori.",
+      "Jumlah kategori yang HADIR dibagi 3. Bukan cacah toko, dua minimarket tetap dihitung satu kategori.",
     cakupan: "Radius 800 m dari pusat kawasan.",
     arah: "Makin lengkap kategorinya, makin tinggi nilainya.",
     catatan:
@@ -114,7 +102,7 @@ export const DEFINISI = {
   },
   W2_keteduhan: {
     ukur: "Keteduhan sepanjang jalur yang dilalui pejalan.",
-    rumus: "NDVI rata-rata — indeks kehijauan dari citra satelit.",
+    rumus: "NDVI rata-rata, indeks kehijauan dari citra satelit.",
     cakupan:
       "Buffer 15 m di sekeliling jalur jalan kaki, dihitung dari komposit median Sentinel-2 musim kemarau yang sudah dibersihkan awan, sehingga satu lintasan berawan tidak menggeser hasilnya.",
     arah: "Makin hijau dan teduh, makin tinggi nilainya.",
@@ -141,7 +129,7 @@ export const DEFINISI = {
     cakupan:
       "Kelas jalan OpenStreetMap di dalam heksagon, dikalibrasi dengan ruas hasil survei lapangan.",
     arah:
-      "NILAI TINGGI BERARTI LALU LINTAS TENANG, bukan padat — yang disimpan adalah kebalikan tekanan.",
+      "NILAI TINGGI BERARTI LALU LINTAS TENANG, bukan padat, yang disimpan adalah kebalikan tekanan.",
     catatan:
       "Kalibrasinya tegas: seluruh gang yang disurvei tergolong sepi, sementara hampir semua jalan raya tergolong ramai. Kelas jalan memprediksi kepadatan hampir sempurna, dan OpenStreetMap punya kelas jalan untuk seluruh wilayah.",
   },
@@ -167,7 +155,7 @@ export const RINGKASAN = [
 /** Penjelasan model untuk indikator yang bersumber estimasi. */
 export const PENJELASAN_MODEL = [
   "Ketersediaan jalur pejalan kaki tidak ada sebagai data siap pakai untuk seluruh wilayah: memetakannya berarti menyurvei tiap ruas jalan. Survei tim mencakup 83 ruas, kurang dari satu persen wilayah studi.",
-  "Karena itu nilainya ditaksir dari dua hal yang dipunyai OpenStreetMap di seluruh wilayah — kelas jalan, dan lebar jalan bila tercatat — dengan model yang dilatih pada ruas hasil survei.",
+  "Karena itu nilainya ditaksir dari dua hal yang dipunyai OpenStreetMap di seluruh wilayah, kelas jalan, dan lebar jalan bila tercatat, dengan model yang dilatih pada ruas hasil survei.",
   "Keputusan memodelkan diuji, bukan diasumsikan. Dengan validasi silang leave-one-out atas ruas survei: menebak rata-rata memberi R² 0,000; kelas jalan saja R² +0,262; kelas jalan ditambah lebar R² +0,394 dengan galat rata-rata 0,197. Model dipakai karena menjelaskan sekitar 39% ragam, jauh lebih baik daripada menebak.",
   "Yang membuatnya bekerja adalah keteraturan tata kota yang nyata: jalan arteri diberi trotoar, gang tidak. Pada ruas survei, rata-rata keutuhan jalur di jalan raya 0,449 sementara di gang 0,044.",
   "Kepadatan kendaraan sengaja TIDAK dipakai sebagai fitur meski menambah sedikit ketepatan, karena angkanya berasal dari survei yang sama dan indikator ketenangan lalu lintas sudah memakai kelas jalan yang sama. Memasukkannya berarti menghitung satu fitur dua kali.",

@@ -3,14 +3,8 @@
  *
  * Data heksagon tidak memuat nama tempat sama sekali (hanya `h3_index`), dan
  * lintang-bujur tidak berarti apa-apa bagi pembaca. Nama desa sudah ada di
- * basemap MAPID sebagai lapisan simbol, jadi diambil dari sana — sumber yang
+ * basemap MAPID sebagai lapisan simbol, jadi diambil dari sana, sumber yang
  * sama dengan yang dilihat pengguna di peta, tanpa permintaan jaringan baru.
- *
- * Yang dipakai: `place_village_indonesia` (desa/kelurahan) lalu
- * `place_town_indonesia` (kota/kecamatan) sebagai konteks yang lebih luas.
- * Keduanya hanya berisi fitur yang sedang DIRENDER, jadi hasilnya bergantung
- * pada area yang terlihat; kalau tidak ketemu, pemanggil wajib menyiapkan
- * cadangan (koordinat).
  */
 
 const LAPISAN_DESA = "place_village_indonesia";

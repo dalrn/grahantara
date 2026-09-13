@@ -1,15 +1,6 @@
 /**
  * Mesin pengenalan progresif: petunjuk satu per satu, dipicu oleh KEADAAN,
  * bukan timer, dan tidak pernah lebih dari satu sekaligus.
- *
- * Sengaja BUKAN tur berurutan. Tur menjelaskan fitur sebelum pengguna punya
- * alasan memakainya, dan dengan sembilan fitur biayanya di depan terlalu
- * besar. Di sini tiap petunjuk menunggu sampai pengguna melakukan sesuatu yang
- * membuat fitur berikutnya masuk akal.
- *
- * Modul ini murni logika: tidak menyentuh DOM dan tidak tahu React. Yang
- * disimpan hanya di localStorage, dan seluruhnya bisa dihapus lewat
- * `resetPetunjuk()` — tanpa itu fiturnya tidak bisa didemokan dua kali.
  */
 
 // Kunci BERVERSI. Kalau urutan atau makna petunjuk berubah, naikkan v1 -> v2
@@ -28,7 +19,7 @@ export const MAKS_TAMPIL = 3;
  *
  * `syarat(k)` menerima keadaan halaman dan mengembalikan true bila petunjuk
  * itu layak tampil SEKARANG. Urutan array menentukan prioritas bila dua
- * syarat terpenuhi bersamaan — hanya satu yang ditampilkan.
+ * syarat terpenuhi bersamaan, hanya satu yang ditampilkan.
  */
 export const PETUNJUK = [
   {

@@ -19,16 +19,6 @@ export function Lencana({ teks, warna }) {
  * bukan nilai mentah. Sebelumnya keduanya tampil bersamaan dan sering saling
  * bertentangan: "Integritas jalur pejalan: 0,2 indeks - persentil 93" terbaca
  * sebagai nilai buruk, padahal kawasan itu termasuk 7% terbaik.
- *
- * `angkaMentah` membuka nilai asli beserta satuannya. Toggle-nya ada satu
- * untuk seluruh panel, bukan satu per baris.
- *
- * Lencana sumber data TIDAK tampil di baris lagi: 16 baris bersamaan membuat
- * "OpenStreetMap" / "MAPID POI" / "Sentinel-2" jadi kebisingan, dan
- * "Sentinel-2" tidak berarti apa-apa bagi mahasiswa baru. Sumber diringkas di
- * bawah daftar, dan muncul per baris hanya saat angka mentah dibuka.
- * Lencana "Estimasi" TETAP di barisnya: itu peringatan kualitas data, bukan
- * atribusi.
  */
 export default function BarisIndikator({ kunci, data, angkaMentah = false }) {
   const nama = NAMA_INDIKATOR[kunci] ?? kunci;

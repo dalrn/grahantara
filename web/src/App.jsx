@@ -552,7 +552,7 @@ export default function App() {
             <button
               onClick={() => setModePin((v) => !v)}
               aria-pressed={modePin}
-              title={`Jatuhkan pin di peta — pintasan: ${pintasJatuhkanPin(adalahSentuh())}`}
+              title={`Jatuhkan pin di peta, pintasan: ${pintasJatuhkanPin(adalahSentuh())}`}
               className={`tombol-pin${modePin ? " is-aktif" : ""}`}
             >
               {modePin ? "Batalkan pin" : "Jatuhkan pin"}

@@ -322,7 +322,7 @@ export default function PanelKawasan({
   const bobotBawaanTampil = bobotBawaan ?? BOBOT_DEFAULT;
   // Daftar terstruktur, BUKAN satu kalimat panjang bertitik-tengah melayang.
   // Versi lama berbunyi "pada bobot bawaan Akses transportasi 40% · Biaya 25%
-  // · ..." — mengalir tanpa jeda, dan titik pemisahnya menggantung di ujung
+  // · ...", mengalir tanpa jeda, dan titik pemisahnya menggantung di ujung
   // baris saat teksnya terpotong.
   // Bobot yang SEDANG dipakai bila pengguna sudah menggesernya. bobotKini
   // datang sebagai pecahan ternormalisasi (jumlahnya 1).
@@ -407,7 +407,7 @@ export default function PanelKawasan({
             tidak berarti apa-apa bagi pembaca, dan huruf monospace membuatnya
             makin terbaca sebagai kode. Koordinat turun ke balik toggle angka
             mentah. Kalau basemap belum memuat nama tempat, koordinat tetap
-            tampil sebagai cadangan — tapi sebagai teks biasa. */}
+            tampil sebagai cadangan, tapi sebagai teks biasa. */}
         <div className="select-text pt-2 text-xs text-slate-400">
           {heksagon.namaTempat ?? formatCoordinates(heksagon.coordinates)}
         </div>

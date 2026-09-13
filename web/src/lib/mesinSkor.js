@@ -54,7 +54,7 @@ export function siapkanMesin(featureCollection) {
  *
  * `penekanan` memetakan kunci indikator -> pengali bobotnya. Indikator tanpa
  * entri memakai bobot aslinya. Indikator tanpa data tetap DIKELUARKAN dan
- * bobot sisanya dinormalisasi ulang, persis aturan pipeline — kalau tidak,
+ * bobot sisanya dinormalisasi ulang, persis aturan pipeline, kalau tidak,
  * penekanan akan diam-diam mengubah arti data hilang jadi nol.
  */
 export function logSubskorDitekan(mesin, dimensi, penekanan) {

@@ -1,29 +1,30 @@
 # Metodologi Grahantara
 
-Dokumen ini menjelaskan bagaimana Skor Grahantara dihitung, dari data apa, dan —
-sama pentingnya — **apa yang tidak kami ketahui**. Versi data `1.0`, dihitung
-2026-09-08 atas 2.134 heksagon H3 resolusi 9 di 213,19 km² sabuk kampus Sleman.
+Dokumen ini menjelaskan bagaimana Skor Grahantara dihitung, dari data apa, dan
+apa saja batasannya. Versi data `1.0`, dihitung 2026-09-12 atas 2.134 heksagon
+H3 resolusi 9 yang menutup 213,19 km² sabuk kampus Sleman, DIY.
 
 ---
 
-## 1. Yang perlu dipahami lebih dulu: skor ini RELATIF
+## 1. Skor ini bersifat relatif
 
-Setiap indikator dinormalisasi sebagai **peringkat persentil (ECDF)** terhadap
+Setiap indikator dinormalisasi sebagai peringkat persentil (ECDF) terhadap
 seluruh wilayah studi, bukan terhadap standar absolut.
 
-> **Skor 70 berarti "lebih baik daripada 70% kawasan lain di wilayah studi",
-> bukan "70 dari 100".**
+> Skor 70 berarti "lebih baik daripada 70% kawasan lain di wilayah studi",
+> bukan "70 dari 100".
 
-Konsekuensinya harus dinyatakan terbuka: kalau seluruh Sleman punya trotoar
-buruk, kawasan dengan trotoar terbaik tetap mendapat persentil tinggi. Skor ini
-membandingkan pilihan yang tersedia bagi mahasiswa, bukan menilai Sleman
-terhadap kota lain.
+Konsekuensinya kami nyatakan terbuka: kalau seluruh Sleman punya trotoar buruk,
+kawasan dengan trotoar terbaik tetap mendapat persentil tinggi. Skor ini
+membandingkan pilihan yang tersedia bagi mahasiswa di wilayah itu, bukan
+menilai Sleman terhadap kota lain.
 
-Cara ini dipilih karena tahan pencilan dan bebas satuan — ia bisa menggabungkan
-meter, rupiah, dan indeks vegetasi dalam satu kerangka tanpa membuat asumsi
-sewenang-wenang tentang berapa "harga yang wajar" atau "jarak yang layak".
+Cara ini dipilih karena tahan pencilan dan bebas satuan. Ia bisa menggabungkan
+meter, rupiah, dan indeks vegetasi dalam satu kerangka tanpa menetapkan
+sendiri berapa "harga yang wajar" atau "jarak yang layak".
 
-Sebaran skor akhir: minimum **14,4** · median **45,1** · maksimum **87,5**.
+Sebaran skor akhir pada data ini: minimum **27,8**, median **45,5**, maksimum
+**75,4**.
 
 ---
 
@@ -31,223 +32,260 @@ Sebaran skor akhir: minimum **14,4** · median **45,1** · maksimum **87,5**.
 
 | Dimensi | Bobot | Pertanyaan yang dijawab |
 |---|---|---|
-| Connectivity | 0,40 | Bisakah saya sampai ke kampus tanpa motor? |
-| Affordability | 0,25 | Sanggupkah saya membayarnya? |
-| Amenity | 0,20 | Bisakah saya makan dan berbelanja dengan jalan kaki? |
-| Walkability | 0,15 | Nyaman dan amankah berjalan kaki di sini? |
+| Akses transportasi | 0,40 | Bisakah saya sampai ke kampus tanpa motor? |
+| Biaya | 0,25 | Sanggupkah saya membayarnya? |
+| Fasilitas | 0,20 | Bisakah saya makan dan berbelanja dengan jalan kaki? |
+| Lingkungan jalan kaki | 0,15 | Nyaman dan amankah berjalan kaki di sini? |
 
 ```
 subskor = Σ (bobot_indikator × persentil_indikator)
 Skor    = 100 × (C+ε)^0,40 × (A+ε)^0,25 × (M+ε)^0,20 × (W+ε)^0,15   ε = 0,01
 ```
 
-**Rata-rata geometrik, bukan aritmetik.** Ini keputusan yang disengaja: kawasan
-dengan Connectivity 5 dan Amenity 95 akan terlihat "sedang" pada rata-rata
-aritmetik, padahal bagi mahasiswa tanpa kendaraan kawasan itu salah pilihan.
-Dengan rata-rata geometrik, satu dimensi yang mendekati nol menyeret seluruh
-skor ke bawah — dan itu perilaku yang benar.
+Yang dipakai adalah rata-rata geometrik, bukan aritmetik. Ini keputusan yang
+disengaja: kawasan dengan akses transportasi 5 dan fasilitas 95 akan terlihat
+sedang-sedang saja pada rata-rata aritmetik, padahal bagi mahasiswa tanpa
+kendaraan kawasan itu jelas salah pilihan. Dengan rata-rata geometrik, satu
+dimensi yang mendekati nol menyeret seluruh skor ke bawah.
 
-Bobot dimensi bisa digeser pengguna saat aplikasi berjalan. Bobot antar-indikator
-di dalam dimensi tetap.
+Konstanta ε = 0,01 menjaga fungsi tetap terdefinisi saat sebuah subskor nol.
+Akibatnya skor terendah yang mungkin adalah 1, bukan 0, dan hasil yang melebihi
+100 dipotong di 100.
+
+Bobot antar-dimensi bisa digeser pengguna saat aplikasi berjalan. Bobot
+antar-indikator di dalam satu dimensi tetap.
+
+### Rentang tiap subskor
+
+Subskor dan skor akhir berada pada skala yang berbeda. Subskor adalah
+rata-rata persentil, jadi sebarannya melebar hampir penuh. Skor akhir adalah
+rata-rata geometrik atas keempatnya, dan rata-rata geometrik menarik nilai
+ekstrem ke tengah.
+
+| Ukuran | Minimum | Median | Maksimum |
+|---|---|---|---|
+| Skor akhir | 27,8 | 45,5 | 75,4 |
+| Akses transportasi | 21,9 | 41,0 | 93,1 |
+| Biaya | 0,2 | 51,8 | 99,1 |
+| Fasilitas | 9,0 | 52,5 | 88,4 |
+| Lingkungan jalan kaki | 25,5 | 50,1 | 77,5 |
+
+Karena itu sebuah subskor bisa melampaui skor tertinggi di legenda peta tanpa
+ada yang keliru. Legenda mewarnai skor akhir, bukan subskor.
 
 ---
 
-## 3. Enam belas indikator dan cakupannya
+## 3. Enam belas indikator
 
-Kolom **cakupan** adalah jumlah heksagon yang benar-benar punya nilai. Selisihnya
-dari 2.134 adalah heksagon yang datanya **tidak tersedia** — bukan bernilai nol.
+Seluruh indikator tercakup penuh pada 2.134 heksagon (100%).
 
-### Connectivity — bobot 0,40
+### Akses transportasi, bobot 0,40
 
-| Indikator | Bobot | Cakupan | Sumber |
+| Indikator | Bobot | Cara hitung | Sumber |
 |---|---|---|---|
-| C1 jarak jaringan ke halte terdekat | 0,30 | **2.134** (100%) | OSM |
-| C2 jumlah koridor unik dalam 400 m | 0,20 | **2.134** (100%) | relasi rute OSM |
-| C3 keterjangkauan kampus | 0,40 | **2.134** (100%) | graf rute + 219 gerbang |
-| C4 jarak ke stasiun KRL | 0,10 | **2.134** (100%) | OSM |
+| C1 jarak halte | 0,30 | `exp(-jarak / 400 m)` | OpenStreetMap |
+| C2 rute unik | 0,20 | `1 - exp(-jumlah rute / 2)` | OpenStreetMap |
+| C3 keterjangkauan kampus | 0,40 | 0 transfer 1,00; 1 transfer 0,60; tidak terjangkau 0,20 | OpenStreetMap |
+| C4 jarak stasiun KRL | 0,10 | `exp(-jarak / 800 m)` | OpenStreetMap |
 
-**C3 adalah tesis produk ini.** Halte 100 meter dari kos tidak berarti apa-apa
-kalau tidak ada koridor yang membawa Anda ke kampus Anda. C3 menjawabnya dengan
-membangun **graf transfer antarkoridor** — bukan sekadar melingkari halte.
+Seluruh jarak diukur menyusuri graf jalan kaki, bukan garis lurus, dari titik
+tengah heksagon.
 
-Simpulnya adalah pasangan **(halte, koridor)**, bukan halte. Perbedaan itu
-menentukan: 295 dari 589 halte dilayani lebih dari satu koridor, dan kalau halte
-dijadikan simpul, halte bersama itu menyatukan seluruh 20 koridor menjadi satu
-gumpalan sehingga berpindah koridor terhitung **nol transfer**. Dengan pasangan
-(halte, koridor), tiap pergantian koridor menjadi sisi berbiaya 1.
+**C3 adalah inti produk ini.** Halte 100 m dari kos tidak berarti apa-apa kalau
+tidak ada koridor yang membawa penumpang ke kampusnya. Karena itu simpul
+grafnya adalah pasangan (halte, koridor), bukan halte. Sebanyak 295 dari 589
+halte dilayani lebih dari satu koridor; memakai halte sebagai simpul akan
+menyatukan 20 koridor menjadi satu gumpalan dan membuat semua kampus tampak
+terjangkau langsung.
 
-Hasilnya, dari heksagon yang punya halte dalam jangkauan jalan kaki 800 m:
+Halte dianggap terjangkau bila berjarak paling jauh 800 m jalan kaki, dan
+kampus terjangkau bila paling jauh 1.000 m dari halte tujuan.
 
-| Kampus | Terhubung langsung |
-|---|---|
-| UGM | 79,0% |
-| UNY | 79,0% |
-| Atma Jaya Babarsari | 55,3% |
-| UIN Sunan Kalijaga | 51,1% |
-| AMIKOM · UPN Veteran | 47,4% |
-| Instiper | 47,2% |
-| STIE YKPN | 43,4% |
-| UII Kaliurang | 38,0% |
-| **Sanata Dharma III** | **0%** |
+### Biaya, bobot 0,25
 
-UGM dan UNY identik karena keduanya kampus bersebelahan yang berbagi 27 halte;
-koridor yang mencapai satu mencapai yang lain.
-
-**Sanata Dharma III 0% adalah temuan, bukan cacat.** Halte terdekatnya berjarak
-1.184 m lewat jaringan jalan kaki — di luar ambang 1.000 m yang dipakai. Ambang
-itu sengaja tidak dinaikkan sampai semua kampus "lulus", karena justru inilah
-yang ingin diungkap produk ini.
-
-### Affordability — bobot 0,25
-
-| Indikator | Bobot | Cakupan | Sumber |
+| Indikator | Bobot | Cara hitung | Sumber |
 |---|---|---|---|
-| A1 harga sewa kos | 0,60 | **153** (7,2%) | survei lapangan |
-| A2 harga makan | 0,40 | **0** (0%) | tidak ada |
+| A1 harga sewa kos | 0,60 | harga median, arah dibalik | survei lapangan |
+| A2 harga makan | 0,40 | harga median per porsi, arah dibalik | survei lapangan |
 
-Ini dimensi terlemah kami, dan kami menyatakannya terbuka.
+A1 dilaporkan apa adanya dari survei, tidak dimodelkan. Keputusan itu berdasar
+bukti: validasi silang leave-one-out atas label harga memberi R² negatif untuk
+Ridge maupun RandomForest, keduanya lebih buruk daripada menebak rata-rata.
+Sebabnya struktural, yaitu sebagian besar ragam harga terjadi antar-kos di
+jalan yang sama (ukuran kamar, kamar mandi dalam, usia bangunan), dan tidak
+satu pun dari faktor itu bersifat spasial.
 
-**A1 tidak dimodelkan, dan itu keputusan berdasar bukti.** Kami menguji apakah
-30 harga hasil survei bisa melatih model untuk seluruh wilayah. Validasi silang
-leave-one-out:
+### Fasilitas, bobot 0,20
 
-| Pendekatan | R² | Galat rata-rata |
+| Indikator | Bobot | Cara hitung | Sumber |
+|---|---|---|---|
+| M1 kepadatan tempat makan | 0,35 | `1 - exp(-jumlah / 5)` | POI MAPID |
+| M2 keragaman kuliner | 0,20 | indeks Shannon ternormalisasi | POI MAPID |
+| M3 keramaian kawasan | 0,20 | pejalan per 10 menit | survei lapangan |
+| M4 layanan harian | 0,25 | jumlah kategori hadir dibagi 3 | POI MAPID |
+
+M1, M2, dan M4 dihitung dalam radius 800 m dari titik tengah heksagon, bukan
+hanya di dalam heksagon. Sel resolusi 9 hanya selebar sekitar 380 m, sehingga
+warung 200 m di luar batas akan terhitung nol padahal jaraknya lima menit
+jalan kaki.
+
+M2 memakai indeks keragaman Shannon atas kategori tempat makan, dinormalisasi
+dengan membaginya dengan logaritma jumlah kategori yang hadir sehingga
+hasilnya berada di rentang 0 sampai 1. Satu kategori saja bernilai 0.
+
+M4 menghitung berapa dari tiga kategori (apotek, minimarket, warung kelontong)
+yang hadir, bukan berapa banyak tokonya. Dua minimarket tetap dihitung satu
+kategori.
+
+### Lingkungan jalan kaki, bobot 0,15
+
+| Indikator | Bobot | Cara hitung | Sumber |
+|---|---|---|---|
+| W1 kerapatan simpang | 0,15 | simpang per km² | OpenStreetMap |
+| W2 keteduhan | 0,20 | NDVI rata-rata, buffer 15 m sepanjang jalur | Sentinel-2 |
+| W3 penerangan malam | 0,15 | `log(1 + radiansi)` | lapisan MAPID |
+| W4 keamanan dari genangan | 0,15 | `1 - indeks bahaya banjir` | lapisan MAPID |
+| W5 ketenangan lalu lintas | 0,15 | `1 - tekanan`, dari kelas jalan | OpenStreetMap |
+| W6 jalur pejalan kaki | 0,20 | model dari kelas jalan dan lebar | model |
+
+W2 dihitung dari komposit median Sentinel-2 musim kemarau yang sudah
+dibersihkan awan, sehingga satu lintasan berawan tidak menggeser hasilnya.
+
+W3 adalah proksi rasa aman berjalan selepas magrib, bukan hitungan lampu
+jalan. Jalan pertokoan yang terang dan lapangan bersorot tampak sama terang
+pada citra, dan resolusi rasternya ratusan meter sehingga hanya sah sebagai
+proksi tingkat kawasan.
+
+**W6 adalah satu-satunya indikator hasil estimasi model**, dan di antarmuka
+selalu diberi penanda "estimasi". Penjelasan lengkapnya ada di bagian 5.
+
+---
+
+## 4. Polaritas indikator
+
+Sebagian indikator berpolaritas terbalik: nilai lebih kecil berarti kondisi
+lebih baik. Jarak ke halte 200 m lebih baik daripada 2.000 m, dan harga sewa
+Rp 600 ribu lebih baik daripada Rp 1,4 juta.
+
+Peringkat persentil tidak membalik arah dengan sendirinya. Yang dilakukan
+adalah membalik arahnya lebih dulu di tingkat indikator, sebelum persentil
+dihitung, dan tiap indikator memakai transformasi yang sesuai sifatnya:
+
+- C1 dan C4 memakai peluruhan eksponensial atas jaraknya, `exp(-jarak/400 m)`
+  dan `exp(-jarak/800 m)`, sehingga jarak besar meluruh mendekati nol.
+- A1 dan A2 memakai harga yang dinegatifkan, sehingga harga termurah menempati
+  peringkat tertinggi.
+- W4 dan W5 menyimpan `1 - indeks bahaya` dan `1 - tekanan`. Itu sebabnya
+  keduanya dinamai menurut hal baiknya, yaitu keamanan dan ketenangan.
+
+Akibatnya setiap nilai yang tersimpan sudah berorientasi "makin tinggi makin
+baik", dan langkah persentil tidak perlu tahu apa pun soal polaritas.
+
+---
+
+## 5. Indikator hasil estimasi
+
+Ketersediaan jalur pejalan kaki tidak ada sebagai data siap pakai untuk
+seluruh wilayah. Memetakannya berarti menyurvei tiap ruas jalan, sementara
+survei tim mencakup 83 ruas, kurang dari satu persen wilayah studi.
+
+Karena itu W6 ditaksir dari dua hal yang dipunyai OpenStreetMap di seluruh
+wilayah, yaitu kelas jalan dan lebar jalan bila tercatat, dengan model yang
+dilatih pada ruas hasil survei.
+
+Keputusan memodelkan diuji, bukan diasumsikan. Dengan validasi silang
+leave-one-out atas ruas survei:
+
+| Model | R² | Galat rata-rata |
 |---|---|---|
-| tebak rata-rata saja | 0,000 | Rp 259.067 |
-| Ridge, 9 fitur spasial | **−0,386** | Rp 297.467 |
-| RandomForest | **−0,152** | Rp 284.665 |
+| Menebak rata-rata | 0,000 | 0,285 |
+| Kelas jalan saja | +0,262 | 0,220 |
+| Kelas jalan dan lebar | **+0,394** | **0,197** |
 
-R² negatif berarti model **lebih buruk** daripada menebak satu angka tetap.
-Sebabnya struktural: **45% ragam harga terjadi antar-kos di jalan yang sama** —
-di satu kawasan sampel harga berkisar Rp350.000 sampai Rp1.200.000. Itu ukuran
-kamar, kamar mandi dalam atau luar, dan usia bangunan; tidak satu pun bersifat
-spasial. Maka A1 hanya melaporkan harga di tempat yang benar-benar disurvei.
+Model dipakai karena menjelaskan sekitar 39% ragam, jauh lebih baik daripada
+menebak. Yang membuatnya bekerja adalah keteraturan tata kota yang nyata:
+jalan arteri diberi trotoar, gang tidak. Pada ruas survei, rata-rata keutuhan
+jalur di jalan raya 0,449 sementara di gang 0,044.
 
-**A2 kosong** karena Menu Go — sumber yang direncanakan PRD — hanya memuat satu
-record untuk seluruh wilayah. Kami juga memeriksa Properti Go (156 record, hanya
-2 berkategori kos), Struck Go (tanpa kolom nominal), dataset kos MAPID (tanpa
-kolom harga), dan dataset harga properti MAPID (harga jual, median Rp700 juta,
-bukan sewa bulanan). Tidak ada yang bisa dipakai.
+Kepadatan kendaraan sengaja tidak dipakai sebagai fitur meski menambah sedikit
+ketepatan, karena angkanya berasal dari survei yang sama dan W5 sudah memakai
+kelas jalan yang sama. Memasukkannya berarti menghitung satu fitur dua kali.
 
-### Amenity — bobot 0,20
-
-| Indikator | Bobot | Cakupan | Sumber |
-|---|---|---|---|
-| M1 kepadatan tempat makan | 0,35 | **2.134** (100%) | POI MAPID |
-| M2 keragaman kuliner | 0,20 | **1.594** (74,7%) | POI MAPID |
-| M3 keramaian | 0,20 | **0** (0%) | survei, terlalu jarang |
-| M4 ragam layanan harian | 0,25 | **2.134** (100%) | POI MAPID |
-
-M1 dan M2 menghitung tempat makan dalam **radius jalan kaki 800 m** dari pusat
-heksagon, bukan di dalam heksagon. Heksagon resolusi 9 hanya selebar ~380 m,
-sehingga warung 200 m di seberang batas — lima menit jalan kaki — akan terhitung
-nol. Definisi lama itu mengukur kisi, bukan kawasan.
-
-M2 kosong di 540 heksagon yang tidak punya tempat makan sama sekali dalam
-jangkauan: tidak ada keragaman untuk diukur, dan itu berbeda dari keragaman nol.
-
-M3 bersumber survei di 12 titik saja — terlalu jarang untuk 2.134 heksagon.
-
-### Walkability — bobot 0,15
-
-| Indikator | Bobot | Cakupan | Sumber |
-|---|---|---|---|
-| W1 kerapatan simpang | 0,15 | **2.134** (100%) | OSMnx |
-| W2 keteduhan | 0,20 | **2.099** (98,4%) | Sentinel-2 NDVI |
-| W3 penerangan | 0,15 | **1.775** (83,2%) | nighttime light MAPID |
-| W4 keamanan banjir | 0,15 | **301** (14,1%) | bahaya banjir MAPID |
-| W5 tekanan lalu lintas | 0,15 | **2.095** (98,2%) | OSM, dikalibrasi survei |
-| W6 integritas jalur | 0,20 | **2.095** (98,2%) | model, dilatih survei |
-
-**W6 dimodelkan, A1 tidak — dan bedanya terukur.** Diuji dengan cara yang sama,
-W6 memberi R² **+0,394** dengan galat 31% lebih kecil daripada menebak
-rata-rata. Sebabnya nyata: ketersediaan trotoar adalah fungsi hierarki jalan
-(jalan raya rata-rata 0,449, jalan kecil 0,129, gang 0,044). Harga sewa tidak
-punya keteraturan setara.
-
-**W5 memakai pola kalibrasi.** Survei tidak dipakai langsung, tetapi
-mengalibrasi aturan atas kelas jalan OSM yang cakupannya penuh. Buktinya kuat:
-seluruh 20 gang tercatat "Sepi", dan 30 dari 31 ruas "Ramai" adalah jalan raya.
+Sebagai pembanding, A1 diuji dengan cara yang sama dan justru tidak dimodelkan
+karena hasilnya lebih buruk daripada menebak rata-rata.
 
 ---
 
-## 4. Kebijakan data hilang
+## 6. Kebijakan data hilang
 
-| Tier | `sumber` | Perlakuan |
+Aturan ini tetap berlaku meski pada data versi 1.0 seluruh indikator tercakup
+penuh, karena data berikutnya belum tentu demikian.
+
+| Keadaan | Ditulis sebagai | Perlakuan di skor |
 |---|---|---|
-| Teramati | `survei`, `osm`, `mapid_poi`, `mapid`, `sentinel2` | dipakai langsung |
-| Ditaksir | `model` | dipakai, **ditandai "estimasi"** di antarmuka |
-| Tidak ada | `tidak_tersedia` | **dikeluarkan**, bobot dinormalisasi ulang |
+| Diukur langsung | `survei` | dipakai biasa |
+| Data sekunder | `osm`, `mapid`, `mapid_poi`, `sentinel2` | dipakai biasa |
+| Ditaksir model | `model` | dipakai, diberi penanda "estimasi" |
+| Tidak ada data | `tidak_tersedia` | dikeluarkan, bobot dinormalisasi ulang |
 
-**Tidak ada imputasi nilai tengah.** Menyembunyikan ketidaktahuan di balik angka
-0,5 lebih buruk daripada mengatakan tidak tahu.
+Aturannya berlaku dua tingkat. Indikator yang hilang dikeluarkan dari subskor
+dan bobot indikator sisanya di dalam dimensi itu dinormalisasi ulang. Dimensi
+yang seluruh indikatornya hilang dikeluarkan dari rata-rata geometrik dan
+bobot dimensi sisanya dinormalisasi ulang; dimensi itu didaftar di
+`properties.dimensi_kosong` dan ditulis 0 pada `subskor` hanya demi kesesuaian
+skema.
 
-Aturan ini berlaku dua tingkat:
-
-1. **Indikator hilang** → dikeluarkan dari subskor, bobot indikator sisanya di
-   dalam dimensi itu dinormalisasi ulang.
-2. **Dimensi hilang seluruhnya** → dikeluarkan dari rata-rata geometrik, bobot
-   dimensi sisanya dinormalisasi ulang.
-
-Aturan kedua penting karena Affordability tidak tersedia di 1.981 dari 2.134
-heksagon. Tanpa aturan itu, dimensi kosong akan bernilai 0 dan menyeret heksagon
-tipikal dari skor 46,9 menjadi **17,9** — menghukum 93% peta karena **ketiadaan
-data**, bukan karena kawasannya mahal.
-
-Untuk heksagon tanpa Affordability, bobot efektifnya menjadi
-Connectivity 0,533 · Amenity 0,267 · Walkability 0,200.
+Tidak ada imputasi netral 0,5, dan nilai kosong tidak pernah dirender sebagai
+nol. Menampilkan data yang belum ada sebagai nol akan membuat kawasan terlihat
+buruk padahal yang sebenarnya terjadi adalah kami tidak tahu.
 
 ---
 
-## 5. Batasan yang harus diketahui pembaca
+## 7. Batasan yang perlu diketahui pembaca
 
-**Survei mengambil sampel jalan arteri secara berlebih.** 47,6% ruas yang
-disurvei adalah jalan raya, padahal jalan raya hanya 12,9% panjang jaringan
-nyata. Surveyor sengaja memilih ruas beragam agar tiap kondisi terwakili —
-metode yang benar — tetapi karena trotoar hampir hanya ada di jalan arteri,
-**angka W6 hasil survei mentah terlihat lebih baik daripada kenyataan**. Nilai
-model yang lebih rendah adalah koreksinya.
-
-**Koordinat kos dipulihkan setelah survei, bukan direkam saat survei.** Titik kos
-diturunkan dari nama jalan lewat gazetteer OSM. Tiap titik membawa label
-`presisi_koordinat`: 18 lewat ruas terkait, 8 memakai pusat kawasan, 3 diisi
-manual, 2 dari nama jalan di catatan kos.
-
-**Cahaya malam bukan ukuran lampu jalan.** W3 adalah proksi rasa aman berjalan
-selepas magrib. Jalan pertokoan terang dan lapangan parkir bersorot terbaca sama
-oleh satelit.
-
-**Peta bahaya banjir hanya menjangkau 14,1% wilayah.** Layer ini memetakan
-kawasan rawan banjir, bukan seluruh kabupaten. Heksagon yang tidak tersentuh
-diberi `tidak_tersedia`, **bukan** aman — kami memeriksa layer risiko banjir
-sebagai pembanding dan cakupannya setara (14,3%), jadi kelangkaan ini melekat
-pada datanya.
-
-**Skor tidak berubah kecuali pipeline dijalankan ulang.** Seluruh analisis
-spasial berjalan luring sebelum penerbitan; aplikasi hanya membaca berkas statis
-dan menghitung ulang agregasi saat pengguna menggeser bobot.
+- Skor bersifat relatif terhadap wilayah studi, bukan nilai mutlak. Kawasan
+  berskor tertinggi adalah yang terbaik di Sleman, bukan yang memenuhi standar
+  tertentu.
+- Unit analisisnya kawasan seluas sekitar 0,105 km², bukan bangunan. Skor
+  tinggi tidak menjamin setiap kos di dalamnya cocok, dan skor rendah tidak
+  berarti tidak ada kos bagus di sana.
+- Harga sewa berasal dari survei lapangan pada sejumlah titik. Sebagian
+  diperoleh dari media sosial dan spanduk, bukan seluruhnya wawancara
+  langsung.
+- Sebagian koordinat kos adalah perkiraan tingkat ruas jalan, bukan titik
+  bangunan.
+- W3 memakai raster cahaya malam beresolusi ratusan meter, sehingga hanya sah
+  sebagai proksi tingkat kawasan, bukan tingkat jalan.
+- W6 adalah hasil estimasi model, bukan pengukuran langsung di tiap ruas.
+- Daftar tempat di panel kawasan memuat titik di dalam heksagon, sedangkan
+  skor Fasilitas menghitung radius 800 m dari titik tengahnya. Keduanya memang
+  berbeda dan antarmuka menyebutkan perbedaan itu.
 
 ---
 
-## 6. Sumber data
+## 8. Sumber data
 
 | Sumber | Dipakai untuk |
 |---|---|
-| MAPID Database (Premium) | POI makanan, apotek, minimarket, toko kelontong, bahaya banjir, nighttime light, halte, kos |
-| MAPID Apps (Activities) | 158 foto lapangan sebagai lapisan bukti |
-| OpenStreetMap | jaringan pejalan kaki (71.045 simpul), 20 koridor Trans Jogja, halte, stasiun, gerbang kampus |
-| Sentinel-2 (Google Earth Engine) | NDVI keteduhan |
-| Survei lapangan tim | 84 ruas, 12 halte, 12 titik ekonomi, 31 kos |
+| OpenStreetMap | graf jalan kaki, halte, rute, stasiun, kelas jalan |
+| Lapisan POI MAPID | tempat makan, minimarket, apotek, warung kelontong |
+| Lapisan non-POI MAPID | cahaya malam 2023, bahaya banjir |
+| Sentinel-2 | NDVI untuk keteduhan |
+| Survei lapangan tim | harga sewa, harga makan, keramaian, kalibrasi jalur pejalan |
 
-Survei lapangan dilakukan tim cinajawabatak di 12 kawasan sampel. Angka survei
-masuk lewat pipeline; foto dan lokasinya hidup di MAPID Apps sebagai lapisan
-bukti untuk narasi AI.
+Seluruh pengambilan data MAPID dilakukan di sisi backend pada tahap pipeline
+offline. Aplikasi web hanya memuat berkas hasil olahan yang statis.
 
 ---
 
-## 7. Keterlacakan
+## 9. Keterlacakan
 
-Setiap keputusan metodologis di atas, termasuk yang salah lalu diperbaiki,
-tercatat di [`PIPELINE_LOG.md`](PIPELINE_LOG.md) beserta alasan dan angkanya.
-Anomali data survei dan penanganannya tercatat di
-[`SURVEI_ANOMALI.md`](SURVEI_ANOMALI.md).
+Seluruh angka di aplikasi berasal dari `web/public/data/hexagons.geojson`, yang
+memuat blok `metadata` berisi versi, waktu hitung, jumlah heksagon, dan bobot
+bawaan. Kontrak datanya ada di `contracts/hexagon.schema.json`.
+
+Pipeline menjalankan tiga lapis pemeriksaan di akhir setiap proses: uji logika
+skoring, validasi kesesuaian skema, dan uji invarian isi yang memeriksa hal
+yang lolos skema tetapi tetap keliru, misalnya himpunan heksagon yang bergeser
+dari indeks beku, skor yang tidak cocok dengan subskornya sendiri, atau nilai
+`tidak_tersedia` yang bocor menjadi angka.

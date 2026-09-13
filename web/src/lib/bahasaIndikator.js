@@ -1,18 +1,10 @@
 /**
- * Menerjemahkan nilai indikator jadi kalimat yang bisa dibaca mahasiswa baru.
+ * Menerjemahkan nilai indikator jadi kalimat yang bisa dibaca pengguna awam.
  *
- * Dipakai panel kawasan dan panel pembanding. Ada tiga lapis:
- *
- *   1. labelKualitatif()  — "Cukup rindang", diturunkan dari PERSENTIL kawasan
- *                           terhadap seluruh wilayah studi, bukan dari nilai
- *                           mentah. Jadi satuan seaneh apa pun (NDVI,
- *                           nW/sr/cm2) tetap bisa dijelaskan.
- *   2. kalimatKonteks()   — "lebih teduh dari 64% kawasan"
- *   3. nilaiMentah()      — angka asli + satuannya, hanya untuk yang memang
- *                           mencarinya (di balik toggle).
- *
- * Satuan yang sudah langsung dipahami (meter, rupiah, jumlah titik/rute)
- * tidak diterjemahkan; angkanya justru lebih informatif apa adanya.
+ * labelKualitatif() memberi kata sifat dari PERSENTIL, bukan nilai mentah,
+ * sehingga satuan seperti NDVI atau nW/sr/cm2 tetap bisa dijelaskan.
+ * kalimatKonteks() menyatakan posisinya terhadap kawasan lain. Satuan yang
+ * sudah dipahami langsung (meter, rupiah, cacah) tidak diterjemahkan.
  */
 
 // Satuan yang tidak perlu diterjemahkan: pembaca langsung paham.
@@ -25,14 +17,9 @@ const SATUAN_JELAS = new Set([
   "Rp/porsi",
 ]);
 
-/**
- * Kata sifat per indikator, diurut dari persentil terendah ke tertinggi.
- * Lima tingkat, dipetakan ke kuintil persentil.
- *
- * Arah kalimatnya mengikuti ARTI NILAI yang disimpan, bukan nama indikatornya.
- * Ini penting untuk W5: yang disimpan pipeline adalah `1 - tekanan`, jadi
- * nilai tinggi berarti lalu lintasnya TENANG, bukan padat.
- */
+// Kata sifat per indikator, dari persentil terendah ke tertinggi (kuintil).
+// Arahnya mengikuti ARTI NILAI yang disimpan, bukan nama indikatornya: W5
+// menyimpan `1 - tekanan`, jadi nilai tinggi berarti lalu lintas tenang.
 const SIFAT = {
   C1_jarak_halte: ["Sangat jauh", "Jauh", "Sedang", "Dekat", "Sangat dekat"],
   C2_rute_unik: ["Sangat sedikit", "Sedikit", "Sedang", "Banyak", "Sangat banyak"],
@@ -73,11 +60,8 @@ const PEMBANDING = {
   W6_integritas_jalur: "baik jalur pejalan kakinya",
 };
 
-/**
- * Nilai kategorikal. Tanpa peta ini, "tidak_terjangkau" bocor apa adanya ke
- * layar dan mudah disalahartikan sebagai data kosong atau error — padahal
- * artinya temuan nyata: tidak ada koridor transit yang sampai ke kampus itu.
- */
+// Nilai kategorikal. Tanpa peta ini "tidak_terjangkau" bocor ke layar dan
+// mudah disalahartikan sebagai data kosong, padahal itu temuan nyata.
 const ENUM = {
   C3_keterjangkauan_kampus: {
     langsung: {
@@ -140,20 +124,6 @@ export function satuanAbstrak(satuan) {
  * Baris indikator siap tampil, dipakai bersama panel Kawasan dan panel
  * Bandingkan supaya keduanya tidak pernah menerjemahkan angka dengan aturan
  * yang berbeda.
- *
- * Mengembalikan { utama, konteks, mentah } di mana:
- *   utama   - yang ditampilkan secara bawaan. Label kualitatif untuk satuan
- *             abstrak (indeks, NDVI, nW/sr/cm2), angka apa adanya untuk
- *             satuan yang memang dipahami langsung (meter, rupiah, cacah).
- *   konteks - kalimat persentil, mis. "lebih teduh dari 88% kawasan".
- *   mentah  - angka + satuan asli, hanya untuk di balik toggle.
- *
- * Alasan memisahkan keduanya: menampilkan nilai mentah dan persentil
- * bersamaan sering saling bertentangan di mata pembaca. "0,2 indeks —
- * persentil 93" terbaca sebagai nilai buruk, padahal kawasan itu termasuk 7%
- * terbaik; angka rendah itu hanya berarti indikatornya memang rendah di mana-
- * mana. Yang menentukan baik-buruk adalah persentilnya, jadi itulah yang
- * tampil lebih dulu.
  */
 export function barisIndikator(kunci, data) {
   if (!data || data.sumber === "tidak_tersedia" || data.nilai === null) {
@@ -173,10 +143,6 @@ export function barisIndikator(kunci, data) {
  * akan mengulanginya apa adanya dan keluarannya berbunyi seperti pembacaan
  * instrumen ("Indikator Jarak ke halte terdekat menunjukkan 43,1 m dengan
  * persentil 99"). Itu bukan masalah prompt, melainkan masalah masukan.
- *
- * Yang dikirim: nama indikator, label kualitatif, dan persentil sebagai
- * bilangan bulat 0-100. Cukup untuk menilai baik-buruk, tidak cukup untuk
- * mengarang presisi.
  */
 export function muatanIndikatorAI(kunci, data, nama) {
   const tersedia =

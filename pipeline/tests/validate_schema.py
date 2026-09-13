@@ -88,18 +88,18 @@ def main(path: str) -> int:
                 errs.append(f"{tag}: cincin poligon tidak tertutup")
             lon, lat = ring[0]
             if not (109 < lon < 112 and -8.5 < lat < -7):
-                errs.append(f"{tag}: koordinat di luar DIY — cek urutan lon/lat")
+                errs.append(f"{tag}: koordinat di luar DIY, cek urutan lon/lat")
 
     for w in warns:
         print(f"  PERINGATAN  {w}")
     if errs:
-        print(f"\nGAGAL — {len(errs)} kesalahan\n")
+        print(f"\nGAGAL, {len(errs)} kesalahan\n")
         for e in errs[:40]:
             print("  -", e)
         if len(errs) > 40:
             print(f"  ... dan {len(errs) - 40} lagi")
         return 1
-    print(f"\nLOLOS — {len(feats)} heksagon, {len(INDIKATOR_WAJIB)} indikator, schema cocok\n")
+    print(f"\nLOLOS, {len(feats)} heksagon, {len(INDIKATOR_WAJIB)} indikator, schema cocok\n")
     return 0
 
 

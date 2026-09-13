@@ -24,7 +24,7 @@ const DIMENSI = DIMENSI_UI.map((d) => [
 //
 // Empat slider kepentingan diganti kontrol berbatas karena skor komposit
 // memakai bobot RELATIF (w/Sigma-w). Keempat slider di maksimum menghasilkan
-// 0,25 per dimensi — identik dengan keempatnya di minimum dan identik dengan
+// 0,25 per dimensi, identik dengan keempatnya di minimum dan identik dengan
 // tidak mengisi apa pun. Pengguna merasa sudah menyetel padahal hasilnya sama
 // dengan bawaan. Batas dua pilihan membuat perbedaan bobot selalu nyata.
 //
@@ -38,7 +38,7 @@ const BOBOT_SISA = 10;
 const MAKS_PILIH = 2;
 
 // "Semuanya sama penting bagiku" berarti "aku tidak punya preferensi khusus",
-// dan jawaban yang benar untuk itu adalah bobot bawaan produk — bukan
+// dan jawaban yang benar untuk itu adalah bobot bawaan produk, bukan
 // pembagian rata.
 //
 // Sebelumnya opsi ini (dan melanjutkan tanpa memilih apa pun) mengirim 25
@@ -217,7 +217,7 @@ export default function Beranda({
     } else {
       setTidakTerbaca([]);
       setRingkasAI(null);
-      setCatatanEkstra(null);
+      setCatatanEkstra([]);
       setPenekanan(null);
     }
     setPesanBaca(pesan ?? null);
@@ -473,7 +473,7 @@ export default function Beranda({
                     />
                     <div className="bidang-kaki">
                       <span>
-                        {formatRupiah(ANGGARAN_MIN)} –{" "}
+                        {formatRupiah(ANGGARAN_MIN)} -{" "}
                         {formatRupiah(ANGGARAN_MAKS)}
                       </span>
                       <label className="kotak-centang">
@@ -632,7 +632,7 @@ export default function Beranda({
               </div>
             </div>
             <p className="data-versi">
-              {TEKS.data.versi(meta?.versi ?? "—", tanggalData)}{" "}
+              {TEKS.data.versi(meta?.versi ?? "-", tanggalData)}{" "}
               <button onClick={onMetodologi}>
                 {TEKS.data.tautanMetodologi}
               </button>
@@ -653,7 +653,7 @@ export default function Beranda({
             <span>
               {tanggalData
                 ? TEKS.footer.diperbarui(tanggalData)
-                : TEKS.footer.versiCadangan(meta?.versi ?? "—")}
+                : TEKS.footer.versiCadangan(meta?.versi ?? "-")}
             </span>
             <span>{TEKS.footer.tim}</span>
           </div>

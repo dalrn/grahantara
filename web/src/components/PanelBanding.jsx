@@ -14,7 +14,7 @@ import {
 } from "../lib/bahasaIndikator";
 
 // Warna A/B dari satu sumber (design.js), sama persis dengan garis heksagon
-// di peta dan pin kos — supaya kartu di panel bisa langsung dicocokkan dengan
+// di peta dan pin kos, supaya kartu di panel bisa langsung dicocokkan dengan
 // heksagon yang disorot. Keduanya di luar skala skor agar tidak tertukar
 // artinya dengan warna heksagon.
 const WARNA_A = bandingColors.a;
@@ -193,7 +193,7 @@ export default function PanelBanding({
           className="text-2xl font-bold"
           style={{ color: warnaTeksSkor(skor, ambangSkor) ?? undefined }}
         >
-          {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
+          {skor !== null && skor !== undefined ? formatSkor(skor) : "-"}
         </div>
         {band && <div className="text-xs text-slate-400">{band}</div>}
       </div>
@@ -233,7 +233,7 @@ export default function PanelBanding({
             >
               {skorKini?.a !== null && skorKini?.a !== undefined
                 ? formatSkor(skorKini.a)
-                : "—"}
+                : "-"}
             </span>
           </div>
         )}
@@ -512,7 +512,7 @@ export default function PanelBanding({
         )}
 
         <div className="mt-3 border-t border-white/10 pt-2 text-xs text-slate-500">
-          Data versi {versi ?? "—"}
+          Data versi {versi ?? "-"}
           {formatTanggal(dihitungPada)
             ? `, dihitung ${formatTanggal(dihitungPada)}`
             : ""}

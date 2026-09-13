@@ -17,7 +17,7 @@ const BATAS = [
 
 /**
  * Peta ringkas untuk hero beranda: heksagon asli berwarna skor komposit di
- * atas basemap MAPID. Bukan tiruan PetaHeksagon — tidak ada panel, lapisan
+ * atas basemap MAPID. Bukan tiruan PetaHeksagon, tidak ada panel, lapisan
  * titik, banding, atau rute. Yang dibagi hanya pipeline data dan warnanya
  * (hitungKuintil + ekspresiWarna + WARNA_KELAS), supaya warna di beranda dan
  * di halaman peta berarti hal yang sama.
@@ -367,7 +367,7 @@ export default function PetaHero({ onBuka }) {
       {siap && sorot && (
         <div className="hero-peta-skor" aria-hidden="true">
           <strong>{sorot.skor.toFixed(1)}</strong>
-          {/* Heksagon tidak punya nama tempat di data — hanya h3_index, yang
+          {/* Heksagon tidak punya nama tempat di data, hanya h3_index, yang
               tidak berarti apa-apa bagi pembaca. Yang ditampilkan adalah arti
               skornya, sesuai definisi persentil. */}
           <span>{TEKS.peta.artiSkor(Math.round(sorot.skor))}</span>

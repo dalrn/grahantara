@@ -28,7 +28,7 @@ export function kalimatKonteks(k) {
 export function kalimatTemuan(t) {
   switch (t.jenis) {
     case JENIS.KONFLIK_PRIORITAS:
-      return `- KONFLIK PRIORITAS: pengguna paling mementingkan ${t.nama} (${t.bobot} dari 100 poin), tetapi kawasan ini justru lemah di sana — lebih baik daripada hanya ${t.persentil}% kawasan lain.`;
+      return `- KONFLIK PRIORITAS: pengguna paling mementingkan ${t.nama} (${t.bobot} dari 100 poin), tetapi kawasan ini justru lemah di sana, lebih baik daripada hanya ${t.persentil}% kawasan lain.`;
 
     case JENIS.KEUNGGULAN_RAPUH:
       return `- KEUNGGULAN BERTUMPU SATU HAL: ${t.nama} tergolong kuat (${t.subskor}), tetapi hampir seluruhnya ditopang "${t.penopang}". Tanpa indikator itu nilainya ${t.tanpaPenopang}, di bawah median wilayah ${Math.round(t.medianWilayah)}.`;
@@ -43,7 +43,7 @@ export function kalimatTemuan(t) {
       return `- KEDUA KAWASAN PRAKTIS SETARA: seluruh selisih dimensi tergolong dapat diabaikan, dan skor akhirnya hanya berbeda ${t.selisihSkor} poin.`;
 
     case JENIS.PEMENANG_KALAH_PRIORITAS:
-      return `- PEMENANG KALAH DI PRIORITAS: Kawasan ${t.pemenangTotal} unggul pada skor akhir, TETAPI Kawasan ${t.unggulDiPrioritas} yang lebih baik pada ${t.nama} — dimensi yang paling dipentingkan pengguna (${t.bobot} dari 100 poin). Selisihnya tergolong ${t.tingkat}.`;
+      return `- PEMENANG KALAH DI PRIORITAS: Kawasan ${t.pemenangTotal} unggul pada skor akhir, TETAPI Kawasan ${t.unggulDiPrioritas} yang lebih baik pada ${t.nama}, dimensi yang paling dipentingkan pengguna (${t.bobot} dari 100 poin). Selisihnya tergolong ${t.tingkat}.`;
 
     case JENIS.UNGGUL_SATU_INDIKATOR:
       return `- KEUNGGULAN TIPIS: Kawasan ${t.kawasan} unggul pada ${t.nama}, tetapi justru kalah pada ${t.kalahDi} dari ${t.dari} indikator penyusunnya.`;

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  * Fasilitas: "jadi apa saja dan di mana saja tempat makannya?". Sebelum ini
  * produk hanya bisa menyebut angka.
  *
- * Berkasnya (455 KB) dimuat MALAS — hanya saat panel pertama kali dibuka, dan
+ * Berkasnya (455 KB) dimuat MALAS, hanya saat panel pertama kali dibuka, dan
  * hanya sekali per sesi. Menaruhnya di muat awal akan memperlambat peta untuk
  * fitur yang dipakai sebagian pengguna saja.
  */
@@ -163,7 +163,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
         </button>
       )}
       {/* Kasus paling membingungkan: skor kepadatan tinggi tapi daftar ini
-          tidak memuat satu pun tempat makan. Terjadi nyata — ada kawasan
+          tidak memuat satu pun tempat makan. Terjadi nyata, ada kawasan
           dengan 56 tempat makan dalam radius 800 m tetapi NOL di dalam
           batasnya. Sebut angkanya, jangan biarkan pembaca menyimpulkan
           datanya salah. */}
@@ -172,7 +172,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
         jumlahRadius > 0 && (
           <p className="poi-catatan poi-catatan--sorot">
             Tidak ada tempat makan di dalam batas kawasan ini, tetapi ada{" "}
-            {Math.round(jumlahRadius)} dalam radius 800 m dari pusatnya — itulah
+            {Math.round(jumlahRadius)} dalam radius 800 m dari pusatnya, itulah
             yang dihitung skor Kepadatan tempat makan.
           </p>
         )}

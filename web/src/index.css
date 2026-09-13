@@ -372,11 +372,15 @@ input[type="checkbox"] {
 }
 
 .preference-card h2 {
-  font-size: 22px;
+  /* Cukup kecil supaya "Kawasan seperti apa yang kamu cari?" muat satu baris
+     di lebar kartu 424 px. Pada 22 px ia pecah jadi dua baris dan kartunya
+     terbaca seperti dua judul terpisah. */
+  font-size: 19px;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.5px;
   margin: 0;
+  text-wrap: balance;
 }
 .card-description {
   color: var(--tinta-2);
@@ -1256,6 +1260,10 @@ input[type="checkbox"] {
     padding: 18px;
   }
   .preference-card h2 {
+    /* SENGAJA lebih besar daripada versi lebar, dan memang dibiarkan dua
+       baris. Kartu di ponsel hanya ~324 px; memaksa judulnya satu baris
+       menuntut sekitar 13 px, terlalu kecil untuk judul. Dua baris di layar
+       sempit itu wajar, judul kekecilan tidak. */
     font-size: 20px;
   }
   .home-dimensi {
