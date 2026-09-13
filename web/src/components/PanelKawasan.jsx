@@ -106,7 +106,7 @@ function BlokInsight({
   const giliranPengguna = (percakapan ?? []).filter(
     (g) => g.peran === "pengguna",
   ).length;
-  const batasTercapai = giliranPengguna >= 6;
+  const batasTercapai = giliranPengguna >= 12;
 
   const kirimTanya = async (teks) => {
     const tanya = (teks ?? "").trim();
@@ -250,7 +250,7 @@ function BlokInsight({
             )}
             {batasTercapai ? (
               <div className="mt-2 text-slate-400">
-                Batas 6 pertanyaan per kawasan sudah tercapai.
+                Batas 12 pertanyaan per kawasan sudah tercapai.
               </div>
             ) : (
               <form
