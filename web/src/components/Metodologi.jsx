@@ -444,7 +444,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
               </ol>
               <p className="metodologi-rumus-blok">
                 <span className="rumus-baris">
-                  subskor<sub>d</sub> = 100 × ( Σ<sub>i∈d</sub> w<sub>i</sub> ·
+                  subskor<sub>d</sub> = 100 × ( Σ<sub>i∈d</sub> w<sub>i</sub> /
                   p<sub>i</sub> ) ÷ ( Σ<sub>i∈d</sub> w<sub>i</sub> )
                 </span>
               </p>
@@ -634,11 +634,11 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                   <tbody>
                     <tr>
                       <td>Dua dimensi dipilih</td>
-                      <td>40% · 40% · 10% · 10%</td>
+                      <td>40% / 40% / 10% / 10%</td>
                     </tr>
                     <tr>
                       <td>Satu dimensi dipilih</td>
-                      <td>55% · 15% · 15% · 15%</td>
+                      <td>55% / 15% / 15% / 15%</td>
                     </tr>
                     <tr>
                       <td>&ldquo;Semuanya sama penting bagiku&rdquo;</td>
@@ -830,8 +830,8 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 <li>
                   <b>{NAMA_INDIKATOR.C1_jarak_halte}</b> dan{" "}
                   <b>{NAMA_INDIKATOR.C4_jarak_krl}</b> memakai peluruhan
-                  eksponensial atas jaraknya, exp(−jarak/400 m) dan
-                  exp(−jarak/800 m). Jarak besar meluruh mendekati nol, jadi
+                  eksponensial atas jaraknya, exp(-jarak/400 m) dan
+                  exp(-jarak/800 m). Jarak besar meluruh mendekati nol, jadi
                   nilai tinggi berarti dekat.
                 </li>
                 <li>
@@ -843,7 +843,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 <li>
                   <b>{NAMA_INDIKATOR.W5_tekanan_lalin}</b> dan{" "}
                   <b>{NAMA_INDIKATOR.W4_banjir}</b> menyimpan{" "}
-                  <b>1 − tekanan</b> dan <b>1 − indeks bahaya</b>. Itu sebabnya
+                  <b>1 - tekanan</b> dan <b>1 - indeks bahaya</b>. Itu sebabnya
                   keduanya dinamai menurut hal baiknya (ketenangan, keamanan),
                   bukan hal buruknya.
                 </li>

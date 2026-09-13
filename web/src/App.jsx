@@ -598,7 +598,7 @@ export default function App() {
             fallback={
               <div className="loading-map" role="status">
                 <p className="animate-pulse text-sm text-emerald-400">
-                  Menyiapkan peta kawasan…
+                  Menyiapkan peta kawasan...
                 </p>
               </div>
             }

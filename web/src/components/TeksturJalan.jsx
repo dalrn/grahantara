@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-/**
- * Lapisan latar dari jaringan jalan Sleman (OSM), bukan pola hias generik.
- *
- * Berkasnya `public/tekstur-jalan.svg`, dirender SEKALI oleh
- * `scripts/buat_tekstur_jalan.py` dari graf yang sama yang dipakai pipeline
- * (`data/interim/walk_graph.graphml`). Tidak ada penggambaran ulang saat
- * runtime: komponen ini hanya mengambil berkas statis lalu menyisipkannya.
- */
+// Lapisan latar dari jaringan jalan Sleman. `public/tekstur-jalan.svg`
+// dibangkitkan sekali oleh scripts/buat_tekstur_jalan.py dari graf yang sama
+// yang dipakai pipeline; komponen ini hanya menyisipkan berkas statis itu.
 
 // Rasio viewBox berkas (1600 x 2256). Dipakai menghitung berapa salinan
 // vertikal yang dibutuhkan; kalau berkas dibangkitkan ulang dengan rasio
@@ -42,22 +37,11 @@ export default function TeksturJalan() {
     };
   }, []);
 
-  // Berapa salinan vertikal yang dibutuhkan agar tekstur menerus sampai
-  // dasar dokumen.
-  //
-  // HATI-HATI: efek ini pernah membuat seluruh tekstur digambar ulang pada
-  // SETIAP KETUKAN saat pengguna mengetik di kartu beranda. Sebabnya
-  // berantai: textarea tumbuh -> scrollHeight induk berubah -> ResizeObserver
-  // menyala -> setSalinan -> React me-render ulang -> 445 KB SVG diurai lagi
-  // lewat dangerouslySetInnerHTML, dan animasi "tarik-jalan" 2,1 detik ikut
-  // berangkat dari awal. Itulah kedipannya.
-  //
-  // Dua penjagaan:
-  //   1. ResizeObserver hanya bereaksi pada perubahan LEBAR. Tinggi dokumen
-  //      berubah setiap kali isi tumbuh, dan itu bukan alasan untuk menghitung
-  //      ulang jumlah salinan.
-  //   2. setSalinan hanya dipanggil bila angkanya BENAR-BENAR berubah; React
-  //      memang menyaring nilai sama, tapi menghitungnya pun tidak perlu.
+  // Berapa salinan vertikal yang dibutuhkan agar tekstur menerus sampai dasar
+  // dokumen. ResizeObserver sengaja hanya bereaksi pada perubahan LEBAR dan
+  // setSalinan hanya dipanggil bila angkanya berubah: tinggi dokumen berubah
+  // tiap kali isi tumbuh, dan render ulang berarti mengurai lagi 445 KB SVG
+  // sekaligus mengulang animasinya dari awal.
   useEffect(() => {
     if (!svg) return;
     const el = wadah.current;

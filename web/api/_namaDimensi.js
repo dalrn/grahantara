@@ -1,12 +1,6 @@
-// Salinan server dari DIMENSI_UI di web/src/lib/kamus.js.
-//
-// Folder api/ adalah fungsi serverless Vercel dan TIDAK boleh mengimpor dari
-// src/, jadi nama dimensi disalin ke sini, pola yang sama dengan
-// _daftarKampus.js. Berkas berawalan garis bawah tidak diperlakukan Vercel
-// sebagai endpoint.
-//
-// Kalau label di kamus.js berubah, ubah juga di sini. Satu salinan untuk
-// seluruh api/, bukan satu per endpoint seperti sebelumnya.
+// Salinan server dari DIMENSI_UI di src/lib/kamus.js. Fungsi serverless tidak
+// boleh mengimpor dari src/, jadi nilainya disalin ke sini. Kalau label di
+// kamus.js berubah, ubah juga di sini.
 export const NAMA_DIMENSI = {
   connectivity: "Akses transportasi",
   affordability: "Biaya",

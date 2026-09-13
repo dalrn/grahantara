@@ -12,14 +12,10 @@ export function Lencana({ teks, warna }) {
   );
 }
 
-/**
- * Satu baris indikator di panel Kawasan Terpilih.
- *
- * Yang tampil secara bawaan adalah LABEL KUALITATIF dan kalimat persentil,
- * bukan nilai mentah. Sebelumnya keduanya tampil bersamaan dan sering saling
- * bertentangan: "Integritas jalur pejalan: 0,2 indeks - persentil 93" terbaca
- * sebagai nilai buruk, padahal kawasan itu termasuk 7% terbaik.
- */
+// Menampilkan label kualitatif dan kalimat persentil, bukan nilai mentah:
+// angka seperti "0,2 indeks" pada persentil 93 terbaca sebagai nilai buruk.
+// Nilai mentah dan sumbernya muncul lewat toggle `angkaMentah`. Lencana
+// "Estimasi" tetap di barisnya karena itu peringatan kualitas data.
 export default function BarisIndikator({ kunci, data, angkaMentah = false }) {
   const nama = NAMA_INDIKATOR[kunci] ?? kunci;
   const tidakTersedia =
@@ -65,7 +61,7 @@ export default function BarisIndikator({ kunci, data, angkaMentah = false }) {
         <div className="mt-0.5 text-xs text-slate-500">
           {/* Untuk satuan yang sudah jelas, `utama` SUDAH angka mentahnya;
               mengulanginya di baris ini hanya menggandakan teks yang sama. */}
-          {abstrak && mentah ? `${mentah} · ` : ""}
+          {abstrak && mentah ? `${mentah}, ` : ""}
           {LABEL_SUMBER[data.sumber] ?? data.sumber}
         </div>
       )}

@@ -75,10 +75,9 @@ export default function AlokasiPoin({
       onUbah({ ...nilai, [kunci]: diminta });
       return;
     }
-    // Poin tidak cukup. Kalau `pinjamDariLain` aktif (panel peta, yang selalu
-    // dibuka dalam keadaan 12 poin terpakai), kekurangannya diambil dari
-    // dimensi lain mulai dari yang paling besar, tanpa ini klik pertama di
-    // panel itu tidak pernah berbuat apa-apa dan terasa macet.
+    // Poin tidak cukup. Dengan `pinjamDariLain` (panel peta, yang selalu
+    // dibuka dengan 12 poin terpakai), kekurangannya diambil dari dimensi
+    // terbesar; tanpa itu klik pertama di panel tidak berefek apa pun.
     if (pinjamDariLain) {
       const hasil = { ...nilai, [kunci]: diminta };
       let kurang = butuh - sisa;

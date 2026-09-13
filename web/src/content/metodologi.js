@@ -17,14 +17,14 @@
 export const DEFINISI = {
   C1_jarak_halte: {
     ukur: "Seberapa dekat halte Trans Jogja terdekat dari pusat kawasan.",
-    rumus: "exp(−jarak / 400 m)",
+    rumus: "exp(-jarak / 400 m)",
     cakupan:
       "Jarak jalan kaki menyusuri graf jalan OpenStreetMap, bukan garis lurus.",
     arah: "Makin dekat halte, makin tinggi nilainya.",
   },
   C2_rute_unik: {
     ukur: "Berapa banyak koridor Trans Jogja berbeda yang bisa dicapai.",
-    rumus: "1 − exp(−jumlah rute / 2)",
+    rumus: "1 - exp(-jumlah rute / 2)",
     cakupan:
       "Semua halte yang terjangkau jalan kaki 800 m dari pusat kawasan. Koridor yang sama di dua halte dihitung sekali.",
     arah: "Makin banyak koridor berbeda, makin tinggi nilainya.",
@@ -33,7 +33,7 @@ export const DEFINISI = {
     ukur:
       "Apakah koridor yang lewat kawasan ini benar-benar sampai ke kampus, bukan sekadar apakah ada halte di dekatnya.",
     rumus:
-      "Pergantian koridor paling sedikit menuju kampus: 0 kali → 1,00 · 1 kali → 0,60 · tidak terjangkau → 0,20. Dipakai nilai kampus terbaik.",
+      "Pergantian koridor paling sedikit menuju kampus: 0 kali → 1,00 / 1 kali → 0,60 / tidak terjangkau → 0,20. Dipakai nilai kampus terbaik.",
     cakupan:
       "Graf dengan simpul berupa pasangan (halte, koridor). Halte dianggap terjangkau bila ≤ 800 m jalan kaki, dan kampus bila ≤ 1.000 m dari halte tujuan.",
     arah: "Ada rute langsung lebih tinggi daripada perlu berganti kendaraan.",
@@ -42,7 +42,7 @@ export const DEFINISI = {
   },
   C4_jarak_krl: {
     ukur: "Seberapa dekat stasiun KRL terdekat, untuk perjalanan antarkota.",
-    rumus: "exp(−jarak / 800 m)",
+    rumus: "exp(-jarak / 800 m)",
     cakupan: "Jarak jalan kaki di graf OpenStreetMap ke stasiun KRL.",
     arah: "Makin dekat stasiun, makin tinggi nilainya.",
   },
@@ -62,7 +62,7 @@ export const DEFINISI = {
   },
   M1_kepadatan_makan: {
     ukur: "Banyaknya tempat makan yang terjangkau jalan kaki.",
-    rumus: "1 − exp(−jumlah tempat makan / 5)",
+    rumus: "1 - exp(-jumlah tempat makan / 5)",
     cakupan:
       "Radius 800 m dari pusat kawasan, bukan hanya di dalam heksagon: sel selebar ~380 m akan menghitung nol untuk warung 200 m di luar batas, padahal itu lima menit jalan kaki.",
     arah: "Makin banyak tempat makan, makin tinggi nilainya.",
@@ -118,14 +118,14 @@ export const DEFINISI = {
   },
   W4_banjir: {
     ukur: "Keamanan kawasan dari genangan dan banjir.",
-    rumus: "1 − indeks bahaya banjir",
+    rumus: "1 - indeks bahaya banjir",
     cakupan:
       "Lapisan wilayah bahaya banjir, berbobot luas bila satu heksagon melintasi beberapa poligon.",
     arah: "Makin aman dari genangan, makin tinggi nilainya.",
   },
   W5_tekanan_lalin: {
     ukur: "Setenang apa lalu lintas bagi orang yang berjalan kaki.",
-    rumus: "1 − tekanan lalu lintas, ditaksir dari kelas jalan.",
+    rumus: "1 - tekanan lalu lintas, ditaksir dari kelas jalan.",
     cakupan:
       "Kelas jalan OpenStreetMap di dalam heksagon, dikalibrasi dengan ruas hasil survei lapangan.",
     arah:
@@ -159,7 +159,7 @@ export const PENJELASAN_MODEL = [
   "Keputusan memodelkan diuji, bukan diasumsikan. Dengan validasi silang leave-one-out atas ruas survei: menebak rata-rata memberi R² 0,000; kelas jalan saja R² +0,262; kelas jalan ditambah lebar R² +0,394 dengan galat rata-rata 0,197. Model dipakai karena menjelaskan sekitar 39% ragam, jauh lebih baik daripada menebak.",
   "Yang membuatnya bekerja adalah keteraturan tata kota yang nyata: jalan arteri diberi trotoar, gang tidak. Pada ruas survei, rata-rata keutuhan jalur di jalan raya 0,449 sementara di gang 0,044.",
   "Kepadatan kendaraan sengaja TIDAK dipakai sebagai fitur meski menambah sedikit ketepatan, karena angkanya berasal dari survei yang sama dan indikator ketenangan lalu lintas sudah memakai kelas jalan yang sama. Memasukkannya berarti menghitung satu fitur dua kali.",
-  "Indikator ini selalu diberi penanda “estimasi” di antarmuka. Harga kos, yang diuji dengan cara yang sama, justru TIDAK dimodelkan karena hasilnya lebih buruk daripada menebak rata-rata.",
+  "Indikator ini selalu diberi penanda 'estimasi' di antarmuka. Harga kos, yang diuji dengan cara yang sama, justru TIDAK dimodelkan karena hasilnya lebih buruk daripada menebak rata-rata.",
 ];
 
 /** Label Indonesia untuk nilai enum presisi koordinat kos. */

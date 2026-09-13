@@ -1562,7 +1562,7 @@ export default function PetaHeksagon({
             <p>
               {loadState === "error"
                 ? "Peta belum berhasil dimuat."
-                : "Menyiapkan peta kawasan…"}
+                : "Menyiapkan peta kawasan..."}
             </p>
             {loadState === "error" ? (
               <button

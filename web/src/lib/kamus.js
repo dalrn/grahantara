@@ -1,15 +1,6 @@
-// SUMBER TUNGGAL label, urutan, dan warna keempat dimensi untuk SELURUH
-// antarmuka: beranda, panel Bobot, panel Kawasan Terpilih, panel Bandingkan,
-// legenda, dan halaman Metodologi.
-//
-// Sebelumnya ada dua himpunan nama yang berbeda, DIMENSI_UI di beranda
-// ("Biaya", "Fasilitas") dan KELOMPOK_INDIKATOR.label di panel detail
-// ("Keterjangkauan", "Kenyamanan"), dengan alasan yang satu lebih teknis
-// daripada yang lain. Akibatnya dua dari empat dimensi berganti nama saat
-// pengguna pindah halaman, dan di panel detail "Kenyamanan" (amenity)
-// berdampingan dengan "Kenyamanan berjalan kaki" (walkability): dua dimensi
-// berbeda dengan nama nyaris identik. Semua turunan di bawah sekarang
-// membaca dari sini; jangan menulis ulang nama dimensi di komponen mana pun.
+// Sumber tunggal label, urutan, dan warna keempat dimensi untuk seluruh
+// antarmuka. NAMA_DIMENSI dan KELOMPOK_INDIKATOR diturunkan dari sini; jangan
+// menulis ulang nama dimensi di komponen mana pun.
 export const DIMENSI_UI = [
   { kunci: "connectivity", label: "Akses transportasi", warna: "#5379a5" },
   { kunci: "affordability", label: "Biaya", warna: "#319b98" },

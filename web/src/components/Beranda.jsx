@@ -41,13 +41,9 @@ const MAKS_PILIH = 2;
 // dan jawaban yang benar untuk itu adalah bobot bawaan produk, bukan
 // pembagian rata.
 //
-// Sebelumnya opsi ini (dan melanjutkan tanpa memilih apa pun) mengirim 25
-// merata, sehingga jalur yang terasa PASIF diam-diam MEMBUANG bobot bawaan
-// hasil metodologi. Pengguna melihat peta yang berbeda dari peta bawaan
-// tanpa pernah diberi tahu, dan panel bobot menyalakan catatan "bobot pilihan
-// Anda" untuk orang yang merasa tidak memilih apa-apa. Pembagian rata juga
-// menyiratkan keempat dimensi sama pentingnya, padahal metodologi menyatakan
-// sebaliknya. Sekarang jalur ini sejalan dengan "Jelajahi peta tanpa mengisi".
+// "Semuanya sama penting" berarti tidak ada preferensi khusus, jadi yang
+// dipakai adalah bobot bawaan. Pembagian rata akan menyiratkan keempat
+// dimensi sama pentingnya, padahal metodologi menyatakan sebaliknya.
 function bobotDariPilihan(pilihan, setara, bawaan) {
   const b = {};
   if (setara || pilihan.length === 0) {
@@ -117,9 +113,8 @@ export default function Beranda({
   const kartuRef = useRef(null);
 
   useEffect(() => {
-    // Metadata saja (ratusan byte). Sebelumnya berkas heksagon 4,5 MB ikut
-    // diunduh di beranda hanya untuk membaca metadata; berkas itu kini
-    // ditinggalkan untuk halaman peta.
+    // Metadata saja, ratusan byte. Berkas heksagon 4,5 MB hanya dimuat di
+    // halaman peta.
     let batal = false;
     fetch("/data/metadata.json")
       .then((r) => {
@@ -522,9 +517,7 @@ export default function Beranda({
                         aria-pressed={setara}
                         disabled={kuotaPenuh}
                         onClick={() => {
-                          // Bisa dibatalkan seperti opsi lain. Sebelumnya
-                          // hanya bisa dinyalakan, sehingga sekali aktif
-                          // tombolnya tidak pernah bisa dilepas lagi.
+                          // Bisa dibatalkan seperti opsi lain.
                           setSetara((v) => !v);
                           setPilihan([]);
                         }}

@@ -94,11 +94,9 @@ export default function PanelBanding({
     selisih === null ? null : selisih > 0.05 ? "A" : selisih < -0.05 ? "B" : null;
 
   // Tiga selisih dimensi terbesar, jadi kalimat alasan.
-  // Tiap selisih dinilai terhadap SIMPANGAN BAKU dimensinya, bukan dibaca
-  // apa adanya. Simpangan bakunya berbeda sampai 3,4 kali antar dimensi:
-  // selisih 7 poin hampir satu sd di Lingkungan jalan kaki (sd 7,6) tetapi
-  // hanya 0,27 sd di Biaya (sd 25,6). Menampilkan keduanya seolah sama besar
-  // membuat pengguna mengira dua kawasan berbeda jauh padahal tidak.
+  // Selisih dinilai terhadap simpangan baku dimensinya. Sd berbeda sampai
+  // 3,4 kali antar dimensi: 7 poin hampir satu sd di Lingkungan jalan kaki
+  // (sd 7,6), tetapi hanya 0,27 sd di Biaya (sd 25,6).
   const nilaiSelisih = (kunci, beda) => {
     const sd = SEBARAN_DIMENSI[kunci]?.simpanganBaku;
     if (!sd) return { rasio: null, tingkat: null };

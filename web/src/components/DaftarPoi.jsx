@@ -73,7 +73,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
     );
   }
   if (!data) {
-    return <p className="poi-catatan">Memuat daftar tempat…</p>;
+    return <p className="poi-catatan">Memuat daftar tempat...</p>;
   }
 
   const daftar = data.per_heksagon?.[h3Index] ?? [];
@@ -90,9 +90,8 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
   const perKategori = {};
   for (const r of daftar) (perKategori[r.k] ??= []).push(r);
 
-  // Kategori yang diminta pengguna naik ke atas. Tanpa ini, "dekat apotek"
-  // bisa menampilkan lima tempat makan dan menyembunyikan satu-satunya
-  // apotek di bawah tombol "tampilkan lainnya".
+  // Kategori yang diminta pengguna naik ke atas daftar, supaya "dekat apotek"
+  // tidak menampilkan lima tempat makan lalu menyembunyikan apoteknya.
   const disorot = sorot.filter((k) => perKategori[k]?.length);
   const tidakAda = sorot.filter((k) => !perKategori[k]?.length);
   const urut = disorot.length

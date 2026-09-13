@@ -203,8 +203,7 @@ export default function PetaHero({ onBuka }) {
             // sekitarnya, bukan prioritas. Delapan dari sepuluh kampus
             // berdesakan dalam ~80 px (UPN dan AMIKOM hanya berjarak 5 px)
             // sementara sprite-nya selebar 70-117 px, jadi hanya kampus yang
-            // terpisah sendiri yang muat. Sort key diuji dan tidak mengubah
-            // hasilnya; menyimpannya hanya menyesatkan pembaca berikutnya.
+            // terpisah sendiri yang muat. symbol-sort-key tidak mengubah hasil.
           },
         });
 

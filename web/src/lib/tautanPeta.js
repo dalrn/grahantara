@@ -1,8 +1,6 @@
-// Tautan ke Google Maps untuk sebuah titik. Grahantara menilai kawasan;
-// navigasi belokan-per-belokan diserahkan ke Google Maps.
-//
-// Format `?api=1` membuka aplikasi Maps di ponsel dan peta web di desktop.
-// Koordinat ditulis `lat,lon`, kebalikan dari [lon, lat] milik GeoJSON.
+// Tautan Google Maps. Format `?api=1` membuka aplikasi Maps di ponsel dan
+// peta web di desktop. Koordinat ditulis `lat,lon`, kebalikan dari [lon, lat]
+// milik GeoJSON.
 
 const sah = (c) =>
   Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1]);

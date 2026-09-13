@@ -46,11 +46,8 @@ export default function PanelBobot({
   onBobotBerubah,
   onKembalikanBawaan,
 }) {
-  // Acuan bawaan datang dari App (metadata.bobot_default), BUKAN dari
-  // BOBOT_DEFAULT di config. Sebelumnya panel ini memakai konstanta config
-  // sementara App memakai metadata: keduanya kebetulan bernilai sama, jadi
-  // tidak ada gejala, tapi begitu pipeline mengubah bobot bawaan, panel dan
-  // tombol "Kembalikan bawaan" akan berselisih diam-diam.
+  // Acuan bawaan dari App (metadata.bobot_default), bukan konstanta config,
+  // supaya panel dan tombol "Kembalikan bawaan" memakai sumber yang sama.
   const bedaDariBawaan = DIMENSI_UI.some(
     ({ kunci }) => Math.abs((bobot[kunci] ?? 0) - (bobotBawaan[kunci] ?? 0)) > 0.5,
   );

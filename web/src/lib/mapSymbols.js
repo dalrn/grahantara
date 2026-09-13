@@ -29,13 +29,9 @@ const KAMPUS_TEKS_X = 33; // teks mulai setelah ikon toga
 const KAMPUS_PAD_KANAN = 12; // jarak teks ke tepi dalam kotak
 
 /**
- * Lebar sprite dari LEBAR TEKS SEBENARNYA, bukan taksiran jumlah huruf.
- *
- * Sebelumnya `label.length * 9 + 36`, yang menganggap semua huruf selebar
- * 9 px. Huruf kapital lebar seperti M dan W jauh melewati itu: "AMIKOM"
- * meluber 1 px ke luar kotak dan "UGM" hanya menyisakan 3,6 px, sehingga
- * keduanya tampak menempel di garis tepi. Diukur dengan measureText, jarak
- * tepinya selalu tepat KAMPUS_PAD_KANAN.
+ * Lebar sprite diukur dari lebar teks sebenarnya, bukan jumlah huruf: huruf
+ * kapital lebar seperti M dan W melewati taksiran per-huruf dan membuat
+ * labelnya meluber dari kotak.
  */
 function lebarSpriteKampus(ctx, label) {
   const teks = ctx.measureText(label).width;

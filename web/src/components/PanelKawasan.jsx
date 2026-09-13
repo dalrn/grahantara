@@ -236,13 +236,7 @@ function BlokDimensi({
   );
 }
 
-/**
- * Bobot yang dipakai, sebagai daftar berlabel.
- *
- * Tiap dimensi jadi satu baris nama + persen, dipisahkan garis tipis, dengan
- * judul kecil di atasnya. Titik-tengah melayang hilang, dan pembaca bisa
- * memindai satu dimensi tanpa membaca seluruh kalimat.
- */
+// Bobot yang dipakai, satu baris per dimensi.
 function BlokBobot({ judul, daftar }) {
   return (
     <div className="blok-bobot">
@@ -321,8 +315,8 @@ export default function PanelKawasan({
   // Angkanya dari metadata bila ada, bukan ditulis tangan.
   const bobotBawaanTampil = bobotBawaan ?? BOBOT_DEFAULT;
   // Daftar terstruktur, BUKAN satu kalimat panjang bertitik-tengah melayang.
-  // Versi lama berbunyi "pada bobot bawaan Akses transportasi 40% · Biaya 25%
-  // · ...", mengalir tanpa jeda, dan titik pemisahnya menggantung di ujung
+  // Versi lama berbunyi "pada bobot bawaan Akses transportasi 40%, Biaya 25%
+  //, ...", mengalir tanpa jeda, dan titik pemisahnya menggantung di ujung
   // baris saat teksnya terpotong.
   // Bobot yang SEDANG dipakai bila pengguna sudah menggesernya. bobotKini
   // datang sebagai pecahan ternormalisasi (jumlahnya 1).
