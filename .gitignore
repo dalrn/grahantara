@@ -38,3 +38,6 @@ data/*.tif
 
 # cache unduhan osmnx/overpass
 cache/
+
+# data MAPID, jangan commit (ketentuan kompetisi)
+reference/mapid/
