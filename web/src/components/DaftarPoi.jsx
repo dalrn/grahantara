@@ -47,7 +47,7 @@ const URUTAN = ["makan", "warung", "minimarket", "apotek"];
  * Kategori itu ditampilkan LEBIH DULU dan tidak boleh terpotong batas daftar:
  * pengguna yang mencari apotek tidak terbantu oleh lima warung.
  */
-export default function DaftarPoi({ h3Index, sorot = [] }) {
+export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
   const [data, setData] = useState(cachePoi);
   const [galat, setGalat] = useState(false);
   const [semua, setSemua] = useState(false);
@@ -162,6 +162,20 @@ export default function DaftarPoi({ h3Index, sorot = [] }) {
             : `Tampilkan ${daftar.length - batasEfektif} tempat lainnya`}
         </button>
       )}
+      {/* Kasus paling membingungkan: skor kepadatan tinggi tapi daftar ini
+          tidak memuat satu pun tempat makan. Terjadi nyata — ada kawasan
+          dengan 56 tempat makan dalam radius 800 m tetapi NOL di dalam
+          batasnya. Sebut angkanya, jangan biarkan pembaca menyimpulkan
+          datanya salah. */}
+      {!perKategori.makan?.length &&
+        Number.isFinite(jumlahRadius) &&
+        jumlahRadius > 0 && (
+          <p className="poi-catatan poi-catatan--sorot">
+            Tidak ada tempat makan di dalam batas kawasan ini, tetapi ada{" "}
+            {Math.round(jumlahRadius)} dalam radius 800 m dari pusatnya — itulah
+            yang dihitung skor Kepadatan tempat makan.
+          </p>
+        )}
       {/* Perbedaan ini WAJIB disebut: daftar ini isi heksagon, sedangkan skor
           Fasilitas menghitung radius 800 m dari pusatnya. Tanpa keterangan,
           kawasan berskor tinggi dengan daftar pendek terlihat seperti bug. */}

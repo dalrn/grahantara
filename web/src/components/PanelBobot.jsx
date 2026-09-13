@@ -82,13 +82,19 @@ export default function PanelBobot({
     }
   }, [bobot]);
 
-  // Satu poin = 1/12 bobot. Dikirim ke App sebagai satu objek dalam skala
-  // 0-100 yang sudah dipakainya, jadi mesin skor tidak berubah.
+  // Satu poin = 1/12 bobot, dikirim dalam skala 0-100 yang sudah dipakai App.
+  //
+  // JANGAN dibulatkan di sini. Pembulatan tiap dimensi membuat totalnya
+  // meleset dari 100 (mis. 5-4-1-1 -> 42+33+8+8 = 91), lalu panel kanan yang
+  // menormalisasi ulang atas total 91 menampilkan 46/36/9/9 sementara panel
+  // kiri menampilkan 42/33/8/8. Dua angka untuk bobot yang sama persis.
+  // Dengan pecahan utuh, w/sum(w) mengembalikan proporsi aslinya dan kedua
+  // panel selalu sepakat.
   const ubahAlokasi = (baru) => {
     setAlokasi(baru);
     const bobotBaru = {};
     for (const { kunci } of DIMENSI_UI) {
-      bobotBaru[kunci] = Math.round(((baru[kunci] ?? 0) / TOTAL_POIN) * 100);
+      bobotBaru[kunci] = ((baru[kunci] ?? 0) / TOTAL_POIN) * 100;
     }
     bobotTerakhir.current = bobotBaru;
     onBobotBerubah(bobotBaru);

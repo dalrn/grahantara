@@ -1588,6 +1588,11 @@ input[type="checkbox"] {
 }
 /* Kategori yang diminta pengguna: dibedakan warna DAN ketebalan, bukan
    warna saja. */
+.baris-ukur {
+  font-size: 11px;
+  font-weight: 400;
+  color: #7f9aa4;
+}
 .poi-lencana.is-sorot {
   background: rgba(255, 212, 0, 0.16);
   border-color: rgba(255, 212, 0, 0.5);
@@ -1717,10 +1722,6 @@ input[type="checkbox"] {
   font-variant-numeric: tabular-nums;
   color: #fff;
   white-space: nowrap;
-}
-.skor-pembanding {
-  font-size: 12px;
-  color: #94a3b8;
 }
 
 .panel-tabs {
