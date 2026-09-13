@@ -376,7 +376,11 @@ function BlokDimensi({
             DAFTAR TEMPAT, bukan hanya angka. "Apa saja dan di mana" adalah
             pertanyaan berikutnya yang pasti muncul. */}
         {kelompok.dimensi === "amenity" && h3Index && (
-          <DaftarPoi h3Index={h3Index} sorot={kategoriPoi} />
+          <DaftarPoi
+            h3Index={h3Index}
+            sorot={kategoriPoi}
+            jumlahRadius={indikator?.M1_kepadatan_makan?.nilai}
+          />
         )}
       </Collapse>
     </div>
@@ -435,9 +439,11 @@ export default function PanelKawasan({
   percakapanCache,
   simpanPercakapan,
 }) {
-  const [terbuka, setTerbuka] = useState(
-    () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
-  );
+  // Semua dimensi TERTUTUP saat panel dibuka: tab gabungan ini pertama-tama
+  // adalah daftar subskor, dan indikator penyusunnya muncul hanya bila
+  // dimensinya diklik. Membuka keempatnya sekaligus mengubur subskor di
+  // antara 16 baris indikator.
+  const [terbuka, setTerbuka] = useState(() => new Set());
 
   const [activeTab, setActiveTab] = useState("Ringkasan");
   // Satu toggle untuk SELURUH panel, bukan satu per baris.
@@ -529,7 +535,7 @@ export default function PanelKawasan({
         </button>
       </div>
       <div className="panel-tabs" role="tablist" aria-label="Detail kawasan">
-        {["Ringkasan", "Subskor", "16 Indikator"].map((tab) => (
+        {["Ringkasan", "Rincian skor"].map((tab) => (
           <button
             key={tab}
             role="tab"
@@ -574,9 +580,6 @@ export default function PanelKawasan({
               style={{ color: warnaTeksSkor(skorKini, ambangSkor) ?? undefined }}
             >
               {formatSkor(skorKini)}
-            </div>
-            <div className="skor-pembanding">
-              Skor bawaan {formatSkor(heksagon.skor)}
             </div>
             <BlokBobot judul="Bobot pilihanmu" daftar={daftarBobotKini} />
           </>
@@ -624,8 +627,9 @@ export default function PanelKawasan({
                 nilai ekstrem ke tengah. Tanpa keterangan ini, subskor 88 di
                 sebelah legenda yang berhenti di 75 terbaca seperti kesalahan. */}
             <p className="mt-2 text-xs leading-snug text-slate-500">
-              Subskor dinilai per dimensi, jadi rentangnya lebih lebar daripada
-              rentang skor gabungan di legenda peta.
+              Klik satu dimensi untuk melihat indikator penyusunnya. Subskor
+              dinilai per dimensi, jadi rentangnya lebih lebar daripada rentang
+              skor gabungan di legenda peta.
             </p>
             {KELOMPOK_INDIKATOR.map((kelompok) => (
               <BlokDimensi
@@ -639,7 +643,7 @@ export default function PanelKawasan({
                 h3Index={heksagon.h3_index}
                 kategoriPoi={kategoriPoi}
                 terbuka={
-                  activeTab === "16 Indikator" && terbuka.has(kelompok.dimensi)
+                  terbuka.has(kelompok.dimensi)
                 }
                 onToggle={() => toggle(kelompok.dimensi)}
               />

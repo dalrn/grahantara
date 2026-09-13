@@ -1,4 +1,4 @@
-import { NAMA_INDIKATOR, LABEL_SUMBER } from "../lib/kamus";
+import { NAMA_INDIKATOR, LABEL_SUMBER, KETERANGAN_UKUR } from "../lib/kamus";
 import { formatNilai } from "../lib/format";
 import { barisIndikator } from "../lib/bahasaIndikator";
 
@@ -62,7 +62,14 @@ export default function BarisIndikator({ kunci, data, angkaMentah = false }) {
           <Lencana teks="Estimasi" warna="bg-yellow-700/80 text-yellow-100" />
         )}
       </div>
-      <div className="mt-0.5 text-sm font-medium text-white">{utama}</div>
+      <div className="mt-0.5 text-sm font-medium text-white">
+        {utama}
+        {/* Dari mana jaraknya diukur. Tanpa ini "483 m" ambigu: dari kos? dari
+            tepi kawasan? Selisihnya ratusan meter di sel selebar ~380 m. */}
+        {KETERANGAN_UKUR[kunci] && (
+          <span className="baris-ukur"> {KETERANGAN_UKUR[kunci]}</span>
+        )}
+      </div>
       {konteks && <div className="text-xs text-slate-400">{konteks}</div>}
       {angkaMentah && (
         <div className="mt-0.5 text-xs text-slate-500">

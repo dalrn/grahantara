@@ -154,8 +154,15 @@ export default function AlokasiPoin({
     onUbah({ ...alokasiBawaan });
   };
 
+  // Persen dibagi POIN TERPAKAI, bukan TOTAL_POIN.
+  //
+  // Skor memakai bobot RELATIF (w/sum w), jadi selama masih ada poin tersisa,
+  // membagi dengan 12 memberi angka yang bukan bobot sebenarnya: alokasi
+  // 5-4-1-1 (11 poin) tampil 42/33/8/8 di sini sementara panel kawasan
+  // menghitung 45/36/9/9. Dua angka untuk bobot yang sama persis. Yang benar
+  // adalah porsi efektifnya, dan itulah yang dipakai mewarnai peta.
   const persen = (k) =>
-    terpakai > 0 ? Math.round(((nilai[k] ?? 0) / TOTAL_POIN) * 100) : 0;
+    terpakai > 0 ? Math.round(((nilai[k] ?? 0) / terpakai) * 100) : 0;
 
   const samaDenganBawaan =
     alokasiBawaan &&

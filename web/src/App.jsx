@@ -153,6 +153,24 @@ export default function App() {
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  // Escape membersihkan pin yang dijatuhkan pengguna, sekaligus menutup
+  // panel rutenya. Pin adalah satu-satunya objek yang dibuat pengguna di
+  // peta, jadi ia butuh cara membatalkan yang tidak menuntut membidik tombol
+  // kecil. Escape tidak menyentuh pilihan kawasan atau mode banding: keduanya
+  // sudah punya tombol tutupnya sendiri yang jelas.
+  useEffect(() => {
+    const padaTombol = (e) => {
+      if (e.key !== "Escape") return;
+      if (!pinJatuh) return;
+      setPinJatuh(null);
+      setKosRute(null);
+      setRute(null);
+      setGerbangRute(null);
+    };
+    window.addEventListener("keydown", padaTombol);
+    return () => window.removeEventListener("keydown", padaTombol);
+  }, [pinJatuh]);
+
   const klikBanding = (props) => {
     setGalatBanding(null);
     setHasilBanding(null);
@@ -363,7 +381,11 @@ export default function App() {
     return setBobot(() => {
       const hasil = {};
       for (const k of DIMENSI_KUNCI) {
-        hasil[k] = Math.max(0, Math.min(100, Math.round(baru[k] ?? 0)));
+        // TIDAK dibulatkan: bobot dipakai sebagai proporsi (w/sum(w)), dan
+        // pembulatan per dimensi membuat totalnya meleset dari 100 sehingga
+        // panel kiri dan panel kanan menampilkan dua angka berbeda untuk
+        // bobot yang sama. Pembulatan hanya boleh terjadi saat DITAMPILKAN.
+        hasil[k] = Math.max(0, Math.min(100, baru[k] ?? 0));
       }
       return hasil;
     });
