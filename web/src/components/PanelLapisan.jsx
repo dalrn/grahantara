@@ -1,4 +1,5 @@
 import { WARNA_KELAS } from "../config";
+import { adalahSentuh, pintasBandingKos } from "../lib/perangkat";
 
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 
@@ -50,11 +51,14 @@ export default function PanelLapisan({
               </label>
             );
           })}
+          {/* Jalan pintas disebut sesuai PERANGKAT, tidak keduanya sekaligus.
+              Jalan yang selalu terlihat disebut lebih dulu: tombol di dalam
+              panel kos, bukan kombinasi tombol. */}
           {lapisanAktif.kos && (
             <p className="pt-2 text-xs text-slate-400">
-              Pin rumah menandai kos; warnanya mengikuti skor kawasan. Ctrl+klik
-              untuk membandingkan. Di HP, tekan lama pin kos atau gunakan tombol
-              di detail kos.
+              Pin rumah menandai kos; warnanya mengikuti skor kawasan. Klik satu
+              pin, lalu pakai tombol &ldquo;Bandingkan kos ini&rdquo; di
+              panelnya. Pintasan: {pintasBandingKos(adalahSentuh())}.
             </p>
           )}
         </div>

@@ -1,5 +1,11 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
-import { NAMA_DIMENSI } from "./_namaDimensi.js";
+import {
+  NAMA_DIMENSI,
+  KELOMPOK_NAMA,
+  BOBOT_INDIKATOR_NAMA,
+} from "./_namaDimensi.js";
+import { temuanKawasan } from "./_temuan.js";
+import { kalimatKonteks, kalimatTemuan } from "./_kalimatTemuan.js";
 
 
 function validasiBentuk(j) {
@@ -84,6 +90,15 @@ export default async function handler(req, res) {
     return `${ik.nama}: ${label}${peringkat}${estimasi}`;
   }).join("\n");
 
+  const { konteks, temuan } = temuanKawasan({
+    subskor: sub,
+    dimensiKosong: [...kosong],
+    bobot: b.bobot,
+    indikator: b.indikator,
+    kelompok: KELOMPOK_NAMA,
+    bobotIndikator: BOBOT_INDIKATOR_NAMA,
+  });
+
   const pengguna = [
     `Skor total: ${Math.round(b.skor)}`,
     `Subskor: ${wajibSub.map((k) => kosong.has(k)
@@ -92,6 +107,12 @@ export default async function handler(req, res) {
     `Bobot: ${wajibSub.filter((k) => !kosong.has(k))
       .map((k) => `${NAMA_DIMENSI[k]} ${b.bobot?.[k] ?? "-"}`).join(" | ") || "-"}`,
     `Indikator:\n${barisIndikator}`,
+    `\nPosisi tiap dimensi di seluruh wilayah studi (konteks):\n${
+      konteks.map(kalimatKonteks).join("\n") || "-"
+    }`,
+    `\nTEMUAN (sudah dihitung, salin apa adanya):\n${
+      temuan.map(kalimatTemuan).join("\n") || "(tidak ada temuan menonjol)"
+    }`,
   ].join("\n");
 
   const sistem = `Kamu penjelas skor kelayakan hunian kos untuk mahasiswa di Sleman, DIY.
@@ -104,16 +125,27 @@ Bentuk keluaran:
 }
 Tepat dua kekuatan dan tepat satu kelemahan.
 ATURAN:
-- Setiap kalimat WAJIB menyebut nama indikator atau nama dimensi yang
-  diberikan, apa adanya.
+- Setiap kalimat WAJIB berlabuh pada TEMUAN atau indikator yang diberikan.
+  Kalimat yang menyampaikan sebuah temuan TIDAK perlu menyebut nama
+  indikator — cukup menyampaikan isi temuannya.
+- Utamakan menyampaikan TEMUAN. Bagian "Indikator" dan "konteks" hanya
+  bahan pendukung; menyebut ulang angkanya tanpa menambah makna tidak
+  berguna bagi pembaca yang sudah melihat panel.
 - DILARANG memulai kalimat dengan kata "Indikator".
 - DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya,
   misalnya "lebih teduh daripada sebagian besar kawasan lain".
 - DILARANG menyebut angka berdesimal. Bulatkan, atau lebih baik pakai
   kata-kata.
 - Maksimal dua kalimat per butir.
-- HANYA boleh memakai angka yang ada di data yang diberikan. DILARANG
-  menghitung, menaksir, atau mengarang angka baru.
+- DILARANG menghitung sendiri. SELURUH perbandingan besaran, selisih, dan
+  posisi relatif SUDAH dihitung dan diberikan sebagai temuan atau konteks.
+  Kamu menyalin temuan, bukan menghitungnya. Angka yang tidak ada di data
+  yang diberikan DILARANG dipakai.
+- Bila ada temuan bertanda KONFLIK PRIORITAS, temuan itu WAJIB muncul di
+  kalimat ringkas.
+- Bila sebuah keunggulan ditandai bertumpu pada satu indikator, atau
+  berasal dari angka taksiran, sebutkan keterbatasan itu DI KALIMAT YANG
+  SAMA — jangan dipisah jadi kalimat sendiri.
 - DILARANG menyebut indikator yang bertanda "tidak tersedia" sebagai
   kekuatan atau kelemahan. Boleh disebut sebagai keterbatasan data.
 - Dimensi bertanda "tidak tersedia, dikeluarkan dari perhitungan skor"
