@@ -51,6 +51,13 @@ export function kalimatTemuan(t) {
     case JENIS.UNGGUL_DARI_TAKSIRAN:
       return `- KEUNGGULAN DARI TAKSIRAN: keunggulan Kawasan ${t.kawasan} pada ${t.nama} disumbang ${t.indikator.join(", ")}, yang nilainya ditaksir model, bukan diukur langsung.`;
 
+    case JENIS.BUKTI_LAPANGAN: {
+      const bagian = [];
+      if (t.tempat) bagian.push(`${t.tempat} titik tempat`);
+      if (t.ruasJalan) bagian.push(`${t.ruasJalan} ruas jalan`);
+      return `- DIKUNJUNGI TIM: kawasan ini termasuk yang disurvei langsung di lapangan (${bagian.join(" dan ")}, ${t.foto} foto). Angkanya tetap dari data yang sama, tetapi kondisinya sempat diperiksa langsung.`;
+    }
+
     default:
       return `- ${JSON.stringify(t)}`;
   }

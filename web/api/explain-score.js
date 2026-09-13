@@ -91,6 +91,7 @@ export default async function handler(req, res) {
   }).join("\n");
 
   const { konteks, temuan } = temuanKawasan({
+    h3Index: b.h3_index,
     subskor: sub,
     dimensiKosong: [...kosong],
     bobot: b.bobot,
@@ -143,6 +144,11 @@ ATURAN:
   yang diberikan DILARANG dipakai.
 - Bila ada temuan bertanda KONFLIK PRIORITAS, temuan itu WAJIB muncul di
   kalimat ringkas.
+- Temuan bertanda DIKUNJUNGI TIM DILARANG dijadikan kekuatan maupun
+  kelemahan, dan DILARANG disebut sebagai alasan skornya tinggi atau rendah.
+  Kawasan yang disurvei tidak lebih baik daripada yang tidak; skornya
+  dihitung dari data yang sama. Boleh disebut sekali pada kalimat ringkas
+  sebagai keterangan bahwa kondisinya sempat diperiksa langsung.
 - Bila sebuah keunggulan ditandai bertumpu pada satu indikator, atau
   berasal dari angka taksiran, sebutkan keterbatasan itu DI KALIMAT YANG
   SAMA, jangan dipisah jadi kalimat sendiri.

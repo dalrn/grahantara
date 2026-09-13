@@ -382,6 +382,43 @@ uji("urutan temuan menimbang DAMPAK, bukan hanya kelangkaan", () => {
   assert.ok(DAMPAK_PER_SD.connectivity > DAMPAK_PER_SD.walkability);
 });
 
+uji("BUKTI LAPANGAN muncul untuk heksagon yang disurvei", () => {
+  // h3 ini ada di aktivitas.json dengan 6 titik tempat dan 13 foto.
+  const t = semuaKawasan({
+    h3Index: "898d8c16137ffff",
+    subskor: { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 },
+    bobot: BOBOT_RATA,
+    indikator: indikatorSeragam(0.5),
+    kelompok: kel,
+  });
+  const r = t.semuaTemuan.find((x) => x.jenis === JENIS.BUKTI_LAPANGAN);
+  assert.ok(r, "temuan bukti lapangan tidak muncul");
+  assert.ok(r.total > 0 && r.foto > 0, `dapat ${JSON.stringify(r)}`);
+});
+
+uji("heksagon tanpa survei TIDAK memunculkan bukti lapangan", () => {
+  const t = semuaKawasan({
+    h3Index: "890000000000000",
+    subskor: { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 },
+    bobot: BOBOT_RATA,
+    indikator: indikatorSeragam(0.5),
+    kelompok: kel,
+  });
+  assert.equal(
+    t.semuaTemuan.filter((x) => x.jenis === JENIS.BUKTI_LAPANGAN).length, 0,
+    "98,4% kawasan tidak disurvei; ketiadaannya harus diam, bukan jadi temuan",
+  );
+});
+
+uji("bukti lapangan berprioritas paling rendah", () => {
+  // Temuan yang menggerakkan peringkat harus menang atas bukti lapangan.
+  const dipilih = pilihTemuan([
+    { jenis: JENIS.BUKTI_LAPANGAN, total: 9, tempat: 9, ruasJalan: 0, foto: 20 },
+    { jenis: JENIS.KONFLIK_PRIORITAS, dimensi: "connectivity", nama: "C", persentil: 10, bobot: 50 },
+  ], 1);
+  assert.equal(dipilih[0].jenis, JENIS.KONFLIK_PRIORITAS);
+});
+
 uji("ambang tersedia sebagai konstanta bernama", () => {
   for (const k of [
     "DIMENSI_TINGGI", "DIMENSI_RENDAH", "INDIKATOR_TINGGI", "INDIKATOR_RENDAH",

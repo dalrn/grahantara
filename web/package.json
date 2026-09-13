@@ -15,6 +15,7 @@
     "test:petunjuk": "node tests/test-petunjuk.mjs",
     "buat:sebaran": "node scripts/buat_sebaran.mjs",
     "buat:poi": "python scripts/buat_poi.py",
+    "buat:aktivitas": "python scripts/buat_aktivitas.py",
     "test:ui": "node tests/ui-interactions.mjs && node tests/map-symbols-comparison.mjs",
     "test:ui:edge": "node tests/ui-edge-cases.mjs"
   },

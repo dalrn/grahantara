@@ -1,6 +1,7 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
 import { NAMA_DIMENSI, KELOMPOK_NAMA } from "./_namaDimensi.js";
 import { temuanBanding } from "./_temuan.js";
+import { aktivitasHeksagon } from "./_aktivitas.js";
 import { kalimatTemuan } from "./_kalimatTemuan.js";
 
 const DIMENSI = Object.keys(NAMA_DIMENSI);
@@ -182,6 +183,11 @@ export default async function handler(req, res) {
     const adaB = ib.tersedia ?? (ib.sumber !== "tidak_tersedia" && ib.nilai != null);
     garis.push(barisData(ia.nama, ia, ib, !adaA && !adaB));
   }
+  // Bukti lapangan hanya disebut bila TIMPANG. Kalau keduanya disurvei atau
+  // keduanya tidak, informasinya tidak membedakan apa pun.
+  const buktiA = aktivitasHeksagon(b.a.h3_index);
+  const buktiB = aktivitasHeksagon(b.b.h3_index);
+
   const { temuan } = temuanBanding({
     a: b.a,
     b: b.b,
@@ -192,6 +198,13 @@ export default async function handler(req, res) {
     garis.push("");
     garis.push("TEMUAN (sudah dihitung, salin apa adanya):");
     for (const t of temuan) garis.push(kalimatTemuan(t));
+  }
+  if (Boolean(buktiA) !== Boolean(buktiB)) {
+    const sisi = buktiA ? "A" : "B";
+    const n = (buktiA ?? buktiB).total;
+    garis.push(
+      `- DIKUNJUNGI TIM: hanya Kawasan ${sisi} yang disurvei langsung di lapangan (${n} aktivitas). Ini TIDAK membuatnya lebih baik; skor kedua kawasan dihitung dari data yang sama.`,
+    );
   }
 
   const pengguna = `Bobot yang dipakai: ${DIMENSI.map((d) => `${NAMA_DIMENSI[d]} ${b.bobot?.[d] ?? "-"}`).join(" | ")}\n\nKawasan A: h3 ${b.a.h3_index} | Kawasan B: h3 ${b.b.h3_index}\n\n${garis.join("\n")}`;
@@ -224,6 +237,8 @@ ATURAN:
   data yang diberikan DILARANG dipakai.
 - Bila ada temuan bertanda PEMENANG KALAH DI PRIORITAS, temuan itu WAJIB
   muncul di "simpulan".
+- Temuan bertanda DIKUNJUNGI TIM DILARANG dijadikan keunggulan salah satu
+  kawasan. Disurvei atau tidak sama sekali tidak memengaruhi skor.
 - Bila ada temuan bertanda KEDUA KAWASAN PRAKTIS SETARA, JANGAN menonjolkan
   pemenang. Sarankan memilih berdasarkan hal di luar cakupan analisis ini,
   misalnya kondisi bangunan atau kecocokan pribadi.

@@ -4,6 +4,7 @@
  */
 import { SEBARAN, KUANTIL } from "./_sebaran.js";
 import { NAMA_DIMENSI } from "./_namaDimensi.js";
+import { aktivitasHeksagon } from "./_aktivitas.js";
 
 const DIMENSI = Object.keys(NAMA_DIMENSI);
 
@@ -65,6 +66,7 @@ export const JENIS = {
   PEMENANG_KALAH_PRIORITAS: "pemenang_kalah_prioritas",
   UNGGUL_SATU_INDIKATOR: "unggul_satu_indikator",
   UNGGUL_DARI_TAKSIRAN: "unggul_dari_taksiran",
+  BUKTI_LAPANGAN: "bukti_lapangan",
 };
 
 /**
@@ -140,6 +142,7 @@ const PRIORITAS_JENIS = {
   [JENIS.BERGANTUNG_TAKSIRAN]: 2,
   [JENIS.UNGGUL_DARI_TAKSIRAN]: 2,
   [JENIS.SEBARAN_TERBELAH]: 3,
+  [JENIS.BUKTI_LAPANGAN]: 4,
 };
 
 /**
@@ -184,7 +187,7 @@ export function pilihTemuan(semua, maks = AMBANG.MAKS_TEMUAN) {
  * `kelompok` memetakan dimensi -> daftar nama indikator penyusunnya, supaya
  * modul ini tidak perlu tahu urutan internal larik indikator.
  */
-export function temuanKawasan({ subskor, dimensiKosong = [], bobot, indikator = [], kelompok, bobotIndikator }) {
+export function temuanKawasan({ h3Index, subskor, dimensiKosong = [], bobot, indikator = [], kelompok, bobotIndikator }) {
   const temuan = [];
   const kosong = new Set(dimensiKosong);
   const posisi = {};
@@ -307,6 +310,19 @@ export function temuanKawasan({ subskor, dimensiKosong = [], bobot, indikator = 
         });
       }
     }
+  }
+
+  // Kawasan yang benar-benar dikunjungi tim. Hanya 1,6% wilayah studi punya
+  // ini, jadi ketiadaannya normal dan tidak dilaporkan sebagai kekurangan.
+  const bukti = aktivitasHeksagon(h3Index);
+  if (bukti) {
+    temuan.push({
+      jenis: JENIS.BUKTI_LAPANGAN,
+      total: bukti.total,
+      tempat: bukti.tempat ?? 0,
+      ruasJalan: bukti.ruas_jalan ?? 0,
+      foto: bukti.foto ?? 0,
+    });
   }
 
   return { konteks, temuan: pilihTemuan(temuan), semuaTemuan: temuan };
