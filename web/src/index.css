@@ -1601,6 +1601,19 @@ input[type="checkbox"] {
 }
 /* Kategori yang diminta pengguna: dibedakan warna DAN ketebalan, bukan
    warna saja. */
+.sig-label {
+  display: block;
+  font-size: 10px;
+  color: #7f9aa4;
+}
+.catatan-daftar {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.catatan-daftar li {
+  margin: 2px 0;
+}
 .baris-ukur {
   font-size: 11px;
   font-weight: 400;

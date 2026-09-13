@@ -16,7 +16,11 @@ import {
   hitungSemua,
   logSubskorDitekan,
 } from "./lib/mesinSkor";
-import { PENEKANAN, DIMENSI_PENEKANAN } from "./config";
+import {
+  PENEKANAN,
+  DIMENSI_PENEKANAN,
+  PENEKANAN_KATEGORI,
+} from "./config";
 import { DEFINISI_LAPISAN } from "./lib/lapisan";
 import { KELOMPOK_INDIKATOR, NAMA_INDIKATOR, DIMENSI_UI } from "./lib/kamus";
 import { muatanIndikatorAI } from "./lib/bahasaIndikator";
@@ -443,9 +447,17 @@ export default function App() {
             onProfil={(profil) => {
               setProfilTerakhir(profil);
               setBobot(skorProfilKeBobot(profil, bobotBawaan));
-              setPenekanan(profil?.penekanan ?? null);
-              setKategoriPoi(
-                Array.isArray(profil?.kategoriPoi) ? profil.kategoriPoi : [],
+              const kat = Array.isArray(profil?.kategoriPoi)
+                ? profil.kategoriPoi
+                : [];
+              setKategoriPoi(kat);
+              // Kalau AI tidak menyimpulkan penekanan tapi pengguna menyebut
+              // jenis tempat tertentu, turunkan penekanannya dari kategori
+              // itu. Tanpa ini "dekat apotek" hanya mengubah daftar di panel
+              // dan sama sekali tidak menggeser peta.
+              setPenekanan(
+                profil?.penekanan ??
+                  (kat.length ? (PENEKANAN_KATEGORI[kat[0]] ?? null) : null),
               );
               setFokusPeta(fokusDariProfil(profil));
               if (!pitaPernahTampil) {

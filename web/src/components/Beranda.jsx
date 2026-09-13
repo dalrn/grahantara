@@ -103,7 +103,7 @@ export default function Beranda({
   const [tidakTerbaca, setTidakTerbaca] = useState([]);
   const [ringkasAI, setRingkasAI] = useState(null);
   // Bagian kebutuhan yang TIDAK tertampung kontrol lain. Bukan seluruh prompt.
-  const [catatanEkstra, setCatatanEkstra] = useState(null);
+  const [catatanEkstra, setCatatanEkstra] = useState([]);
   // Penekanan antar-indikator dari AI-1, mis. "makan" untuk pengguna yang
   // bilang fasilitas lain tidak penting.
   const [penekanan, setPenekanan] = useState(null);
@@ -204,7 +204,14 @@ export default function Beranda({
       if (dipilih.length === 0) luput.push("prioritas");
       setTidakTerbaca(luput);
       setRingkasAI(hasil.ringkas ?? null);
-      setCatatanEkstra(hasil.catatanEkstra ?? null);
+      // Larik; bentuk lama (string tunggal) tetap diterima.
+      setCatatanEkstra(
+        Array.isArray(hasil.catatanEkstra)
+          ? hasil.catatanEkstra
+          : hasil.catatanEkstra
+            ? [hasil.catatanEkstra]
+            : [],
+      );
       setPenekanan(hasil.penekanan ?? null);
       setKategoriPoi(Array.isArray(hasil.kategoriPoi) ? hasil.kategoriPoi : []);
     } else {
@@ -259,6 +266,7 @@ export default function Beranda({
       ringkas: ringkasAI,
       penekanan,
       kategoriPoi,
+      catatanEkstra,
       sumber: "beranda",
       teks: teks.trim(),
       // Dibaca App untuk memberi tahu peta apa yang dipilih di beranda.
@@ -532,12 +540,16 @@ export default function Beranda({
                       Mengulang seluruh catatan membuat pengguna membaca hal
                       yang sama dua kali: kampus, anggaran, dan prioritas
                       sudah punya kontrolnya sendiri. */}
-                  {catatanEkstra && (
+                  {catatanEkstra.length > 0 && (
                     <div className="bidang">
                       <span className="bidang-label">
                         {TEKS.form.konfirmasi.catatanmu}
                       </span>
-                      <p className="catatan-asli">{catatanEkstra}</p>
+                      <ul className="catatan-asli catatan-daftar">
+                        {catatanEkstra.map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>

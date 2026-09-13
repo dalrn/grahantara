@@ -67,7 +67,7 @@ function fallback(teks, msLatensi) {
     // Tanpa AI, memisahkan bagian "ekstra" dari teks bebas tidak bisa
     // dilakukan andal. Lebih baik tidak menampilkan catatan sama sekali
     // daripada menampilkan seluruh prompt lagi.
-    catatanEkstra: null,
+    catatanEkstra: [],
     penekanan: null,
     kategoriPoi,
     sumber: "fallback",
@@ -97,10 +97,18 @@ function validasiKetat(raw, msLatensi) {
     anggaran = raw.anggaran;
   }
   const ringkas = typeof raw?.ringkas === "string" ? raw.ringkas.slice(0, 200) : "";
-  const catatanEkstra =
-    typeof raw?.catatanEkstra === "string" && raw.catatanEkstra.trim()
-      ? raw.catatanEkstra.trim().slice(0, 120)
-      : null;
+  // Larik, bukan satu frasa: satu kalimat pengguna sering memuat beberapa
+  // syarat sekaligus ("tempat makan saja yang penting" DAN "10 menit ke
+  // kampus"), dan memaksanya jadi satu frasa membuat sisanya hilang diam-diam.
+  // Bentuk lama (string) tetap diterima supaya respons lama tidak pecah.
+  const catatanEkstra = (() => {
+    const r = raw?.catatanEkstra;
+    const bersih = (x) =>
+      typeof x === "string" && x.trim() ? x.trim().slice(0, 120) : null;
+    if (Array.isArray(r)) return r.map(bersih).filter(Boolean).slice(0, 4);
+    const satu = bersih(r);
+    return satu ? [satu] : [];
+  })();
   const PENEKANAN_SAH = new Set(["makan", "layanan", "transit"]);
   const penekanan = PENEKANAN_SAH.has(raw?.penekanan) ? raw.penekanan : null;
   // Kategori tempat yang disebut spesifik. Terpisah dari `penekanan` karena
@@ -142,7 +150,7 @@ Bentuk keluaran:
   "bobot": { "connectivity": <0-100>, "affordability": <0-100>,
              "amenity": <0-100>, "walkability": <0-100> },
   "ringkas": "<satu kalimat Indonesia, maksimal 20 kata>",
-  "catatanEkstra": "<lihat aturan di bawah, atau null>",
+  "catatanEkstra": ["<lihat aturan di bawah, boleh kosong>"],
   "penekanan": "<salah satu: makan, layanan, transit, atau null>",
   "kategoriPoi": ["<kategori tempat yang DISEBUT SPESIFIK, boleh kosong>"]
 }
@@ -161,14 +169,24 @@ Bila anggaran tidak disebut, isi null. Jangan menebak angka.
 kampus, anggaran, maupun bobot dimensi. Kartu konfirmasi sudah menampilkan
 ketiganya lewat kontrolnya sendiri, jadi mengulanginya di catatan hanya
 membuat pengguna membaca dua kali.
-  - Ringkas jadi satu frasa pendek, maksimal 12 kata, huruf kecil.
+  - LARIK, satu frasa per butir, tiap butir maksimal 12 kata, huruf kecil.
+    Ambil SEMUA yang memenuhi syarat, jangan berhenti di satu.
   - DILARANG menyebut ulang nama kampus, angka anggaran, atau dimensi yang
     sudah tercermin di bobot.
-  - Yang layak masuk: penekanan yang lebih spesifik daripada nama dimensi
-    (misalnya "yang penting banyak tempat makan" saat pengguna bilang
-    fasilitas lain tidak penting), batasan waktu tempuh, atau syarat lain
-    yang tidak punya kontrol sendiri.
-  - Bila seluruh kebutuhannya sudah tertampung kontrol, isi null.
+  - Yang layak masuk: penekanan yang lebih spesifik daripada nama dimensi,
+    batasan waktu tempuh, atau syarat lain yang tidak punya kontrol sendiri.
+  - Larik kosong bila seluruh kebutuhannya sudah tertampung kontrol.
+
+Contoh lengkap. Masukan:
+  "maba UGM, budget sekitar 1 juta maksimal, sekitar banyak tempat makan saja
+   yang penting (tidak apa apa kalau sedikit fasilitas lainnya), dan kalau
+   bisa terjangkau kampus dalam 10 menit"
+catatanEkstra yang BENAR:
+  ["fasilitas yang penting hanya tempat makan", "maksimal 10 menit ke kampus"]
+DUA butir, bukan satu. "UGM" dan "1 juta" tidak masuk karena sudah jadi
+kampus dan anggaran. Penekanan tempat makan MASUK karena lebih spesifik
+daripada sekadar menaikkan bobot Fasilitas — pengguna justru mengecilkan
+apotek dan minimarket di dalam dimensi yang sama.
 
 "penekanan" dipakai bila pengguna menyebut SATU hal spesifik di dalam sebuah
 dimensi dan mengecilkan sisanya. Tanpa ini, "yang penting banyak tempat
