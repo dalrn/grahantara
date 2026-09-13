@@ -43,3 +43,37 @@ export const BOBOT_INDIKATOR = {
   W5_tekanan_lalin: 0.15,
   W6_integritas_jalur: 0.2,
 };
+
+// Penekanan antar-indikator DI DALAM satu dimensi, dipilih AI-1 dari kalimat
+// pengguna. Nilainya pengali bobot indikator, bukan bobot itu sendiri.
+//
+// Alasannya: "yang penting banyak tempat makan, fasilitas lain tidak
+// penting" sebelumnya hanya menaikkan seluruh dimensi Fasilitas — termasuk
+// apotek dan minimarket yang justru dikecilkan pengguna. Terukur: 20 kawasan
+// teratas berubah 60% antara bobot campuran dan penekanan tempat makan.
+export const PENEKANAN = {
+  makan: {
+    M1_kepadatan_makan: 2.5,
+    M2_keragaman: 1.5,
+    M3_keramaian: 0.5,
+    M4_layanan_harian: 0.2,
+  },
+  layanan: {
+    M1_kepadatan_makan: 0.3,
+    M2_keragaman: 0.3,
+    M4_layanan_harian: 3,
+  },
+  transit: {
+    C1_jarak_halte: 2,
+    C2_rute_unik: 1.5,
+    C3_keterjangkauan_kampus: 1.5,
+    C4_jarak_krl: 0.2,
+  },
+};
+
+// Dimensi yang disentuh tiap penekanan.
+export const DIMENSI_PENEKANAN = {
+  makan: "amenity",
+  layanan: "amenity",
+  transit: "connectivity",
+};
