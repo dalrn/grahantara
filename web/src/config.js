@@ -77,3 +77,17 @@ export const DIMENSI_PENEKANAN = {
   layanan: "amenity",
   transit: "connectivity",
 };
+
+// Kategori POI yang DISOROT untuk tiap penekanan, dipakai daftar tempat di
+// panel kawasan.
+//
+// Bobot indikator saja tidak cukup menjawab "dekat apotek": M4 layanan harian
+// adalah SATU indikator gabungan (apotek + minimarket + warung), jadi
+// menaikkan bobotnya menaikkan ketiganya sekaligus. Yang bisa dibedakan
+// adalah daftar tempatnya — di situ apotek, minimarket, dan warung memang
+// tercatat terpisah. Jadi penekanan menentukan kategori mana yang tampil
+// lebih dulu dan tidak terpotong oleh batas daftar.
+export const SOROT_POI = {
+  makan: ["makan"],
+  layanan: ["apotek", "minimarket", "warung"],
+};

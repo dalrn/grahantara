@@ -1586,6 +1586,20 @@ input[type="checkbox"] {
   gap: 5px;
   margin-bottom: 8px;
 }
+/* Kategori yang diminta pengguna: dibedakan warna DAN ketebalan, bukan
+   warna saja. */
+.poi-lencana.is-sorot {
+  background: rgba(255, 212, 0, 0.16);
+  border-color: rgba(255, 212, 0, 0.5);
+  color: #ffe066;
+  font-weight: 700;
+}
+.poi-catatan--sorot {
+  color: #cbb26a;
+}
+.poi-catatan--nihil {
+  color: #d8a0a0;
+}
 .poi-lencana {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);

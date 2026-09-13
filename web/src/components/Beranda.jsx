@@ -107,6 +107,9 @@ export default function Beranda({
   // Penekanan antar-indikator dari AI-1, mis. "makan" untuk pengguna yang
   // bilang fasilitas lain tidak penting.
   const [penekanan, setPenekanan] = useState(null);
+  // Jenis tempat yang disebut spesifik ("dekat apotek"), dipakai panel
+  // kawasan untuk menampilkan tempat itu lebih dulu.
+  const [kategoriPoi, setKategoriPoi] = useState([]);
   const [pesanBaca, setPesanBaca] = useState(null);
   // Nama dimensi yang cakupannya belum penuh, dilaporkan SebaranDimensi dari
   // data. Dipakai kalimat cakupan di bawah grafik.
@@ -203,6 +206,7 @@ export default function Beranda({
       setRingkasAI(hasil.ringkas ?? null);
       setCatatanEkstra(hasil.catatanEkstra ?? null);
       setPenekanan(hasil.penekanan ?? null);
+      setKategoriPoi(Array.isArray(hasil.kategoriPoi) ? hasil.kategoriPoi : []);
     } else {
       setTidakTerbaca([]);
       setRingkasAI(null);
@@ -254,6 +258,7 @@ export default function Beranda({
       bobot: bobotFinal(),
       ringkas: ringkasAI,
       penekanan,
+      kategoriPoi,
       sumber: "beranda",
       teks: teks.trim(),
       // Dibaca App untuk memberi tahu peta apa yang dipilih di beranda.

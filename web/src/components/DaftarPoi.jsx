@@ -42,7 +42,12 @@ const LABEL = {
 };
 const URUTAN = ["makan", "warung", "minimarket", "apotek"];
 
-export default function DaftarPoi({ h3Index }) {
+/**
+ * `sorot` = kategori yang disebut pengguna secara spesifik ("dekat apotek").
+ * Kategori itu ditampilkan LEBIH DULU dan tidak boleh terpotong batas daftar:
+ * pengguna yang mencari apotek tidak terbantu oleh lima warung.
+ */
+export default function DaftarPoi({ h3Index, sorot = [] }) {
   const [data, setData] = useState(cachePoi);
   const [galat, setGalat] = useState(false);
   const [semua, setSemua] = useState(false);
@@ -85,20 +90,55 @@ export default function DaftarPoi({ h3Index }) {
   const perKategori = {};
   for (const r of daftar) (perKategori[r.k] ??= []).push(r);
 
+  // Kategori yang diminta pengguna naik ke atas. Tanpa ini, "dekat apotek"
+  // bisa menampilkan lima tempat makan dan menyembunyikan satu-satunya
+  // apotek di bawah tombol "tampilkan lainnya".
+  const disorot = sorot.filter((k) => perKategori[k]?.length);
+  const tidakAda = sorot.filter((k) => !perKategori[k]?.length);
+  const urut = disorot.length
+    ? [
+        ...daftar.filter((r) => disorot.includes(r.k)),
+        ...daftar.filter((r) => !disorot.includes(r.k)),
+      ]
+    : daftar;
+
   // Tampilkan lima lebih dulu. Satu heksagon bisa memuat 28 titik, dan daftar
-  // sepanjang itu mengubur sisa panel.
+  // sepanjang itu mengubur sisa panel. Bila ada kategori yang disorot,
+  // batasnya melebar supaya SELURUH tempat kategori itu muat.
   const BATAS = 5;
-  const tampil = semua ? daftar : daftar.slice(0, BATAS);
+  const batasEfektif = disorot.length
+    ? Math.max(BATAS, daftar.filter((r) => disorot.includes(r.k)).length)
+    : BATAS;
+  const tampil = semua ? urut : urut.slice(0, batasEfektif);
 
   return (
     <div className="poi-daftar">
       <div className="poi-ringkas">
         {URUTAN.filter((k) => perKategori[k]?.length).map((k) => (
-          <span key={k} className="poi-lencana">
+          <span
+            key={k}
+            className={`poi-lencana${disorot.includes(k) ? " is-sorot" : ""}`}
+          >
             {perKategori[k].length} {LABEL[k].toLowerCase()}
           </span>
         ))}
       </div>
+      {/* Sebut alasannya, supaya urutan yang berbeda tidak terasa acak. */}
+      {disorot.length > 0 && (
+        <p className="poi-catatan poi-catatan--sorot">
+          {disorot.map((k) => LABEL[k].toLowerCase()).join(" dan ")} ditampilkan
+          lebih dulu sesuai yang kamu cari.
+        </p>
+      )}
+      {/* Yang dicari TIDAK ADA di kawasan ini: katakan langsung. Membiarkan
+          pengguna memindai daftar untuk menemukan bahwa apoteknya nihil jauh
+          lebih buruk daripada satu kalimat. */}
+      {tidakAda.length > 0 && (
+        <p className="poi-catatan poi-catatan--nihil">
+          Tidak ada {tidakAda.map((k) => LABEL[k].toLowerCase()).join(" dan ")} yang
+          tercatat di dalam kawasan ini.
+        </p>
+      )}
       <ul>
         {tampil.map((r, i) => (
           <li key={`${r.n}-${i}`}>
@@ -111,7 +151,7 @@ export default function DaftarPoi({ h3Index }) {
           </li>
         ))}
       </ul>
-      {daftar.length > BATAS && (
+      {daftar.length > batasEfektif && (
         <button
           type="button"
           className="poi-lainnya"
@@ -119,7 +159,7 @@ export default function DaftarPoi({ h3Index }) {
         >
           {semua
             ? "Tampilkan lebih sedikit"
-            : `Tampilkan ${daftar.length - BATAS} tempat lainnya`}
+            : `Tampilkan ${daftar.length - batasEfektif} tempat lainnya`}
         </button>
       )}
       {/* Perbedaan ini WAJIB disebut: daftar ini isi heksagon, sedangkan skor
