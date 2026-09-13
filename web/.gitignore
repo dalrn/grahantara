@@ -12,3 +12,4 @@ dev_server.log
 
 # Artefak verifikasi UI (web/tests/)
 test-results/
+.vercel

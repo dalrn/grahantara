@@ -26,48 +26,67 @@ function daftarKosong(x) {
   return new Set();
 }
 
-function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
+// Muatan AI-2 dipakai bersama oleh /api/explain-score dan
+// /api/explain-followup: satu sumber kebenaran, tidak disalin dua kali.
+function susunMuatanAI(heksagon, bobotKini) {
+  const bobot = bobotKini
+    ? Object.fromEntries(
+        Object.entries(bobotKini).map(([k, v]) => [k, Math.round(v * 100)]),
+      )
+    : Object.fromEntries(
+        Object.entries(BOBOT_DEFAULT).map(([k, v]) => [
+          k,
+          Math.round(v * 100),
+        ]),
+      );
+  const indikator = [];
+  for (const kelompok of KELOMPOK_INDIKATOR) {
+    for (const k of kelompok.kunci) {
+      indikator.push(
+        muatanIndikatorAI(k, heksagon.indikator?.[k], NAMA_INDIKATOR[k] ?? k),
+      );
+    }
+  }
+  return {
+    h3_index: heksagon.h3_index,
+    skor: heksagon.skor,
+    subskor: heksagon.subskor,
+    dimensiKosong: heksagon.dimensi_kosong ?? [],
+    bobot,
+    indikator,
+  };
+}
+
+function BlokInsight({
+  heksagon,
+  bobotKini,
+  narasi,
+  padaJelaskan,
+  percakapan,
+  padaPercakapan,
+}) {
   const [memuat, setMemuat] = useState(false);
   const [galat, setGalat] = useState(null);
+  const [pertanyaan, setPertanyaan] = useState("");
+  const [memuatTanya, setMemuatTanya] = useState(false);
+  const [galatTanya, setGalatTanya] = useState(null);
 
   useEffect(() => {
     setMemuat(false);
     setGalat(null);
+    setPertanyaan("");
+    setMemuatTanya(false);
+    setGalatTanya(null);
   }, [heksagon.h3_index]);
 
   const kirim = async () => {
     setMemuat(true);
     setGalat(null);
     try {
-      const bobot = bobotKini
-        ? Object.fromEntries(
-            Object.entries(bobotKini).map(([k, v]) => [k, Math.round(v * 100)]),
-          )
-        : Object.fromEntries(
-            Object.entries(BOBOT_DEFAULT).map(([k, v]) => [
-              k,
-              Math.round(v * 100),
-            ]),
-          );
-      const indikator = [];
-      for (const kelompok of KELOMPOK_INDIKATOR) {
-        for (const k of kelompok.kunci) {
-          indikator.push(
-            muatanIndikatorAI(k, heksagon.indikator?.[k], NAMA_INDIKATOR[k] ?? k),
-          );
-        }
-      }
       const r = await fetch("/api/explain-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          h3_index: heksagon.h3_index,
-          skor: heksagon.skor,
-          subskor: heksagon.subskor,
-          dimensiKosong: heksagon.dimensi_kosong ?? [],
-          bobot,
-          indikator,
-        }),
+        body: JSON.stringify(susunMuatanAI(heksagon, bobotKini)),
       });
       if (!r.ok) {
         const j = await r.json().catch(() => null);
@@ -80,6 +99,47 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
       setGalat("Tidak dapat menghubungi server. Coba lagi.");
     } finally {
       setMemuat(false);
+    }
+  };
+
+  const giliranPengguna = (percakapan ?? []).filter(
+    (g) => g.peran === "pengguna",
+  ).length;
+  const batasTercapai = giliranPengguna >= 6;
+
+  const kirimTanya = async (teks) => {
+    const tanya = (teks ?? "").trim();
+    if (!tanya || tanya.length > 200 || memuatTanya || batasTercapai) return;
+    setMemuatTanya(true);
+    setGalatTanya(null);
+    try {
+      const riwayat = (percakapan ?? []).slice(-6);
+      const r = await fetch("/api/explain-followup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...susunMuatanAI(heksagon, bobotKini),
+          riwayat,
+          pertanyaan: tanya,
+        }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => null);
+        setGalatTanya(j?.galat ?? `Server menjawab ${r.status}.`);
+        return;
+      }
+      const hasil = await r.json();
+      const daftar = [
+        ...(percakapan ?? []),
+        { peran: "pengguna", isi: tanya },
+        { peran: "asisten", isi: hasil.jawaban, sumber: hasil.sumber },
+      ];
+      padaPercakapan(heksagon.h3_index, daftar);
+      setPertanyaan("");
+    } catch {
+      setGalatTanya("Tidak dapat menghubungi server. Coba lagi.");
+    } finally {
+      setMemuatTanya(false);
     }
   };
 
@@ -131,6 +191,97 @@ function BlokInsight({ heksagon, bobotKini, narasi, padaJelaskan }) {
           )}
           <div className="text-xs text-slate-500">
             Disusun AI dari angka pada panel ini.
+          </div>
+
+          <div className="mt-3 border-t border-white/10 pt-2">
+            <div className="text-xs font-semibold text-slate-300">
+              Tanya lanjutan
+            </div>
+            {!batasTercapai && (
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {[
+                  "Kenapa skornya segitu?",
+                  "Apa kelemahan terbesarnya?",
+                  "Cocok untuk siapa kawasan ini?",
+                ].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => kirimTanya(s)}
+                    disabled={memuatTanya}
+                    className="rounded bg-slate-800 px-2 py-1 text-[11px] text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700 disabled:opacity-60"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            {(percakapan ?? []).length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {(percakapan ?? []).map((g, i) => (
+                  <div
+                    key={i}
+                    className={
+                      g.peran === "pengguna"
+                        ? "ml-6 rounded bg-sky-900/40 px-2 py-1 text-sky-100"
+                        : "mr-6 rounded bg-slate-800 px-2 py-1 text-slate-200"
+                    }
+                  >
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                      {g.peran === "pengguna" ? "Kamu" : "Asisten"}
+                    </div>
+                    <div>{g.isi}</div>
+                    {g.peran === "asisten" && g.sumber === "fallback" && (
+                      <div className="mt-1 rounded bg-yellow-700 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        Dijawab tanpa AI
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {galatTanya && (
+              <div className="mt-2 rounded bg-red-900/60 p-2 text-red-100">
+                {galatTanya}
+              </div>
+            )}
+            {memuatTanya && (
+              <div className="mt-2 text-slate-400">Menjawab...</div>
+            )}
+            {batasTercapai ? (
+              <div className="mt-2 text-slate-400">
+                Batas 6 pertanyaan per kawasan sudah tercapai.
+              </div>
+            ) : (
+              <form
+                className="mt-2 flex items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  kirimTanya(pertanyaan);
+                }}
+              >
+                <input
+                  type="text"
+                  value={pertanyaan}
+                  maxLength={200}
+                  onChange={(e) => setPertanyaan(e.target.value)}
+                  placeholder="Tanya tentang kawasan ini..."
+                  disabled={memuatTanya}
+                  className="min-w-0 flex-1 rounded bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none ring-1 ring-slate-700 focus:ring-emerald-400 disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={memuatTanya || !pertanyaan.trim()}
+                  className="tombol-aksi rounded px-2 py-1 text-xs font-semibold disabled:opacity-60"
+                >
+                  Kirim
+                </button>
+              </form>
+            )}
+            {!batasTercapai && pertanyaan.length > 160 && (
+              <div className="mt-0.5 text-right text-[10px] text-slate-500">
+                {200 - pertanyaan.length} karakter tersisa
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -270,6 +421,8 @@ export default function PanelKawasan({
   onTutup,
   narasiCache,
   simpanNarasi,
+  percakapanCache,
+  simpanPercakapan,
 }) {
   const [terbuka, setTerbuka] = useState(
     () => new Set(KELOMPOK_INDIKATOR.map((k) => k.dimensi)),
@@ -442,6 +595,8 @@ export default function PanelKawasan({
             bobotKini={bobotKini}
             narasi={narasiCache?.[heksagon.h3_index]}
             padaJelaskan={(h3, hasil) => simpanNarasi(h3, hasil)}
+            percakapan={percakapanCache?.[heksagon.h3_index] ?? []}
+            padaPercakapan={(h3, daftar) => simpanPercakapan(h3, daftar)}
           />
         )}
 

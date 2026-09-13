@@ -103,6 +103,7 @@ export default function App() {
   const [lapisanAktif, setLapisanAktif] = useState(lapisanAwal);
   const [jumlahLapisan, setJumlahLapisan] = useState({});
   const [narasiCache, setNarasiCache] = useState({});
+  const [percakapanCache, setPercakapanCache] = useState({});
   const [modeBanding, setModeBanding] = useState(false);
   const [comparisonType, setComparisonType] = useState("kawasan");
   const [pilihanBanding, setPilihanBanding] = useState({ a: null, b: null });
@@ -499,6 +500,10 @@ export default function App() {
                 narasiCache={narasiCache}
                 simpanNarasi={(h3, hasil) =>
                   setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))
+                }
+                percakapanCache={percakapanCache}
+                simpanPercakapan={(h3, daftar) =>
+                  setPercakapanCache((c) => ({ ...c, [h3]: daftar }))
                 }
               />
             )}
