@@ -9,7 +9,7 @@ Sumbernya graf jalan kaki OSM yang sudah dipakai pipeline
 `web/public/tekstur-jalan.svg`, hanya garis, tanpa isian, label, atau penanda.
 
 Graf dibaca dengan iterparse, bukan networkx: yang dibutuhkan cuma koordinat
-simpul, pasangan ujung tiap sisi, dan tag `highway` — tidak perlu membangun
+simpul, pasangan ujung tiap sisi, dan tag `highway`, tidak perlu membangun
 objek graf lengkap di memori.
 
 Keluarannya TIGA <path>, satu per kelas jalan (utama / menengah / kecil),

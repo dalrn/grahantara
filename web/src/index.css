@@ -603,7 +603,7 @@ input[type="checkbox"] {
 }
 
 /* "Pilih dua": state terpilih ditandai kotak centang SVG, border tebal, dan
-   latar terisi sekaligus — tidak bergantung pada warna saja. */
+   latar terisi sekaligus, tidak bergantung pada warna saja. */
 /* <legend> tidak ikut grid gap fieldset seperti anak biasa, jadi jaraknya ke
    daftar opsi diberikan eksplisit di sini. Tanpa ini pertanyaan menempel ke
    kotak pilihan pertama. */
@@ -746,15 +746,15 @@ input[type="checkbox"] {
   z-index: 0;
 }
 /* Tiap salinan menjaga rasio aspek lewat padding-top; SVG mengisi penuh.
-   Diposisikan di tengah dan dibiarkan meluber ke samping — diregangkan akan
+   Diposisikan di tengah dan dibiarkan meluber ke samping, diregangkan akan
    mendistorsi bentuk jaringan jalannya. */
 /* Rasio aspek dijaga lewat padding-top; tidak boleh memakai min-width karena
    itu memaksa lebar dokumen dan memunculkan scroll horizontal di ponsel.
    Untuk menjaga jaringan jalan tetap terbaca di layar sempit, salinannya
-   diperlebar lewat transform: scale — yang tidak menambah lebar tata letak. */
+   diperlebar lewat transform: scale, yang tidak menambah lebar tata letak. */
 /* Rasio aspek dijaga lewat padding-top; tidak memakai min-width karena itu
    memaksa lebar dokumen dan memunculkan scroll horizontal di ponsel.
-   Diperbesar lewat transform: scale — tidak menambah lebar tata letak, dan
+   Diperbesar lewat transform: scale, tidak menambah lebar tata letak, dan
    luapannya dipotong .home-isi. Tanpa ini, pada layar lebar wilayah studi
    yang sempit menyisakan tepi kiri dan kanan yang kosong. */
 .tekstur-salinan {
@@ -799,7 +799,7 @@ input[type="checkbox"] {
   opacity: 1;
 }
 /* Opasitas keseluruhan lapisan. Jauh lebih tegas daripada 5% sebelumnya,
-   tapi tetap di bawah ambang yang membuat teks sulit dibaca — semua blok
+   tapi tetap di bawah ambang yang membuat teks sulit dibaca, semua blok
    teks di halaman ini punya latar sendiri (lihat .home-penjelasan dsb). */
 .tekstur-jalan {
   opacity: 0.16;
@@ -1341,7 +1341,7 @@ input[type="checkbox"] {
 /* --- Pengenalan progresif -------------------------------------------------
    Kartu kecil yang menempel pada elemen yang dimaksud. BUKAN modal, BUKAN
    overlay: peta tetap bisa dipakai selagi kartu tampil. Tidak ada animasi
-   berdenyut — kartunya muncul sekali lalu diam. */
+   berdenyut, kartunya muncul sekali lalu diam. */
 .kartu-petunjuk {
   position: absolute;
   z-index: 40;
@@ -1412,7 +1412,7 @@ input[type="checkbox"] {
 }
 /* Kartu petunjuk TIDAK BOLEH memblokir peta di bawahnya. Kartunya melayang
    di atas kanvas, jadi tanpa ini ia menangkap klik yang dimaksudkan untuk
-   kontrol peta — terpantau memblokir tombol "Jatuhkan pin". Hanya isi
+   kontrol peta, terpantau memblokir tombol "Jatuhkan pin". Hanya isi
    kartunya yang menerima pointer; area di luar teks dan tombol tembus. */
 .kartu-petunjuk {
   pointer-events: none;
