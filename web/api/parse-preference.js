@@ -46,6 +46,19 @@ function fallback(teks, msLatensi) {
   for (const [kata, dimensi] of aturan) {
     if (kata.some((k) => t.includes(k))) bobot[dimensi] = Math.min(100, bobot[dimensi] + 20);
   }
+  // Kategori tempat masih bisa dideteksi andal tanpa AI: kata kuncinya
+  // harfiah. Ini yang membuat "dekat apotek" tetap menyorot apotek walau
+  // layanan bahasa sedang mati.
+  const kataKategori = [
+    [["apotek", "obat"], "apotek"],
+    [["minimarket", "indomaret", "alfamart"], "minimarket"],
+    [["kelontong", "warung kelontong"], "warung"],
+    [["tempat makan", "kuliner", "jajan", "warung makan", "kafe", "cafe", "makan"], "makan"],
+  ];
+  const kategoriPoi = [];
+  for (const [kata, kat] of kataKategori) {
+    if (kata.some((k) => t.includes(k))) kategoriPoi.push(kat);
+  }
   return {
     kampus: cocokKampus(teks),
     anggaran: cocokAnggaran(teks),
@@ -56,6 +69,7 @@ function fallback(teks, msLatensi) {
     // daripada menampilkan seluruh prompt lagi.
     catatanEkstra: null,
     penekanan: null,
+    kategoriPoi,
     sumber: "fallback",
     bobotDiganti: false,
     msLatensi,
@@ -89,7 +103,15 @@ function validasiKetat(raw, msLatensi) {
       : null;
   const PENEKANAN_SAH = new Set(["makan", "layanan", "transit"]);
   const penekanan = PENEKANAN_SAH.has(raw?.penekanan) ? raw.penekanan : null;
-  return { kampus, anggaran, bobot, ringkas, catatanEkstra, penekanan, sumber: "llm", bobotDiganti, msLatensi };
+  // Kategori tempat yang disebut spesifik. Terpisah dari `penekanan` karena
+  // bobot indikator tidak bisa membedakannya: layanan harian adalah SATU
+  // indikator gabungan apotek + minimarket + warung. Yang bisa dibedakan
+  // hanya daftar tempatnya, dan di sana ketiganya tercatat terpisah.
+  const KATEGORI_SAH = new Set(["makan", "warung", "minimarket", "apotek"]);
+  const kategoriPoi = Array.isArray(raw?.kategoriPoi)
+    ? [...new Set(raw.kategoriPoi.filter((k) => KATEGORI_SAH.has(k)))].slice(0, 4)
+    : [];
+  return { kampus, anggaran, bobot, ringkas, catatanEkstra, penekanan, kategoriPoi, sumber: "llm", bobotDiganti, msLatensi };
 }
 
 export default async function handler(req, res) {
@@ -121,7 +143,8 @@ Bentuk keluaran:
              "amenity": <0-100>, "walkability": <0-100> },
   "ringkas": "<satu kalimat Indonesia, maksimal 20 kata>",
   "catatanEkstra": "<lihat aturan di bawah, atau null>",
-  "penekanan": "<salah satu: makan, layanan, transit, atau null>"
+  "penekanan": "<salah satu: makan, layanan, transit, atau null>",
+  "kategoriPoi": ["<kategori tempat yang DISEBUT SPESIFIK, boleh kosong>"]
 }
 Daftar kampus yang sah: ${DAFTAR_KAMPUS.join(", ")}
 Arti dimensi:
@@ -155,7 +178,18 @@ Fasilitas, termasuk apotek dan minimarket yang justru ia bilang tidak penting.
   - "layanan"  = menekankan minimarket, apotek, layanan harian saja
   - "transit"  = menekankan halte dan rute bus saja, bukan stasiun KRL
   - null       = tidak ada penekanan sespesifik itu
-Isi null bila pengguna hanya menyebut dimensinya secara umum.`;
+Isi null bila pengguna hanya menyebut dimensinya secara umum.
+
+"kategoriPoi" mencatat jenis tempat yang disebut pengguna SECARA SPESIFIK,
+supaya panel kawasan bisa menampilkan tempat-tempat itu lebih dulu dengan
+nama dan alamatnya. Isi hanya yang benar-benar disebut.
+  - "makan"       tempat makan, warung makan, kuliner, jajan, kafe
+  - "warung"      warung kelontong, toko kelontong
+  - "minimarket"  minimarket, Indomaret, Alfamart
+  - "apotek"      apotek, obat
+Contoh: "dekat apotek" -> ["apotek"]. "banyak tempat makan" -> ["makan"].
+"fasilitas lengkap" -> [] karena tidak menyebut jenis tertentu.
+Larik kosong bila tidak ada yang disebut spesifik.`;
     const isi = await panggilDeepseek({ sistem, pengguna: teks });
     const parsed = parseJsonLonggar(isi);
     if (parsed === null) throw new Error("JSON tidak terparse");

@@ -110,6 +110,7 @@ export default function App() {
   const [modePin, setModePin] = useState(false);
   // Penekanan antar-indikator dari beranda (mis. "makan").
   const [penekanan, setPenekanan] = useState(null);
+  const [kategoriPoi, setKategoriPoi] = useState([]);
   // --- pengenalan progresif -------------------------------------------------
   // Keadaan yang memicu petunjuk. Semuanya TINDAKAN pengguna, bukan waktu.
   const [petunjukAktif, setPetunjukAktif] = useState(null);
@@ -154,6 +155,13 @@ export default function App() {
   const klikBanding = (props) => {
     setGalatBanding(null);
     setHasilBanding(null);
+    // Ctrl+klik di peta bisa datang saat mode banding BELUM menyala. Nyalakan
+    // di sini, kalau tidak pilihannya tersimpan tapi panelnya tidak pernah
+    // terbuka dan jalan pintasnya tampak tidak bekerja.
+    setHeksagonTerpilih(null);
+    setModeBanding(true);
+    setPernahBanding(true);
+    setComparisonType("kawasan");
     setPilihanBanding((sebelum) => {
       if (!sebelum.a) return { a: props, b: null };
       if (!sebelum.b) {
@@ -413,6 +421,9 @@ export default function App() {
               setProfilTerakhir(profil);
               setBobot(skorProfilKeBobot(profil, bobotBawaan));
               setPenekanan(profil?.penekanan ?? null);
+              setKategoriPoi(
+                Array.isArray(profil?.kategoriPoi) ? profil.kategoriPoi : [],
+              );
               setFokusPeta(fokusDariProfil(profil));
               if (!pitaPernahTampil) {
                 setPitaPrioritas(ringkasPrioritas(profil));
@@ -669,6 +680,7 @@ export default function App() {
                 ambangSkor={ambangSkor}
                 onTutup={() => setHeksagonTerpilih(null)}
                 onTabRinci={() => setTabRinciDibuka(true)}
+                kategoriPoi={kategoriPoi}
                 narasiCache={narasiCache}
                 simpanNarasi={(h3, hasil) =>
                   setNarasiCache((c) => (c[h3] ? c : { ...c, [h3]: hasil }))

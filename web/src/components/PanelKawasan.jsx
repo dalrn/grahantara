@@ -149,6 +149,7 @@ function BlokDimensi({
   onToggle,
   angkaMentah,
   h3Index,
+  kategoriPoi,
 }) {
   const nilai = subskor?.[kelompok.dimensi];
   const kosongDimensi = kosong.has(kelompok.dimensi) || !Number.isFinite(nilai);
@@ -224,7 +225,7 @@ function BlokDimensi({
             DAFTAR TEMPAT, bukan hanya angka. "Apa saja dan di mana" adalah
             pertanyaan berikutnya yang pasti muncul. */}
         {kelompok.dimensi === "amenity" && h3Index && (
-          <DaftarPoi h3Index={h3Index} />
+          <DaftarPoi h3Index={h3Index} sorot={kategoriPoi} />
         )}
       </Collapse>
     </div>
@@ -277,6 +278,7 @@ export default function PanelKawasan({
   ambangSkor,
   onTutup,
   onTabRinci,
+  kategoriPoi,
   narasiCache,
   simpanNarasi,
 }) {
@@ -480,6 +482,7 @@ export default function PanelKawasan({
                 kosong={kosong}
                 angkaMentah={angkaMentah}
                 h3Index={heksagon.h3_index}
+                kategoriPoi={kategoriPoi}
                 terbuka={
                   activeTab === "16 Indikator" && terbuka.has(kelompok.dimensi)
                 }
