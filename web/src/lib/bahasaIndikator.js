@@ -15,6 +15,8 @@
  * tidak diterjemahkan; angkanya justru lebih informatif apa adanya.
  */
 
+import { formatNilai } from "./format.js";
+
 // Satuan yang tidak perlu diterjemahkan: pembaca langsung paham.
 const SATUAN_JELAS = new Set([
   "m",
@@ -178,9 +180,40 @@ export function barisIndikator(kunci, data) {
  * bilangan bulat 0-100. Cukup untuk menilai baik-buruk, tidak cukup untuk
  * mengarang presisi.
  */
+// Satuan hitungan yang tetap boleh ditampilkan meski tidak ada di
+// SATUAN_JELAS: cacah per satuan waktu yang dipahami awam.
+const SATUAN_HITUNG_AWAM = new Set(["orang/10 menit"]);
+
+/**
+ * Nilai + satuan untuk dibaca manusia, HANYA bila bermakna bagi awam.
+ * Memakai ulang satuanAbstrak (SATUAN_JELAS) sebagai penyaring utama.
+ */
+function nilaiTeksAwam(data) {
+  const nilai = data?.nilai;
+  // Enum / teks: labelnya sudah cukup, angka mentah malah membingungkan.
+  if (typeof nilai === "string") return null;
+  const satuan = data?.satuan;
+  // Satuan instrumen (indeks, NDVI, nW/sr/cm2, per km2, ...) tidak berarti
+  // bagi pencari kos.
+  if (satuanAbstrak(satuan) && !SATUAN_HITUNG_AWAM.has(satuan)) return null;
+  const teks = formatNilai(nilai, satuan);
+  if (teks === null || teks === undefined) return null;
+  // Nol asli ditolak (rawan bertabrakan dengan label kualitatif); angka
+  // bukan-nol yang terbulatkan jadi nol juga ditolak.
+  if (nilai === 0) return null;
+  const angka = Number(
+    String(teks).replace(/[^\d,-]/g, "").replace(/\./g, "").replace(",", "."),
+  );
+  if (Number.isFinite(angka) && angka === 0) return null;
+  return teks;
+}
+
 export function muatanIndikatorAI(kunci, data, nama) {
   const tersedia =
     data && data.sumber !== "tidak_tersedia" && data.nilai !== null;
+  // Tanpa nilaiTeks model menyimpulkan datanya tidak ada padahal hanya tidak
+  // diberikan; tapi hanya nilai yang bermakna awam yang dikirim.
+  const nilaiTeks = tersedia ? nilaiTeksAwam(data) : null;
   return {
     nama,
     label: tersedia ? labelKualitatif(kunci, data) : null,
@@ -192,5 +225,6 @@ export function muatanIndikatorAI(kunci, data, nama) {
     // Penanda kualitas data tetap dikirim supaya model bisa menghindari
     // menyebut angka taksiran sebagai fakta.
     estimasi: tersedia && data.sumber === "model",
+    ...(nilaiTeks !== null && nilaiTeks !== undefined ? { nilaiTeks } : {}),
   };
 }

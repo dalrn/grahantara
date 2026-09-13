@@ -116,11 +116,14 @@ export default async function handler(req, res) {
     const label = ik.label ?? "tidak berlabel";
     const estimasi =
       ik.estimasi || ik.sumber === "model" ? " (angka taksiran)" : "";
+    // Angka terukur dalam tanda kurung; hanya bila klien mengirimkannya.
+    const nilaiTeks =
+      typeof ik.nilaiTeks === "string" && ik.nilaiTeks ? ` (${ik.nilaiTeks})` : "";
     const peringkat =
       persentil === null
         ? ""
         : `, lebih baik daripada ${persentil}% kawasan lain`;
-    return `${ik.nama}: ${label}${peringkat}${estimasi}`;
+    return `${ik.nama}: ${label}${nilaiTeks}${peringkat}${estimasi}`;
   }).join("\n");
 
   const riwayatTeks = b.riwayat
@@ -174,7 +177,17 @@ ATURAN TAMBAHAN:
   kecuali bobot bawaan bila ditanya langsung.
 - Bila pengguna bertanya tentang metode atau alasan, jawab dari
   pengetahuan proyek. Bila bertanya tentang kawasan, jawab dari data.
-- DILARANG mengarang isi kode, nama berkas, atau klaim dokumen.`;
+- DILARANG mengarang isi kode, nama berkas, atau klaim dokumen.
+- Angka dalam kurung setelah label adalah nilai terukur indikator itu.
+  Boleh disebut HANYA bila pengguna bertanya langsung tentang nilai atau
+  angka indikator tersebut. DILARANG menaburkannya pada jawaban lain.
+- DILARANG menyatakan suatu indikator "tidak tersedia" bila indikator itu
+  ada dalam daftar yang diberikan. Bila tidak yakin, sebut labelnya.
+- Kalimat "tidak tersedia di Grahantara" HANYA untuk hal yang benar-benar
+  tidak ada dalam daftar indikator, misalnya nama kos, alamat, nomor
+  kontak, nama jalan, atau data kawasan lain.
+- DILARANG mengarang pernyataan bahwa sebagian indikator tidak tersedia
+  bila seluruh indikator dalam daftar bertanda tersedia.`;
 
   let hasil;
   try {
