@@ -52,7 +52,6 @@ const KELOMPOK = [
       { id: "skala", judul: "Skala skor dan subskor" },
       { id: "batasan", judul: "Batasan" },
       { id: "ai", judul: "Peran AI" },
-      { id: "tanya", judul: "Tanya tentang metode" },
     ],
   },
 ];
@@ -1011,13 +1010,10 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 tanpa AI dan diberi label demikian.
               </p>
             </Bagian>
-
-            <Bagian id="tanya" judul="Tanya tentang metode ini">
-              <TanyaMetode />
-            </Bagian>
           </div>
         </div>
       </div>
+      <TanyaMetode />
     </div>
   );
 }

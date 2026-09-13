@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SARAN = [
   "Kenapa pakai rata-rata geometrik?",
@@ -6,7 +6,9 @@ const SARAN = [
   "Data ini dari mana saja?",
 ];
 
-export default function TanyaMetode() {
+// Logika percakapan (state, kirim, riwayat) tidak diubah; hanya dipindah ke
+// dalam pembungkus pop-up.
+function IsiTanya() {
   const [riwayat, setRiwayat] = useState([]);
   const [pertanyaan, setPertanyaan] = useState("");
   const [memuat, setMemuat] = useState(false);
@@ -140,5 +142,55 @@ export default function TanyaMetode() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TanyaMetode() {
+  const [buka, setBuka] = useState(false);
+
+  useEffect(() => {
+    if (!buka) return;
+    const padaTombol = (e) => {
+      if (e.key === "Escape") setBuka(false);
+    };
+    window.addEventListener("keydown", padaTombol);
+    return () => window.removeEventListener("keydown", padaTombol);
+  }, [buka]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setBuka((v) => !v)}
+        aria-expanded={buka}
+        aria-controls="panel-tanya-metode"
+        className="fixed bottom-4 right-4 z-40 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg hover:bg-emerald-400 sm:bottom-auto sm:top-4"
+      >
+        Tanya AI
+      </button>
+      {/* Selalu ter-mount; saat tertutup hanya disembunyikan, supaya riwayat
+          percakapan tidak hilang saat panel ditutup lalu dibuka lagi. */}
+      <div
+        id="panel-tanya-metode"
+        className={`${buka ? "" : "hidden "}fixed bottom-16 left-4 right-4 z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-xl bg-slate-900/95 text-white shadow-2xl ring-1 ring-slate-700 backdrop-blur-sm sm:bottom-auto sm:left-auto sm:top-16 sm:w-[380px]`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2">
+          <span className="text-sm font-semibold">
+            Tanya tentang metode ini
+          </span>
+          <button
+            type="button"
+            onClick={() => setBuka(false)}
+            aria-label="Tutup panel tanya"
+            className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          <IsiTanya />
+        </div>
+      </div>
+    </>
   );
 }
