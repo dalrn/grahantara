@@ -153,8 +153,6 @@ input[type="checkbox"] {
   width: 170px;
   height: 70px;
   object-fit: contain;
-  background: #fff;
-  border-radius: 6px;
   flex-shrink: 0;
 }
 @media (max-width: 767px) {
