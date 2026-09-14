@@ -128,6 +128,7 @@ export default function App() {
   const [pernahMetodologi, setPernahMetodologi] = useState(false);
   const [petaSiap, setPetaSiap] = useState(false);
   const [versiPetunjuk, setVersiPetunjuk] = useState(0);
+  const sudahDicatat = useRef(null);
   const [bobot, setBobot] = useState(BAWAAN_MENTAH);
   const [bobotBawaan, setBobotBawaan] = useState(BAWAAN_MENTAH);
   const [bobotDariMetadata, setBobotDariMetadata] = useState(false);
@@ -351,6 +352,11 @@ export default function App() {
       pernahMetodologi,
     });
     if (!p) return;
+    // StrictMode menjalankan efek dua kali, dan setPetunjukAktif belum
+    // tercermin saat jalan kedua. Tanpa penjaga ini satu petunjuk terhitung
+    // tampil dua kali dan anggarannya habis separuh lebih cepat.
+    if (sudahDicatat.current === p.id) return;
+    sudahDicatat.current = p.id;
     catatTampil(p.id);
     setPetunjukAktif(p);
     // bedaDariBawaan sengaja tidak jadi dependensi langsung: nilainya
@@ -373,7 +379,18 @@ export default function App() {
   const ulangiPetunjuk = () => {
     resetPetunjuk();
     setPetunjukAktif(null);
-    // Paksa evaluasi ulang: keadaan pemicunya mungkin tidak berubah.
+    sudahDicatat.current = null;
+    // Status di localStorage saja tidak cukup. Syarat tiap petunjuk juga
+    // membaca keadaan sesi ini, dan sebagian syaratnya hanya benar bagi
+    // pengguna yang belum melakukan apa-apa. Tanpa ini, menekan "Ulangi"
+    // setelah menjelajah tidak memunculkan apa pun.
+    setKawasanDibuka(new Set());
+    setKosDibuka(false);
+    setTabRinciDibuka(false);
+    setPernahBanding(false);
+    setPernahUbahBobot(false);
+    setPernahRute(false);
+    setPernahMetodologi(false);
     setVersiPetunjuk((v) => v + 1);
   };
 

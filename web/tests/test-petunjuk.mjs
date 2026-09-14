@@ -171,6 +171,39 @@ uji("status rusak di localStorage tidak merusak halaman", () => {
   assert.equal(petunjukBerikut(awal())?.id, "p1_disarankan");
 });
 
+uji("petunjuk yang sudah tampil tidak muncul lagi, ditutup atau tidak", () => {
+  const p = petunjukBerikut(awal());
+  catatTampil(p.id);
+  assert.equal(
+    petunjukBerikut(awal())?.id ?? null,
+    null,
+    "sekali tampil cukup untuk satu lokasi",
+  );
+});
+
+uji("MAKS_TAMPIL satu: tampil sekali per lokasi", () => {
+  assert.equal(MAKS_TAMPIL, 1);
+});
+
+uji("setelah reset, keadaan awal memunculkan petunjuk pertama lagi", () => {
+  catatTampil("p1_disarankan");
+  tandaiSelesai("p1_disarankan");
+  resetPetunjuk();
+  assert.equal(petunjukBerikut(awal())?.id, "p1_disarankan");
+});
+
+uji("status versi lama diabaikan, dan ikut tersapu saat reset", () => {
+  const lama = "grahantara.petunjuk.v1.status";
+  simpanan.set(lama, JSON.stringify({ tampil: {}, selesai: {}, total: 5, lewati: true }));
+  assert.equal(
+    petunjukBerikut(awal())?.id,
+    "p1_disarankan",
+    "status v1 yang mentok tidak boleh memblokir v2",
+  );
+  resetPetunjuk();
+  assert.equal(simpanan.has(lama), false, "sisa v1 harus ikut dihapus");
+});
+
 uji("tiap petunjuk punya id dan jangkar unik", () => {
   const id = PETUNJUK.map((p) => p.id);
   assert.equal(new Set(id).size, id.length, "id harus unik");

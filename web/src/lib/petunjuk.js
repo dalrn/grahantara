@@ -3,15 +3,21 @@
  * bukan timer, dan tidak pernah lebih dari satu sekaligus.
  */
 
-// Kunci BERVERSI. Kalau urutan atau makna petunjuk berubah, naikkan v1 -> v2
+// Kunci BERVERSI. Kalau urutan atau makna petunjuk berubah, naikkan versinya
 // supaya pengguna lama tidak terjebak status yang artinya sudah bergeser.
-export const AWALAN = "grahantara.petunjuk.v1.";
+// v2: MAKS_TAMPIL turun dari 3 jadi 1, satu petunjuk tampil sekali saja.
+const AWALAN_UMUM = "grahantara.petunjuk.";
+export const AWALAN = `${AWALAN_UMUM}v2.`;
 const KUNCI_STATUS = `${AWALAN}status`;
 
 /** Anggaran total seumur hidup pengguna. Setelah ini, tidak ada lagi. */
 export const ANGGARAN_TOTAL = 5;
-/** Sekali diabaikan, satu petunjuk boleh muncul lagi sebanyak ini. */
-export const MAKS_TAMPIL = 3;
+/**
+ * Berapa kali satu petunjuk boleh tampil. Satu: begitu pengguna sampai di
+ * suatu tempat untuk pertama kalinya, petunjuknya muncul sekali lalu tidak
+ * pernah lagi, ditutup atau tidak.
+ */
+export const MAKS_TAMPIL = 1;
 
 /**
  * Urutan petunjuk. `id` dipakai sebagai kunci penyimpanan, jadi jangan diubah
@@ -137,11 +143,11 @@ export function resetPetunjuk() {
   if (typeof localStorage === "undefined") return kosong();
   try {
     localStorage.removeItem(KUNCI_STATUS);
-    // Sapu juga kunci lain berawalan sama, kalau versi sebelumnya
-    // meninggalkan sisa.
+    // Sapu semua versi, bukan hanya yang sedang dipakai: memakai AWALAN di
+    // sini akan meninggalkan sisa v1 di browser pengguna lama selamanya.
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(AWALAN)) localStorage.removeItem(k);
+      if (k && k.startsWith(AWALAN_UMUM)) localStorage.removeItem(k);
     }
   } catch {
     /* abaikan */
