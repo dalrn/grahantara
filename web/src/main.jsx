@@ -6,6 +6,7 @@ import "@fontsource/plus-jakarta-sans/latin-600.css";
 import "@fontsource/plus-jakarta-sans/latin-700.css";
 import "@fontsource/plus-jakarta-sans/latin-800.css";
 import { MotionConfig } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import App from "./App.jsx";
 
@@ -13,6 +14,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
       <App />
+      <Analytics />
     </MotionConfig>
   </StrictMode>,
 );
