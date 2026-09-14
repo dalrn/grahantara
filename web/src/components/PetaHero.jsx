@@ -17,7 +17,7 @@ const BATAS = [
 
 /**
  * Peta ringkas untuk hero beranda: heksagon asli berwarna skor komposit di
- * atas basemap MAPID. Bukan tiruan PetaHeksagon — tidak ada panel, lapisan
+ * atas basemap MAPID. Bukan tiruan PetaHeksagon, tidak ada panel, lapisan
  * titik, banding, atau rute. Yang dibagi hanya pipeline data dan warnanya
  * (hitungKuintil + ekspresiWarna + WARNA_KELAS), supaya warna di beranda dan
  * di halaman peta berarti hal yang sama.
@@ -203,8 +203,7 @@ export default function PetaHero({ onBuka }) {
             // sekitarnya, bukan prioritas. Delapan dari sepuluh kampus
             // berdesakan dalam ~80 px (UPN dan AMIKOM hanya berjarak 5 px)
             // sementara sprite-nya selebar 70-117 px, jadi hanya kampus yang
-            // terpisah sendiri yang muat. Sort key diuji dan tidak mengubah
-            // hasilnya; menyimpannya hanya menyesatkan pembaca berikutnya.
+            // terpisah sendiri yang muat. symbol-sort-key tidak mengubah hasil.
           },
         });
 
@@ -367,7 +366,7 @@ export default function PetaHero({ onBuka }) {
       {siap && sorot && (
         <div className="hero-peta-skor" aria-hidden="true">
           <strong>{sorot.skor.toFixed(1)}</strong>
-          {/* Heksagon tidak punya nama tempat di data — hanya h3_index, yang
+          {/* Heksagon tidak punya nama tempat di data, hanya h3_index, yang
               tidak berarti apa-apa bagi pembaca. Yang ditampilkan adalah arti
               skornya, sesuai definisi persentil. */}
           <span>{TEKS.peta.artiSkor(Math.round(sorot.skor))}</span>

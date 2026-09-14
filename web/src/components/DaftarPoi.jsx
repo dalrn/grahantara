@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  * Fasilitas: "jadi apa saja dan di mana saja tempat makannya?". Sebelum ini
  * produk hanya bisa menyebut angka.
  *
- * Berkasnya (455 KB) dimuat MALAS — hanya saat panel pertama kali dibuka, dan
+ * Berkasnya (455 KB) dimuat MALAS, hanya saat panel pertama kali dibuka, dan
  * hanya sekali per sesi. Menaruhnya di muat awal akan memperlambat peta untuk
  * fitur yang dipakai sebagian pengguna saja.
  */
@@ -73,7 +73,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
     );
   }
   if (!data) {
-    return <p className="poi-catatan">Memuat daftar tempat…</p>;
+    return <p className="poi-catatan">Memuat daftar tempat...</p>;
   }
 
   const daftar = data.per_heksagon?.[h3Index] ?? [];
@@ -90,9 +90,8 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
   const perKategori = {};
   for (const r of daftar) (perKategori[r.k] ??= []).push(r);
 
-  // Kategori yang diminta pengguna naik ke atas. Tanpa ini, "dekat apotek"
-  // bisa menampilkan lima tempat makan dan menyembunyikan satu-satunya
-  // apotek di bawah tombol "tampilkan lainnya".
+  // Kategori yang diminta pengguna naik ke atas daftar, supaya "dekat apotek"
+  // tidak menampilkan lima tempat makan lalu menyembunyikan apoteknya.
   const disorot = sorot.filter((k) => perKategori[k]?.length);
   const tidakAda = sorot.filter((k) => !perKategori[k]?.length);
   const urut = disorot.length
@@ -163,7 +162,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
         </button>
       )}
       {/* Kasus paling membingungkan: skor kepadatan tinggi tapi daftar ini
-          tidak memuat satu pun tempat makan. Terjadi nyata — ada kawasan
+          tidak memuat satu pun tempat makan. Terjadi nyata, ada kawasan
           dengan 56 tempat makan dalam radius 800 m tetapi NOL di dalam
           batasnya. Sebut angkanya, jangan biarkan pembaca menyimpulkan
           datanya salah. */}
@@ -172,7 +171,7 @@ export default function DaftarPoi({ h3Index, sorot = [], jumlahRadius }) {
         jumlahRadius > 0 && (
           <p className="poi-catatan poi-catatan--sorot">
             Tidak ada tempat makan di dalam batas kawasan ini, tetapi ada{" "}
-            {Math.round(jumlahRadius)} dalam radius 800 m dari pusatnya — itulah
+            {Math.round(jumlahRadius)} dalam radius 800 m dari pusatnya, itulah
             yang dihitung skor Kepadatan tempat makan.
           </p>
         )}

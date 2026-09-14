@@ -4,7 +4,7 @@
  *     node tests/test-temuan.mjs
  *
  * Menguji LOGIKA TEMUAN, bukan keluaran model: tidak ada panggilan API di
- * sini, dan hasilnya deterministik. Itu memang inti gagasannya — penalaran
+ * sini, dan hasilnya deterministik. Itu memang inti gagasannya, penalaran
  * dipindahkan ke tempat yang bisa diuji.
  *
  * Kawasan uji dibuat tangan, bukan diambil dari data nyata, supaya tiap kasus
@@ -318,7 +318,7 @@ uji("keunggulan disumbang indikator estimasi -> TERTANDAI", () => {
 
 uji("PENJAGAAN: rasio sd kecil tapi skor total berbeda -> BUKAN setara", () => {
   // Seluruh selisih dimensi di bawah ambang sd, tetapi skor akhirnya berbeda
-  // 3 poin — cukup terlihat di panel, jadi tidak boleh disebut setara.
+  // 3 poin, cukup terlihat di panel, jadi tidak boleh disebut setara.
   const t = temuanBanding({
     a: kawasan(48.0, { connectivity: 47, affordability: 58, amenity: 57, walkability: 51 }, indikatorSeragam(0.5)),
     b: kawasan(45.0, { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 }, indikatorSeragam(0.5)),
@@ -380,6 +380,43 @@ uji("urutan temuan menimbang DAMPAK, bukan hanya kelangkaan", () => {
   ]);
   assert.equal(dipilih[0].dimensi, "connectivity");
   assert.ok(DAMPAK_PER_SD.connectivity > DAMPAK_PER_SD.walkability);
+});
+
+uji("BUKTI LAPANGAN muncul untuk heksagon yang disurvei", () => {
+  // h3 ini ada di aktivitas.json dengan 6 titik tempat dan 13 foto.
+  const t = semuaKawasan({
+    h3Index: "898d8c16137ffff",
+    subskor: { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 },
+    bobot: BOBOT_RATA,
+    indikator: indikatorSeragam(0.5),
+    kelompok: kel,
+  });
+  const r = t.semuaTemuan.find((x) => x.jenis === JENIS.BUKTI_LAPANGAN);
+  assert.ok(r, "temuan bukti lapangan tidak muncul");
+  assert.ok(r.total > 0 && r.foto > 0, `dapat ${JSON.stringify(r)}`);
+});
+
+uji("heksagon tanpa survei TIDAK memunculkan bukti lapangan", () => {
+  const t = semuaKawasan({
+    h3Index: "890000000000000",
+    subskor: { connectivity: 41, affordability: 52, amenity: 52, walkability: 50 },
+    bobot: BOBOT_RATA,
+    indikator: indikatorSeragam(0.5),
+    kelompok: kel,
+  });
+  assert.equal(
+    t.semuaTemuan.filter((x) => x.jenis === JENIS.BUKTI_LAPANGAN).length, 0,
+    "98,4% kawasan tidak disurvei; ketiadaannya harus diam, bukan jadi temuan",
+  );
+});
+
+uji("bukti lapangan berprioritas paling rendah", () => {
+  // Temuan yang menggerakkan peringkat harus menang atas bukti lapangan.
+  const dipilih = pilihTemuan([
+    { jenis: JENIS.BUKTI_LAPANGAN, total: 9, tempat: 9, ruasJalan: 0, foto: 20 },
+    { jenis: JENIS.KONFLIK_PRIORITAS, dimensi: "connectivity", nama: "C", persentil: 10, bobot: 50 },
+  ], 1);
+  assert.equal(dipilih[0].jenis, JENIS.KONFLIK_PRIORITAS);
 });
 
 uji("ambang tersedia sebagai konstanta bernama", () => {

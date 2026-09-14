@@ -190,8 +190,6 @@ Fase 2, runtime
 Untungnya murah, cepat, dan nggak bisa mati gara-gara database down. Ruginya,
 skor nggak berubah kecuali pipeline dijalankan ulang.
 
-Detailnya di [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
 ## Isi repo
 
 ```
@@ -206,7 +204,7 @@ pipeline/      analisis spasial offline, bernomor sesuai urutan jalan
   tests/         uji indikator dan validasi skema
 contracts/     skema GeoJSON, kontrak antara pipeline dan frontend
 reference/     masukan hasil kurasi tangan yang dilacak git
-docs/          metodologi, arsitektur, kamus data, log keputusan
+docs/          metodologi dan kamus data
 web/           frontend WebGIS
   src/           komponen React, pustaka, konten
   api/           serverless function
@@ -220,17 +218,16 @@ web/           frontend WebGIS
 ```bash
 cd web
 npm install
-npm run dev        # Vite doang, folder api/ NGGAK ikut jalan
-```
-
-Serverless function cuma hidup lewat `vercel dev` atau di produksi. Kalau pakai
-`npm run dev`, semua endpoint `/api/*` bakal jawab 404. Itu normal, bukan bug.
-
-```bash
-vercel dev         # frontend plus serverless function
+npm run dev        # frontend plus endpoint /api/*
 npm run build
 npm run lint
+npm run test:temuan    # uji lapisan temuan AI
+npm run test:petunjuk  # uji mesin petunjuk
 ```
+
+`vite.config.js` memasang middleware yang menjalankan handler `api/` yang sama
+seperti di produksi, jadi endpoint `/api/*` ikut hidup saat `npm run dev`.
+Tidak ada tiruan endpoint terpisah.
 
 Butuh `DEEPSEEK_API_KEY` di environment buat fungsi AI. Tanpa itu endpointnya
 tetap jawab 200 lewat jalur cadangan.
@@ -263,8 +260,7 @@ kompetisi melarang penyebaran data mentah MAPID di luar kompetisi.
 Keenamnya diekspor manual dari antarmuka MAPID, bukan lewat API. Soalnya
 `get_layer` berplafon keras 200 fitur, padahal satu layer saja isinya ribuan.
 Simpan hasil ekspornya sebagai GeoJSON di `data/raw/mapid/`. Kolom `TIPE_1`,
-`TIPE_2`, `TIPE_3` wajib dipertahankan karena itu kategori buat M2. Daftar lengkap
-sama nomor layernya ada di [`mapid_data.txt`](mapid_data.txt).
+`TIPE_2`, `TIPE_3` wajib dipertahankan karena itu kategori buat M2.
 
 Tanpa berkas-berkas itu, M1, M2, M4, W3, dan W4 nggak bisa dihitung ulang.
 

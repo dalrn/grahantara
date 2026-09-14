@@ -571,7 +571,7 @@ export default function PetaHeksagon({
       } catch (error) {
         if (!disposed && error.name !== "AbortError") setLoadState("error");
         // Kembalikan false, jangan menelan kegagalan diam-diam: pemanggil
-        // perlu tahu supaya boleh mencoba lagi. AbortError termasuk gagal —
+        // perlu tahu supaya boleh mencoba lagi. AbortError termasuk gagal -
         // justru itu kasus yang paling sering terjadi di StrictMode.
         return false;
       }
@@ -733,7 +733,7 @@ export default function PetaHeksagon({
           // Label sudah memuat kampus + jalan terdekat; tidak perlu diulang.
           isi = `<div class="text-sm"><b>${escapeHTML(String(p.label ?? `Gerbang ${p.kampus}`))}</b></div>`;
         } else if (def.id === "krl") {
-          // berkas KRL hanya memuat nama — jangan mengarang isi lain.
+          // berkas KRL hanya memuat nama, jangan mengarang isi lain.
           isi = `<div class="text-sm"><b>${p.nama}</b></div>`;
         } else {
           const { harga } = hargaPopup(p);
@@ -862,7 +862,7 @@ export default function PetaHeksagon({
     }
 
     // Klik kanan di mana pun: jatuhkan satu pin. Pin ini bisa dipakai untuk
-    // rute ke kampus dan dibuka di Google Maps, sama seperti pin kos — jadi
+    // rute ke kampus dan dibuka di Google Maps, sama seperti pin kos, jadi
     // fitur rute tidak lagi terbatas pada 31 kos hasil survei.
     //
     // Handler `contextmenu` untuk "titik-kos" sudah ada (menahan menu saat
@@ -1214,7 +1214,7 @@ export default function PetaHeksagon({
       map.addSource("disarankan", { type: "geojson", data: kosong });
       // Casing gelap DI BAWAH garis kuning, alasan yang sama dengan garis
       // rute: kuning #f0d45e di atas isi heksagon kelas tengah (yang juga
-      // #f0d45e) berkontras 1,00:1 — benar-benar tidak terlihat. Dengan alas
+      // #f0d45e) berkontras 1,00:1, benar-benar tidak terlihat. Dengan alas
       // gelap, garisnya terbaca di atas kelas warna apa pun.
       map.addLayer({
         id: "disarankan-casing",
@@ -1253,7 +1253,7 @@ export default function PetaHeksagon({
       return;
     }
 
-    // Tetangga dalam radius sekitar 1,5 km dari kampus — sejalan dengan
+    // Tetangga dalam radius sekitar 1,5 km dari kampus, sejalan dengan
     // ZOOM_KAMPUS yang memperlihatkan kawasan seluas itu.
     const [lonK, latK] = fokus.pusat;
     const dekat = [];
@@ -1562,7 +1562,7 @@ export default function PetaHeksagon({
             <p>
               {loadState === "error"
                 ? "Peta belum berhasil dimuat."
-                : "Menyiapkan peta kawasan…"}
+                : "Menyiapkan peta kawasan..."}
             </p>
             {loadState === "error" ? (
               <button

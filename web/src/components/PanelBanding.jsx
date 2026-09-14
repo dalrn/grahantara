@@ -14,7 +14,7 @@ import {
 } from "../lib/bahasaIndikator";
 
 // Warna A/B dari satu sumber (design.js), sama persis dengan garis heksagon
-// di peta dan pin kos — supaya kartu di panel bisa langsung dicocokkan dengan
+// di peta dan pin kos, supaya kartu di panel bisa langsung dicocokkan dengan
 // heksagon yang disorot. Keduanya di luar skala skor agar tidak tertukar
 // artinya dengan warna heksagon.
 const WARNA_A = bandingColors.a;
@@ -94,11 +94,9 @@ export default function PanelBanding({
     selisih === null ? null : selisih > 0.05 ? "A" : selisih < -0.05 ? "B" : null;
 
   // Tiga selisih dimensi terbesar, jadi kalimat alasan.
-  // Tiap selisih dinilai terhadap SIMPANGAN BAKU dimensinya, bukan dibaca
-  // apa adanya. Simpangan bakunya berbeda sampai 3,4 kali antar dimensi:
-  // selisih 7 poin hampir satu sd di Lingkungan jalan kaki (sd 7,6) tetapi
-  // hanya 0,27 sd di Biaya (sd 25,6). Menampilkan keduanya seolah sama besar
-  // membuat pengguna mengira dua kawasan berbeda jauh padahal tidak.
+  // Selisih dinilai terhadap simpangan baku dimensinya. Sd berbeda sampai
+  // 3,4 kali antar dimensi: 7 poin hampir satu sd di Lingkungan jalan kaki
+  // (sd 7,6), tetapi hanya 0,27 sd di Biaya (sd 25,6).
   const nilaiSelisih = (kunci, beda) => {
     const sd = SEBARAN_DIMENSI[kunci]?.simpanganBaku;
     if (!sd) return { rasio: null, tingkat: null };
@@ -193,7 +191,7 @@ export default function PanelBanding({
           className="text-2xl font-bold"
           style={{ color: warnaTeksSkor(skor, ambangSkor) ?? undefined }}
         >
-          {skor !== null && skor !== undefined ? formatSkor(skor) : "—"}
+          {skor !== null && skor !== undefined ? formatSkor(skor) : "-"}
         </div>
         {band && <div className="text-xs text-slate-400">{band}</div>}
       </div>
@@ -233,7 +231,7 @@ export default function PanelBanding({
             >
               {skorKini?.a !== null && skorKini?.a !== undefined
                 ? formatSkor(skorKini.a)
-                : "—"}
+                : "-"}
             </span>
           </div>
         )}
@@ -512,7 +510,7 @@ export default function PanelBanding({
         )}
 
         <div className="mt-3 border-t border-white/10 pt-2 text-xs text-slate-500">
-          Data versi {versi ?? "—"}
+          Data versi {versi ?? "-"}
           {formatTanggal(dihitungPada)
             ? `, dihitung ${formatTanggal(dihitungPada)}`
             : ""}

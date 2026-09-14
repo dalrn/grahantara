@@ -1,15 +1,6 @@
-/**
- * Tautan ke Google Maps untuk sebuah titik.
- *
- * Dipakai popup kos, popup halte/kampus/gerbang/KRL, dan pin yang dijatuhkan
- * pengguna. Grahantara menilai kawasan; navigasi belokan-per-belokan bukan
- * tugasnya, jadi untuk itu pengguna diantar ke Google Maps.
- *
- * Format `?api=1` adalah URL universal yang resmi didukung Google: di ponsel
- * ia membuka aplikasi Maps bila terpasang, di desktop membuka peta web.
- * Koordinat ditulis `lat,lon` — urutan Google, KEBALIKAN dari [lon, lat] milik
- * GeoJSON/MapLibre. Salah urutan di sini memindahkan titiknya ke Somalia.
- */
+// Tautan Google Maps. Format `?api=1` membuka aplikasi Maps di ponsel dan
+// peta web di desktop. Koordinat ditulis `lat,lon`, kebalikan dari [lon, lat]
+// milik GeoJSON.
 
 const sah = (c) =>
   Array.isArray(c) && Number.isFinite(c[0]) && Number.isFinite(c[1]);

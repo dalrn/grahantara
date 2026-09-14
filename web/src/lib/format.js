@@ -1,19 +1,6 @@
-/**
- * Pembulatan yang menghormati ketelitian data.
- *
- * Presisi berlebih menurunkan kepercayaan karena menyiratkan ketelitian yang
- * tidak dimiliki datanya: jarak jalan kaki tidak butuh satu desimal, dan
- * 3.504,9 m tidak butuh ketelitian 10 sentimeter. Aturannya:
- *
- *   jarak  < 1000 m  -> bulat, "43 m"
- *   jarak >= 1000 m  -> kilometer satu desimal, "3,5 km"
- *   skor & subskor    -> bulat, "81" bukan "81,31"
- *   cacah (rute, titik, kategori) -> bulat
- *   rupiah            -> bulat, pemisah ribuan
- *
- * Indeks abstrak (NDVI, nW/sr/cm2) tidak dibulatkan di sini: angkanya hanya
- * tampil di balik toggle "angka mentah", tempat presisi justru diinginkan.
- */
+// Pembulatan dibuat sesuai ketelitian datanya: jarak < 1 km bulat, >= 1 km
+// jadi kilometer satu desimal, skor dan cacah bulat. Indeks abstrak (NDVI,
+// nW/sr/cm2) tidak dibulatkan karena hanya tampil di balik toggle angka mentah.
 const SATUAN_CACAH = new Set(["rute", "titik", "kategori", "per km2"]);
 
 export function formatJarak(meter) {

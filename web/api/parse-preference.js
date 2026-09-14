@@ -185,7 +185,7 @@ catatanEkstra yang BENAR:
   ["fasilitas yang penting hanya tempat makan", "maksimal 10 menit ke kampus"]
 DUA butir, bukan satu. "UGM" dan "1 juta" tidak masuk karena sudah jadi
 kampus dan anggaran. Penekanan tempat makan MASUK karena lebih spesifik
-daripada sekadar menaikkan bobot Fasilitas — pengguna justru mengecilkan
+daripada sekadar menaikkan bobot Fasilitas, pengguna justru mengecilkan
 apotek dan minimarket di dalam dimensi yang sama.
 
 "penekanan" dipakai bila pengguna menyebut SATU hal spesifik di dalam sebuah

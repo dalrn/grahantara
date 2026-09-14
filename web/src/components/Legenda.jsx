@@ -32,7 +32,7 @@ export default function Legenda({ labels }) {
             ))
           ) : (
             <p className="animate-pulse text-xs text-slate-400">
-              Memuat rentang skor…
+              Memuat rentang skor...
             </p>
           )}
         </div>

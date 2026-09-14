@@ -140,18 +140,18 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
   };
 
   const formatBilangan = (n) =>
-    typeof n === "number" ? n.toLocaleString("id-ID") : "—";
+    typeof n === "number" ? n.toLocaleString("id-ID") : "-";
   const formatPecahan = (n) =>
     typeof n === "number"
       ? `${n.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%`
-      : "—";
+      : "-";
   const satuDesimal = (n) =>
     typeof n === "number"
       ? n.toLocaleString("id-ID", {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1,
         })
-      : "—";
+      : "-";
 
   const versiData = data?.metadata?.versi ?? versi;
   const dihitung = data?.metadata?.dihitung_pada ?? null;
@@ -343,9 +343,9 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
             <Bagian id="wilayah" judul="Wilayah studi">
               <p className="metodologi-p">
                 Wilayah studi adalah sabuk kampus Sleman, DIY, dibagi menjadi{" "}
-                {jumlah !== null ? formatBilangan(jumlah) : "—"} heksagon H3
+                {jumlah !== null ? formatBilangan(jumlah) : "-"} heksagon H3
                 resolusi 9. Tiap heksagon berluas sekitar 0,1 km² dengan lebar
-                sekitar 380 m — cukup kecil untuk terasa sebagai satu
+                sekitar 380 m, cukup kecil untuk terasa sebagai satu
                 lingkungan, cukup besar untuk punya beberapa pilihan kos.
               </p>
               <p className="metodologi-p">
@@ -425,9 +425,9 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                   diubah menjadi peringkat persentil (ECDF) terhadap{" "}
                   <b>seluruh heksagon wilayah studi yang punya nilai untuk
                   indikator itu</b>, bukan terhadap nilai maksimum teoretis dan
-                  bukan terhadap subhimpunan mana pun. Hasilnya 0–1. Nilai yang
+                  bukan terhadap subhimpunan mana pun. Hasilnya 0 sampai 1. Nilai yang
                   sama mendapat peringkat rata-rata. Indikator tanpa data tidak
-                  mendapat persentil sama sekali — persentil akan menyiratkan
+                  mendapat persentil sama sekali, persentil akan menyiratkan
                   kita tahu sesuatu.
                 </li>
                 <li>
@@ -445,7 +445,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
               </ol>
               <p className="metodologi-rumus-blok">
                 <span className="rumus-baris">
-                  subskor<sub>d</sub> = 100 × ( Σ<sub>i∈d</sub> w<sub>i</sub> ·
+                  subskor<sub>d</sub> = 100 × ( Σ<sub>i∈d</sub> w<sub>i</sub> /
                   p<sub>i</sub> ) ÷ ( Σ<sub>i∈d</sub> w<sub>i</sub> )
                 </span>
               </p>
@@ -454,23 +454,23 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                   <b>
                     p<sub>i</sub>
                   </b>{" "}
-                  — peringkat persentil indikator <i>i</i>, bernilai 0 sampai 1
+                 , peringkat persentil indikator <i>i</i>, bernilai 0 sampai 1
                 </li>
                 <li>
                   <b>
                     w<sub>i</sub>
                   </b>{" "}
-                  — bobot indikator <i>i</i> di dalam dimensinya
+                 , bobot indikator <i>i</i> di dalam dimensinya
                 </li>
                 <li>
-                  <b>i ∈ d</b> — hanya indikator dimensi itu yang{" "}
+                  <b>i ∈ d</b>, hanya indikator dimensi itu yang{" "}
                   <b>punya data</b>
                 </li>
               </ul>
               <p className="metodologi-p">
                 Contohnya: subskor {NAMA_DIMENSI.connectivity} dibentuk dari
                 empat indikatornya dengan bobot jarak halte 0,30, rute unik
-                0,20, keterjangkauan kampus 0,40, dan jarak stasiun KRL 0,10 —
+                0,20, keterjangkauan kampus 0,40, dan jarak stasiun KRL 0,10 -
                 masing-masing dikalikan persentilnya, dijumlahkan, lalu dikali
                 100.
               </p>
@@ -523,23 +523,23 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
               </p>
               <ul className="metodologi-simbol">
                 <li>
-                  <b>D</b> — himpunan dimensi yang <b>punya data</b> pada
+                  <b>D</b>, himpunan dimensi yang <b>punya data</b> pada
                   heksagon itu
                 </li>
                 <li>
                   <b>
                     w<sub>d</sub>
                   </b>{" "}
-                  — bobot dimensi <i>d</i>
+                 , bobot dimensi <i>d</i>
                 </li>
                 <li>
-                  <b>W</b> — jumlah bobot dimensi di dalam D, sebagai penormal
+                  <b>W</b>, jumlah bobot dimensi di dalam D, sebagai penormal
                 </li>
                 <li>
-                  <b>ε</b> — konstanta kecil 0,01
+                  <b>ε</b>, konstanta kecil 0,01
                 </li>
                 <li>
-                  <b>∏</b> — hasil kali atas seluruh dimensi di D
+                  <b>∏</b>, hasil kali atas seluruh dimensi di D
                 </li>
               </ul>
               <ul className="metodologi-ul">
@@ -568,7 +568,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                     <>
                       {" "}
                       Pada data ini tidak ada heksagon yang punya dimensi
-                      kosong, jadi mekanisme itu tidak terpakai — penjelasannya
+                      kosong, jadi mekanisme itu tidak terpakai, penjelasannya
                       tetap dicantumkan karena aturannya berlaku untuk data
                       berikutnya.
                     </>
@@ -635,11 +635,11 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                   <tbody>
                     <tr>
                       <td>Dua dimensi dipilih</td>
-                      <td>40% · 40% · 10% · 10%</td>
+                      <td>40% / 40% / 10% / 10%</td>
                     </tr>
                     <tr>
                       <td>Satu dimensi dipilih</td>
-                      <td>55% · 15% · 15% · 15%</td>
+                      <td>55% / 15% / 15% / 15%</td>
                     </tr>
                     <tr>
                       <td>&ldquo;Semuanya sama penting bagiku&rdquo;</td>
@@ -652,7 +652,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 Bobot dari beranda menjadi posisi awal di panel prioritas
                 halaman peta, lalu poinnya bisa dibagi ulang sesuka pengguna.
                 Pilihan &ldquo;semuanya sama penting&rdquo; berarti tidak ada
-                preferensi khusus, jadi yang dipakai adalah bobot bawaan —
+                preferensi khusus, jadi yang dipakai adalah bobot bawaan -
                 bukan pembagian rata, yang justru menyiratkan keempat dimensi
                 sama pentingnya.
               </p>
@@ -716,8 +716,8 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                                 {ik.dimensi}
                               </span>
                             </td>
-                            <td>{ik.satuan ?? "—"}</td>
-                            <td>{ik.sumber || "—"}</td>
+                            <td>{ik.satuan ?? "-"}</td>
+                            <td>{ik.sumber || "-"}</td>
                             <td className="kanan">
                               {formatBilangan(ik.punya ?? 0)}
                             </td>
@@ -823,7 +823,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
               <p className="metodologi-p">
                 Peringkat persentil <b>tidak</b> membalik arah dengan
                 sendirinya. Yang dilakukan adalah membalik arahnya lebih dulu,
-                di tingkat indikator, sebelum persentil dihitung — dan tiap
+                di tingkat indikator, sebelum persentil dihitung, dan tiap
                 indikator memakai transformasi yang sesuai sifatnya, bukan satu
                 aturan seragam:
               </p>
@@ -831,8 +831,8 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 <li>
                   <b>{NAMA_INDIKATOR.C1_jarak_halte}</b> dan{" "}
                   <b>{NAMA_INDIKATOR.C4_jarak_krl}</b> memakai peluruhan
-                  eksponensial atas jaraknya, exp(−jarak/400 m) dan
-                  exp(−jarak/800 m). Jarak besar meluruh mendekati nol, jadi
+                  eksponensial atas jaraknya, exp(-jarak/400 m) dan
+                  exp(-jarak/800 m). Jarak besar meluruh mendekati nol, jadi
                   nilai tinggi berarti dekat.
                 </li>
                 <li>
@@ -844,7 +844,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 <li>
                   <b>{NAMA_INDIKATOR.W5_tekanan_lalin}</b> dan{" "}
                   <b>{NAMA_INDIKATOR.W4_banjir}</b> menyimpan{" "}
-                  <b>1 − tekanan</b> dan <b>1 − indeks bahaya</b>. Itu sebabnya
+                  <b>1 - tekanan</b> dan <b>1 - indeks bahaya</b>. Itu sebabnya
                   keduanya dinamai menurut hal baiknya (ketenangan, keamanan),
                   bukan hal buruknya.
                 </li>
@@ -865,7 +865,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 , dan angkanya tidak bisa dibandingkan langsung. Subskor adalah
                 rata-rata persentil, jadi sebarannya melebar hampir penuh. Skor
                 total adalah rata-rata geometrik atas keempat subskor, dan
-                rata-rata geometrik menarik nilai ekstrem ke tengah — sehingga
+                rata-rata geometrik menarik nilai ekstrem ke tengah, sehingga
                 rentangnya selalu lebih sempit.
               </p>
               {rentang && (
@@ -941,7 +941,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
                 )}
                 <li>
                   Harga sewa berasal dari{" "}
-                  {kosTotal ? formatBilangan(kosTotal) : "—"} titik survei.
+                  {kosTotal ? formatBilangan(kosTotal) : "-"} titik survei.
                   Sebagian dari media sosial dan spanduk, bukan seluruhnya
                   wawancara langsung.
                 </li>

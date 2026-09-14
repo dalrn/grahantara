@@ -8,7 +8,7 @@ import AlokasiPoin, { TOTAL_POIN } from "./AlokasiPoin";
 // mendarat di peta.
 // App menyimpan bobot sebagai angka mentah 0-100 dan skor memakai bobot
 // RELATIF (w / Sigma-w). Kontrol alokasi bekerja dalam 12 poin, jadi konversi
-// dilakukan di batas komponen ini saja — logika skor di App tidak disentuh.
+// dilakukan di batas komponen ini saja, logika skor di App tidak disentuh.
 function bobotKeAlokasi(bobot) {
   const total = DIMENSI_UI.reduce((a, { kunci }) => a + (bobot[kunci] ?? 0), 0);
   const hasil = {};
@@ -46,11 +46,8 @@ export default function PanelBobot({
   onBobotBerubah,
   onKembalikanBawaan,
 }) {
-  // Acuan bawaan datang dari App (metadata.bobot_default), BUKAN dari
-  // BOBOT_DEFAULT di config. Sebelumnya panel ini memakai konstanta config
-  // sementara App memakai metadata: keduanya kebetulan bernilai sama, jadi
-  // tidak ada gejala — tapi begitu pipeline mengubah bobot bawaan, panel dan
-  // tombol "Kembalikan bawaan" akan berselisih diam-diam.
+  // Acuan bawaan dari App (metadata.bobot_default), bukan konstanta config,
+  // supaya panel dan tombol "Kembalikan bawaan" memakai sumber yang sama.
   const bedaDariBawaan = DIMENSI_UI.some(
     ({ kunci }) => Math.abs((bobot[kunci] ?? 0) - (bobotBawaan[kunci] ?? 0)) > 0.5,
   );

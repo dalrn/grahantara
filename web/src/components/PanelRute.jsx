@@ -10,7 +10,7 @@ import { ruteColors } from "../design";
  * bus, kuning putus-putus untuk jalan kaki, keduanya di atas alas gelap yang
  * sama dengan casing di peta.
  *
- * Ini yang menggantikan legenda terpisah — pemetaan warna ke moda terbaca
+ * Ini yang menggantikan legenda terpisah, pemetaan warna ke moda terbaca
  * langsung dari daftar langkah. Pembedanya bukan warna saja: penuh versus
  * putus-putus tetap terbaca dalam grayscale.
  */
@@ -168,11 +168,11 @@ export default function PanelRute({
               {rute.totalMenit}
             </span>
             <span className="text-xs text-slate-400">
-              menit · {(rute.totalMeter / 1000).toFixed(1)} km
+              menit, {(rute.totalMeter / 1000).toFixed(1)} km
             </span>
             {status === "memuat" && (
               <span className="ml-auto animate-pulse text-xs text-slate-500">
-                menghitung…
+                menghitung...
               </span>
             )}
           </div>
@@ -208,7 +208,7 @@ export default function PanelRute({
                 <span className="min-w-0">
                   <span className="text-slate-200">{l.teks}</span>
                   <span className="block text-slate-500">
-                    {l.menit} menit · {l.meter.toLocaleString("id-ID")} m
+                    {l.menit} menit, {l.meter.toLocaleString("id-ID")} m
                   </span>
                 </span>
               </li>

@@ -1,20 +1,4 @@
-/**
- * SUMBER TUNGGAL seluruh teks yang tampil di halaman beranda.
- *
- * Strukturnya mengikuti struktur halaman dari atas ke bawah — nav, hero,
- * kartu form (tahap 1 lalu tahap 2), bagian dimensi, bagian data, footer —
- * supaya bisa ditelusuri dari apa yang terlihat di layar ke tempatnya di kode.
- *
- * Yang TIDAK ada di sini, dan memang tidak boleh dipindahkan ke sini:
- *   - Angka yang berasal dari data: jumlah kawasan, versi, dan tanggal
- *     dihitung dibaca dari `public/data/metadata.json` saat runtime.
- *   - Persentase bobot: dihitung dari pilihan pengguna di `Beranda.jsx`.
- *   - Nama dan urutan dimensi: `src/lib/kamus.js` (DIMENSI_UI), dipakai
- *     bersama oleh beranda dan slider di halaman peta.
- *   - Daftar kampus: `src/kampus.js`.
- *
- * Fungsi (bukan string) dipakai bila kalimatnya menyisipkan angka dari data.
- */
+// Seluruh teks halaman beranda, disusun mengikuti urutan tampilannya.
 export const TEKS = {
   nav: {
     labelBeranda: "Grahantara beranda",
@@ -25,28 +9,24 @@ export const TEKS = {
 
   hero: {
     judul: "Peta kawasan untuk memilih tempat tinggal di Sleman.",
-    // jumlah datang dari metadata.json, bukan ditulis tangan.
     pembuka: (jumlah) =>
       `Grahantara menilai ${jumlah} kawasan di sabuk kampus Sleman. Tentukan yang paling penting bagimu dan bandingkan langsung kawasannya di peta.`,
     keteranganPeta:
       "Tiap heksagon adalah satu kawasan seluas sekitar 0,1 km², diwarnai menurut skor default.",
   },
 
-  // Overlay di dalam peta hero (PetaHero.jsx).
   peta: {
     buka: "Buka peta lengkap",
     legendaRendah: "Kurang sesuai",
     legendaTinggi: "Lebih sesuai",
-    // skor dibulatkan dari data heksagon yang sedang disorot.
     artiSkor: (persen) => `lebih baik daripada ${persen}% kawasan lain`,
     gagal:
       "Peta tidak dapat dimuat. Data kawasan tetap bisa dibuka di halaman peta.",
   },
 
   form: {
-    // Tahap 1 — menulis.
     tulis: {
-      judul: "Kawasan bagaimana yang kamu cari?",
+      judul: "Kawasan seperti apa yang kamu cari?",
       labelTextarea: "Ceritakan kebutuhanmu",
       placeholder:
         "maba UGM, budget sekitar 800 ribu, pengennya deket halte soalnya belum bawa motor",
@@ -56,12 +36,11 @@ export const TEKS = {
         "anggaran 1,5 juta, yang penting banyak warung murah",
       ],
       lanjut: "Lanjut",
-      sedangMembaca: "Membaca catatanmu…",
+      sedangMembaca: "Membaca catatanmu...",
       lewatiKePeta: "Jelajahi peta tanpa mengisi",
       lewatiKePilihan: "Lebih suka memilih daripada menulis",
     },
 
-    // Tahap 2 — konfirmasi hasil pembacaan.
     konfirmasi: {
       judul: "Periksa dulu",
       dariCatatan: "Ini hasil pembacaan catatanmu. Ubah yang belum tepat.",
@@ -88,14 +67,13 @@ export const TEKS = {
       kembali: "Kembali ubah catatan",
     },
 
-    // Peringatan data palsu; hanya muncul bila metadata.versi diawali "stub".
+    // Hanya muncul bila metadata.versi diawali "stub".
     stub: (versi) =>
       `DATA PALSU (${versi}) - angka pada peta ini acak, bukan hasil analisis`,
   },
 
   dimensi: {
     judul: "Empat hal yang dinilai di tiap kawasan",
-    // Kunci mengikuti DIMENSI_UI di src/lib/kamus.js.
     penjelasan: {
       connectivity:
         "Jarak ke halte, jumlah rute, dan apakah ada koridor yang benar-benar sampai ke kampusmu.",
@@ -106,10 +84,7 @@ export const TEKS = {
       walkability:
         "Keteduhan, penerangan malam, kerapatan simpang, ketenangan lalu lintas, dan ketersediaan jalur pejalan kaki.",
     },
-    // Kalimat cakupan DIHASILKAN dari data, bukan ditulis manual: menyebut
-    // dimensi tertentu "hanya terisi sebagian" akan basi begitu datanya
-    // berubah. `kurang` berisi nama dimensi yang cakupannya belum penuh,
-    // dihitung SebaranDimensi dari hexagons.geojson.
+    // `kurang` berisi dimensi yang cakupannya belum penuh, dari SebaranDimensi.
     catatan: (jumlah, kurang = []) =>
       kurang.length === 0
         ? `Tiap grafik adalah sebaran skor dimensi itu, dihitung untuk seluruh ${jumlah} kawasan.`
@@ -120,9 +95,8 @@ export const TEKS = {
     judul: "Dasar penilaiannya",
     catatan: [
       "Skor adalah peringkat terhadap seluruh wilayah studi. Skor 70 berarti kawasan itu lebih baik daripada 70% kawasan lain di Sleman.",
-      "Indikator yang datanya belum ada ditandai “tidak tersedia” dan dikeluarkan dari perhitungan, tidak dihitung sebagai nol. Kawasan tanpa data tidak dianggap buruk.",
+      "Indikator yang datanya belum ada ditandai 'tidak tersedia' dan dikeluarkan dari perhitungan, tidak dihitung sebagai nol. Kawasan tanpa data tidak dianggap buruk.",
     ],
-    // `angka` diisi dari data saat render; hanya keterangannya yang statis.
     angka: {
       kawasan:
         "kawasan dinilai, masing-masing heksagon seluas ~0,1 km² atau selebar ~380 m",
@@ -147,6 +121,4 @@ export const TEKS = {
   },
 };
 
-// Jumlah kampus yang datanya tercakup. Bukan teks: dihitung dari daftar
-// kampus supaya angka di halaman tidak pernah berbeda dari isi peta.
 export { DAFTAR_KAMPUS } from "../kampus.js";

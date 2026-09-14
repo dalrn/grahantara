@@ -70,7 +70,7 @@ const skorTotal = statistik(fitur.map((f) => f.properties.skor));
 
 // Alih-alih menyimpan seluruh nilai, simpan 101 titik kuantil per dimensi
 // (0%, 1%, ... 100%). Mencari persentil sebuah subskor cukup dengan mencari
-// posisi sisip di larik 101 elemen itu — cukup presisi untuk kalimat seperti
+// posisi sisip di larik 101 elemen itu, cukup presisi untuk kalimat seperti
 // "termasuk 20% terendah", dan berkasnya tetap kecil.
 const kuantil = {};
 for (const d of DIMENSI) {

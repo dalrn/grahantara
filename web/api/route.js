@@ -1,21 +1,12 @@
-// Proksi routing OSRM. Diletakkan di serverless agar demo tidak bergantung
-// langsung pada rate limit server publik dari tiap browser, dan agar hasil
-// bisa di-cache di edge.
+// Proksi routing, diletakkan di serverless supaya tidak bergantung pada rate
+// limit server publik dari tiap browser dan hasilnya bisa di-cache di edge.
 
-// Tiap profil punya SERVER SENDIRI, bukan satu server dengan banyak profil.
+// Tiap profil punya server sendiri. router.project-osrm.org hanya memuat
+// profil mobil: path /foot/ diterima tapi hasilnya identik dengan /driving/,
+// sehingga rute pejalan ikut mematuhi jalan satu arah dan melewatkan gang
+// tembus. routing.openstreetmap.de memisahkan mesinnya per profil.
 //
-// router.project-osrm.org hanya memuat profil MOBIL. Path /foot/ diterima
-// tanpa galat, tapi hasilnya identik dengan /driving/ — terukur: jarak dan
-// durasi sama persis sampai desimal, dan rute di jalan satu arah tetap
-// memutar walau pejalan kaki tidak terikat arah itu. Akibatnya rute "jalan
-// kaki" mengikuti aturan lalu lintas yang tidak relevan bagi pejalan kaki
-// dan melewatkan gang tembus.
-//
-// routing.openstreetmap.de menyediakan mesin terpisah per profil. Terukur di
-// sabuk kampus Sleman, rutenya sampai 533 m LEBIH PENDEK daripada profil
-// mobil karena memakai jalur pejalan yang memang ada.
-//
-// Catatan: path-nya tetap /route/v1/driving/ untuk SEMUA profil — itu nama
+// Catatan: path-nya tetap /route/v1/driving/ untuk SEMUA profil, itu nama
 // path bawaan OSRM, sedangkan profil sebenarnya ditentukan oleh server yang
 // dipanggil (routed-foot / routed-car). Bukan salah tulis.
 const SERVER = {

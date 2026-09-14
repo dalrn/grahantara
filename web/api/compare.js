@@ -1,6 +1,7 @@
 import { panggilDeepseek, parseJsonLonggar } from "./_klienLLM.js";
 import { NAMA_DIMENSI, KELOMPOK_NAMA } from "./_namaDimensi.js";
 import { temuanBanding } from "./_temuan.js";
+import { aktivitasHeksagon } from "./_aktivitas.js";
 import { kalimatTemuan } from "./_kalimatTemuan.js";
 
 const DIMENSI = Object.keys(NAMA_DIMENSI);
@@ -66,7 +67,7 @@ const fmtPersentil = (p) =>
   typeof p === "number" ? Math.round(p <= 1 ? p * 100 : p) : "NA";
 
 // Baris indikator memakai LABEL KUALITATIF, bukan nilai mentah: alasannya
-// sama dengan explain-score.js — nilai mentah dan satuan teknis di konteks
+// sama dengan explain-score.js, nilai mentah dan satuan teknis di konteks
 // membuat model mengulanginya apa adanya. Arah perbandingan tetap dihitung
 // server dari persentil, jadi polaritas tidak bergantung pada model.
 function barisData(nama, a, b, unavailableKedua) {
@@ -182,6 +183,11 @@ export default async function handler(req, res) {
     const adaB = ib.tersedia ?? (ib.sumber !== "tidak_tersedia" && ib.nilai != null);
     garis.push(barisData(ia.nama, ia, ib, !adaA && !adaB));
   }
+  // Bukti lapangan hanya disebut bila TIMPANG. Kalau keduanya disurvei atau
+  // keduanya tidak, informasinya tidak membedakan apa pun.
+  const buktiA = aktivitasHeksagon(b.a.h3_index);
+  const buktiB = aktivitasHeksagon(b.b.h3_index);
+
   const { temuan } = temuanBanding({
     a: b.a,
     b: b.b,
@@ -192,6 +198,13 @@ export default async function handler(req, res) {
     garis.push("");
     garis.push("TEMUAN (sudah dihitung, salin apa adanya):");
     for (const t of temuan) garis.push(kalimatTemuan(t));
+  }
+  if (Boolean(buktiA) !== Boolean(buktiB)) {
+    const sisi = buktiA ? "A" : "B";
+    const n = (buktiA ?? buktiB).total;
+    garis.push(
+      `- DIKUNJUNGI TIM: hanya Kawasan ${sisi} yang disurvei langsung di lapangan (${n} aktivitas). Ini TIDAK membuatnya lebih baik; skor kedua kawasan dihitung dari data yang sama.`,
+    );
   }
 
   const pengguna = `Bobot yang dipakai: ${DIMENSI.map((d) => `${NAMA_DIMENSI[d]} ${b.bobot?.[d] ?? "-"}`).join(" | ")}\n\nKawasan A: h3 ${b.a.h3_index} | Kawasan B: h3 ${b.b.h3_index}\n\n${garis.join("\n")}`;
@@ -208,11 +221,11 @@ Bentuk keluaran:
 }
 Hingga dua keunggulan untuk masing-masing kawasan; pilih dua yang terkuat.
 Bila sebuah kawasan tidak unggul pada dimensi maupun indikator mana pun,
-tulis array keunggulannya KOSONG ([]) — jangan mengarang keunggulan.
+tulis array keunggulannya KOSONG ([]), jangan mengarang keunggulan.
 ATURAN:
 - Setiap kalimat WAJIB berlabuh pada TEMUAN atau indikator yang diberikan.
   Kalimat yang menyampaikan sebuah temuan TIDAK perlu menyebut nama
-  indikator — cukup menyampaikan isi temuannya.
+  indikator, cukup menyampaikan isi temuannya.
 - Utamakan menyampaikan TEMUAN; baris data hanya bahan pendukung.
 - DILARANG memulai kalimat dengan kata "Indikator".
 - DILARANG memakai kata "persentil" sebagai istilah. Nyatakan artinya.
@@ -224,6 +237,8 @@ ATURAN:
   data yang diberikan DILARANG dipakai.
 - Bila ada temuan bertanda PEMENANG KALAH DI PRIORITAS, temuan itu WAJIB
   muncul di "simpulan".
+- Temuan bertanda DIKUNJUNGI TIM DILARANG dijadikan keunggulan salah satu
+  kawasan. Disurvei atau tidak sama sekali tidak memengaruhi skor.
 - Bila ada temuan bertanda KEDUA KAWASAN PRAKTIS SETARA, JANGAN menonjolkan
   pemenang. Sarankan memilih berdasarkan hal di luar cakupan analisis ini,
   misalnya kondisi bangunan atau kecocokan pribadi.

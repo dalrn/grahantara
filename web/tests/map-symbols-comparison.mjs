@@ -25,16 +25,6 @@ try {
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text());
   });
-  await page.route("**/src/components/PetaHeksagon.jsx*", async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({
-      response,
-      body: (await response.text()).replace(
-        "peta.current = map;",
-        "peta.current = map; window.__qaMap = map;",
-      ),
-    });
-  });
   const kos = JSON.parse(fs.readFileSync("public/data/kos.geojson"));
   const missing = kos.features.find((f) => f.properties.harga_median === null);
   const first = kos.features.find(
@@ -57,7 +47,7 @@ try {
     route.fulfill({ json: kos }),
   );
   await page.goto(process.env.UI_TEST_URL || "http://127.0.0.1:5178");
-  await page.getByRole("button", { name: "Lewati, langsung ke peta" }).click();
+  await page.getByRole("button", { name: "Jelajahi peta tanpa mengisi" }).click();
   await page.waitForFunction(() => window.__qaMap?.getLayer("titik-kos"));
   await page.waitForFunction(
     () => __qaMap.queryRenderedFeatures({ layers: ["titik-kos"] }).length > 0,

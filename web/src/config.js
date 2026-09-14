@@ -48,7 +48,7 @@ export const BOBOT_INDIKATOR = {
 // pengguna. Nilainya pengali bobot indikator, bukan bobot itu sendiri.
 //
 // Alasannya: "yang penting banyak tempat makan, fasilitas lain tidak
-// penting" sebelumnya hanya menaikkan seluruh dimensi Fasilitas — termasuk
+// penting" sebelumnya hanya menaikkan seluruh dimensi Fasilitas, termasuk
 // apotek dan minimarket yang justru dikecilkan pengguna. Terukur: 20 kawasan
 // teratas berubah 60% antara bobot campuran dan penekanan tempat makan.
 export const PENEKANAN = {
@@ -84,7 +84,7 @@ export const DIMENSI_PENEKANAN = {
 // Bobot indikator saja tidak cukup menjawab "dekat apotek": M4 layanan harian
 // adalah SATU indikator gabungan (apotek + minimarket + warung), jadi
 // menaikkan bobotnya menaikkan ketiganya sekaligus. Yang bisa dibedakan
-// adalah daftar tempatnya — di situ apotek, minimarket, dan warung memang
+// adalah daftar tempatnya, di situ apotek, minimarket, dan warung memang
 // tercatat terpisah. Jadi penekanan menentukan kategori mana yang tampil
 // lebih dulu dan tidak terpotong oleh batas daftar.
 export const SOROT_POI = {
@@ -100,11 +100,6 @@ export const SOROT_POI = {
  * makan" keduanya ada di dimensi Fasilitas, tetapi menuntut indikator yang
  * berbeda: yang pertama layanan harian, yang kedua kepadatan dan keragaman
  * tempat makan.
- *
- * Batasnya jujur: apotek, minimarket, dan warung sama-sama menyusun SATU
- * indikator gabungan (M4 layanan harian), jadi ketiganya menghasilkan
- * penekanan yang sama. Yang membedakan apotek dari minimarket hanyalah
- * daftar tempat di panel (SOROT_POI), bukan skornya.
  */
 export const PENEKANAN_KATEGORI = {
   makan: "makan",

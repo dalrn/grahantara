@@ -553,7 +553,7 @@ export default function App() {
             <button
               onClick={() => setModePin((v) => !v)}
               aria-pressed={modePin}
-              title={`Jatuhkan pin di peta — pintasan: ${pintasJatuhkanPin(adalahSentuh())}`}
+              title={`Jatuhkan pin di peta, pintasan: ${pintasJatuhkanPin(adalahSentuh())}`}
               className={`tombol-pin${modePin ? " is-aktif" : ""}`}
             >
               {modePin ? "Batalkan pin" : "Jatuhkan pin"}
@@ -599,7 +599,7 @@ export default function App() {
             fallback={
               <div className="loading-map" role="status">
                 <p className="animate-pulse text-sm text-emerald-400">
-                  Menyiapkan peta kawasan…
+                  Menyiapkan peta kawasan...
                 </p>
               </div>
             }
