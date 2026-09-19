@@ -26,11 +26,10 @@ Grahantara menilai kelayakan kawasan hunian untuk mahasiswa di sabuk kampus
 Sleman, DIY dari segi akses mobilitas tanpa kendaraan pribadi, biaya hidup,
 fasilitas sekitar, dan kenyamanan berjalan kaki.
 
-Dibuat oleh tim `cinajawabatak` untuk MAPID WebGIS Competition 2026, tema *Maps That Think! Mass
-Transportation Edition*.
-
 ![Grahantara](docs/gambar/hero.png)
-
+<sub>
+Dibuat oleh tim <code>cinajawabatak</code> untuk MAPID WebGIS Competition 2026, tema <i>Maps That Think! Mass Transportation Edition</i>.
+</sub>
 
 ---
 
