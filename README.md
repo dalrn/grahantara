@@ -1,17 +1,49 @@
-# Grahantara
+<div align="center">
 
-![Grahantara](docs/gambar/hero.png)
+<a href="https://grahantara.space">
+  <img src="docs/gambar/grahantara-logo.png" width="400">
+</a>
+
+[![Live](https://img.shields.io/badge/link-grahantara.space-2f7a5a?style=for-the-badge)](https://grahantara.space)
+[![MAPID WebGIS Competition](https://img.shields.io/badge/MAPID_WebGIS_Competition-2026-1a4d3a?style=for-the-badge)](https://mapid.co.id)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![MapLibre GL JS](https://img.shields.io/badge/MapLibre_GL_JS-5-295DAA?logo=maplibre&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-serverless-000000?logo=vercel&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![OSMnx](https://img.shields.io/badge/OSMnx-2.0-7EBC6F)
+![OSRM](https://img.shields.io/badge/OSRM-routing-7a7a7a)
+![NetworkX](https://img.shields.io/badge/NetworkX-3.4-2C5985)
+ 
+<br>
 
 **Memilih tempat tinggal itu keputusan mobilitas.**
 
+</div>
+
 Grahantara menilai kelayakan kawasan hunian untuk mahasiswa di sabuk kampus
-Sleman, DIY dari segi akses mobilitas tanpa kendaraan pribadi, biaya hidup, fasilitas sekitar, 
-dan kenyamanan berjalan kaki.
+Sleman, DIY dari segi akses mobilitas tanpa kendaraan pribadi, biaya hidup,
+fasilitas sekitar, dan kenyamanan berjalan kaki.
 
-**Coba di sini:** https://grahantara.space
+Dibuat oleh tim `cinajawabatak` untuk MAPID WebGIS Competition 2026, tema *Maps That Think! Mass
+Transportation Edition*.
 
-Dibuat untuk MAPID WebGIS Competition 2026, tema *Maps That Think! Mass
-Transportation Edition*. Tim `cinajawabatak`.
+![Grahantara](docs/gambar/hero.png)
+
+
+---
+
+## Daftar Isi
+
+- [Yang kami buat](#yang-kami-buat)
+- [Cara pakai](#cara-pakai)
+- [AI-nya ngapain saja](#ai-nya-ngapain-saja)
+- [Arsitektur](#arsitektur)
+- [Isi repo](#isi-repo)
+- [Menjalankan](#menjalankan)
+- [Data MAPID](#data-mapid)
+- [Tim](#tim)
 
 ---
 
