@@ -165,28 +165,36 @@ Tidak ada layar kosong.
 
 ## Arsitektur
 
-Analisis beratnya dikerjakan offline, sekali, sebelum deploy. Hasilnya dibekukan jadi
-GeoJSON statis. Runtime-nya tipis. Tidak ada basis data, tidak ada server
+Analisis berat dikerjakan offline sebelum deploy, dan hasilnya dibekukan sebagai
+GeoJSON statis. Tidak ada database, tidak ada server
 aplikasi. Satu-satunya panggilan server adalah saat pengguna buka aplikasi, ke
 serverless function yang mem-proxy API bahasa sama routing.
 
-```
-Fase 1, offline
-  MAPID, OSM, Sentinel-2, VIIRS, survei lapangan
-      |
-      v  pipeline Python (GeoPandas, OSMnx, NetworkX, H3, GEE)
-  web/public/data/hexagons.geojson
-      kontraknya di contracts/hexagon.schema.json
+```mermaid
+flowchart TB
+    subgraph offline["Fase 1 (offline, sekali sebelum deploy)"]
+        direction TB
+        sumber["MAPID - OSM - Sentinel-2 - VIIRS - survei lapangan"]
+        pipa["pipeline Python<br/>GeoPandas - OSMnx - NetworkX - H3 - GEE"]
+        geo["web/public/data/hexagons.geojson"]
+        skema["contracts/hexagon.schema.json"]
+        sumber --> pipa --> geo
+        skema -. kontrak .-> geo
+    end
 
-Fase 2, runtime
-  Browser (React, MapLibre GL JS)
-      |- CDN ....................... GeoJSON statis
-      |- MAPID MAPS ................ basemap
-      |- Serverless function ....... proxy LLM dan OSRM
-```
+    subgraph runtime["Fase 2 (runtime)"]
+        direction TB
+        cdn["CDN"]
+        basemap["MAPID MAPS"]
+        fn["Serverless function"]
+        browser["Browser<br/>React - MapLibre GL JS"]
+        cdn -- "GeoJSON statis" --> browser
+        basemap -- "basemap" --> browser
+        fn -- "proxy LLM dan OSRM" --> browser
+    end
 
-Untungnya murah, cepat, dan tidak bisa mati gara-gara database down. Ruginya,
-skor tidak akan berubah kecuali pipeline dijalankan ulang.
+    geo --> cdn
+```
 
 ## Isi repo
 
