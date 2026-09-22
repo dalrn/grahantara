@@ -73,6 +73,20 @@ const ANGGARAN_AWAL = 800000;
 const formatRupiah = (n) =>
   Number.isFinite(n) ? `Rp ${n.toLocaleString("id-ID")}` : "";
 
+// Anggaran dari AI/regex bisa di luar jangkauan slider. Nilai di luar batas
+// dipatok ke batas dan dicatat asalnya supaya panel bisa menjelaskannya;
+// nilai di dalam batas dibulatkan ke langkah slider terdekat.
+function sesuaikanAnggaran(nilai) {
+  if (nilai < ANGGARAN_MIN)
+    return { nilai: ANGGARAN_MIN, catatan: { asli: nilai, arah: "bawah" } };
+  if (nilai > ANGGARAN_MAKS)
+    return { nilai: ANGGARAN_MAKS, catatan: { asli: nilai, arah: "atas" } };
+  return {
+    nilai: Math.round(nilai / ANGGARAN_LANGKAH) * ANGGARAN_LANGKAH,
+    catatan: null,
+  };
+}
+
 export default function Beranda({
   onProfil,
   onLewati,
@@ -91,6 +105,8 @@ export default function Beranda({
     profilAwal?.anggaran ?? ANGGARAN_AWAL,
   );
   const [adaAnggaran, setAdaAnggaran] = useState(profilAwal?.anggaran != null);
+  // { asli, arah } bila anggaran dari AI dipatok ke batas slider.
+  const [catatanAnggaran, setCatatanAnggaran] = useState(null);
   const [pilihan, setPilihan] = useState(profilAwal?.prioritas ?? []);
   const [setara, setSetara] = useState(
     Boolean(profilAwal) && (profilAwal.prioritas ?? []).length === 0,
@@ -186,9 +202,12 @@ export default function Beranda({
   const keKonfirmasi = (hasil, pesan) => {
     if (hasil) {
       if (hasil.kampus) setKampus(hasil.kampus);
+      setCatatanAnggaran(null);
       if (hasil.anggaran != null) {
-        setAnggaran(hasil.anggaran);
+        const { nilai, catatan } = sesuaikanAnggaran(hasil.anggaran);
+        setAnggaran(nilai);
         setAdaAnggaran(true);
+        setCatatanAnggaran(catatan);
       }
       const dipilih = pilihanDariBobot(hasil.bobot);
       setPilihan(dipilih);
@@ -214,6 +233,7 @@ export default function Beranda({
       setRingkasAI(null);
       setCatatanEkstra([]);
       setPenekanan(null);
+      setCatatanAnggaran(null);
     }
     setPesanBaca(pesan ?? null);
     setTahap("konfirmasi");
@@ -461,8 +481,24 @@ export default function Beranda({
                       onChange={(e) => {
                         setAnggaran(Number(e.target.value));
                         setAdaAnggaran(true);
+                        setCatatanAnggaran(null);
                       }}
                     />
+                    {catatanAnggaran && (
+                      <p className="bidang-bantuan">
+                        Anggaranmu {formatRupiah(catatanAnggaran.asli)}{" "}
+                        {catatanAnggaran.arah === "atas"
+                          ? "melebihi"
+                          : "di bawah"}{" "}
+                        batas pencarian. Disesuaikan ke{" "}
+                        {formatRupiah(
+                          catatanAnggaran.arah === "atas"
+                            ? ANGGARAN_MAKS
+                            : ANGGARAN_MIN,
+                        )}
+                        .
+                      </p>
+                    )}
                     <div className="bidang-kaki">
                       <span>
                         {formatRupiah(ANGGARAN_MIN)} -{" "}
@@ -472,7 +508,10 @@ export default function Beranda({
                         <input
                           type="checkbox"
                           checked={!adaAnggaran}
-                          onChange={(e) => setAdaAnggaran(!e.target.checked)}
+                          onChange={(e) => {
+                            setAdaAnggaran(!e.target.checked);
+                            setCatatanAnggaran(null);
+                          }}
                         />
                         {TEKS.form.konfirmasi.anggaranCentang}
                       </label>

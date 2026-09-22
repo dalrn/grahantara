@@ -93,7 +93,11 @@ function validasiKetat(raw, msLatensi) {
   }
   const kampus = DAFTAR_KAMPUS.includes(raw?.kampus) ? raw.kampus : null;
   let anggaran = null;
-  if (typeof raw?.anggaran === "number" && raw.anggaran >= 100000 && raw.anggaran <= 10000000) {
+  if (
+    typeof raw?.anggaran === "number" &&
+    Number.isFinite(raw.anggaran) &&
+    raw.anggaran > 0
+  ) {
     anggaran = raw.anggaran;
   }
   const ringkas = typeof raw?.ringkas === "string" ? raw.ringkas.slice(0, 200) : "";
