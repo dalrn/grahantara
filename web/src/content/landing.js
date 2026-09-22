@@ -112,7 +112,7 @@ export const TEKS = {
 
   footer: {
     nama: "Grahantara",
-    deskripsi: "Peta kawasan? untuk memilih kos mahasiswa di Sleman, DIY.",
+    deskripsi: "Peta kawasan untuk memilih kos mahasiswa di Sleman, DIY.",
     peta: "Peta",
     metodologi: "Metodologi",
     diperbarui: (tanggal) => `Data diperbarui ${tanggal}`,
