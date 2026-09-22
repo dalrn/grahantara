@@ -1,17 +1,48 @@
-# Grahantara
+<div align="center">
 
-![Grahantara](docs/gambar/hero.png)
+<a href="https://grahantara.space">
+  <img src="docs/gambar/grahantara-logo.png" width="400">
+</a>
+
+[![Live](https://img.shields.io/badge/link-grahantara.space-2f7a5a?style=for-the-badge)](https://grahantara.space)
+[![MAPID WebGIS Competition](https://img.shields.io/badge/MAPID_WebGIS_Competition-2026-1a4d3a?style=for-the-badge)](https://mapid.co.id)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![MapLibre GL JS](https://img.shields.io/badge/MapLibre_GL_JS-5-295DAA?logo=maplibre&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-serverless-000000?logo=vercel&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![OSMnx](https://img.shields.io/badge/OSMnx-2.0-7EBC6F)
+![OSRM](https://img.shields.io/badge/OSRM-routing-7a7a7a)
+![NetworkX](https://img.shields.io/badge/NetworkX-3.4-2C5985)
+ 
+<br>
 
 **Memilih tempat tinggal itu keputusan mobilitas.**
 
+</div>
+
 Grahantara menilai kelayakan kawasan hunian untuk mahasiswa di sabuk kampus
-Sleman, DIY dari segi akses mobilitas tanpa kendaraan pribadi, biaya hidup, fasilitas sekitar, 
-dan kenyamanan berjalan kaki.
+Sleman, DIY dari segi akses mobilitas tanpa kendaraan pribadi, biaya hidup,
+fasilitas sekitar, dan kenyamanan berjalan kaki.
 
-**Coba di sini:** https://grahantara.space
+![Grahantara](docs/gambar/hero.png)
+<sub>
+Dibuat oleh tim <code>cinajawabatak</code> untuk MAPID WebGIS Competition 2026, tema <i>Maps That Think! Mass Transportation Edition</i>.
+</sub>
 
-Dibuat untuk MAPID WebGIS Competition 2026, tema *Maps That Think! Mass
-Transportation Edition*. Tim `cinajawabatak`.
+---
+
+## Daftar Isi
+
+- [Yang kami buat](#yang-kami-buat)
+- [Cara pakai](#cara-pakai)
+- [AI-nya ngapain saja](#ai-nya-ngapain-saja)
+- [Arsitektur](#arsitektur)
+- [Isi repo](#isi-repo)
+- [Menjalankan](#menjalankan)
+- [Data MAPID](#data-mapid)
+- [Tim](#tim)
 
 ---
 
@@ -134,28 +165,36 @@ Tidak ada layar kosong.
 
 ## Arsitektur
 
-Analisis beratnya dikerjakan offline, sekali, sebelum deploy. Hasilnya dibekukan jadi
-GeoJSON statis. Runtime-nya tipis. Tidak ada basis data, tidak ada server
+Analisis berat dikerjakan offline sebelum deploy, dan hasilnya dibekukan sebagai
+GeoJSON statis. Tidak ada database, tidak ada server
 aplikasi. Satu-satunya panggilan server adalah saat pengguna buka aplikasi, ke
 serverless function yang mem-proxy API bahasa sama routing.
 
-```
-Fase 1, offline
-  MAPID, OSM, Sentinel-2, VIIRS, survei lapangan
-      |
-      v  pipeline Python (GeoPandas, OSMnx, NetworkX, H3, GEE)
-  web/public/data/hexagons.geojson
-      kontraknya di contracts/hexagon.schema.json
+```mermaid
+flowchart TB
+    subgraph offline["Fase 1 (offline, sekali sebelum deploy)"]
+        direction TB
+        sumber["MAPID - OSM - Sentinel-2 - VIIRS - survei lapangan"]
+        pipa["pipeline Python<br/>GeoPandas - OSMnx - NetworkX - H3 - GEE"]
+        geo["web/public/data/hexagons.geojson"]
+        skema["contracts/hexagon.schema.json"]
+        sumber --> pipa --> geo
+        skema -. kontrak .-> geo
+    end
 
-Fase 2, runtime
-  Browser (React, MapLibre GL JS)
-      |- CDN ....................... GeoJSON statis
-      |- MAPID MAPS ................ basemap
-      |- Serverless function ....... proxy LLM dan OSRM
-```
+    subgraph runtime["Fase 2 (runtime)"]
+        direction TB
+        cdn["CDN"]
+        basemap["MAPID MAPS"]
+        fn["Serverless function"]
+        browser["Browser<br/>React - MapLibre GL JS"]
+        cdn -- "GeoJSON statis" --> browser
+        basemap -- "basemap" --> browser
+        fn -- "proxy LLM dan OSRM" --> browser
+    end
 
-Untungnya murah, cepat, dan tidak bisa mati gara-gara database down. Ruginya,
-skor tidak akan berubah kecuali pipeline dijalankan ulang.
+    geo --> cdn
+```
 
 ## Isi repo
 
