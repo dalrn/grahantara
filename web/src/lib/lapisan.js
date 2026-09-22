@@ -13,7 +13,7 @@ export const DEFINISI_LAPISAN = [
     label: "Gerbang kampus",
     berkas: "/data/kampus_gerbang.geojson",
     warna: "#fbbf24",
-    jari: 4,
+    jari: 6,
     aktifAwal: false,
     tersedia: true,
   },

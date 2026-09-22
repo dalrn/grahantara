@@ -19,8 +19,11 @@ const BATAS = [
   [110.334, -7.837],
   [110.473, -7.643],
 ];
-const ID_LAYER_TITIK = DEFINISI_LAPISAN.filter((d) => d.tersedia).map(
-  (d) => `titik-${d.id}`,
+const ID_LAYER_TITIK = DEFINISI_LAPISAN.filter((d) => d.tersedia).flatMap(
+  (d) =>
+    d.id === "gerbang"
+      ? [`titik-${d.id}-hit`, `titik-${d.id}`]
+      : [`titik-${d.id}`],
 );
 
 // Ruang yang ditempati panel melayang, agar isi peta tidak tersembunyi di
@@ -533,6 +536,37 @@ export default function PetaHeksagon({
               "#192b27",
             ];
           }
+          // Area tap gerbang: lingkaran transparan yang jauh lebih besar
+          // daripada titik visualnya, supaya gerbang masih bisa diketuk di
+          // layar sentuh. Ditaruh TEPAT DI BAWAH visual agar titiknya tetap
+          // terlihat. Opacity 0.01, bukan 0: layer dengan opacity 0 dilewati
+          // queryRenderedFeatures, dan guard klik mengandalkannya.
+          if (def.id === "gerbang") {
+            map.addLayer({
+              id: "titik-gerbang-hit",
+              type: "circle",
+              source: `titik-${def.id}`,
+              paint: {
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  11,
+                  10,
+                  15,
+                  16,
+                  17,
+                  20,
+                ],
+                "circle-color": warna,
+                "circle-opacity": 0.01,
+                "circle-stroke-width": 0,
+              },
+            });
+            if (!layerVisibility.current.gerbang) {
+              map.setLayoutProperty("titik-gerbang-hit", "visibility", "none");
+            }
+          }
           map.addLayer({
             id: `titik-${def.id}`,
             type: "circle",
@@ -661,7 +695,12 @@ export default function PetaHeksagon({
         e.originalEvent.preventDefault();
     });
     for (const def of DEFINISI_LAPISAN.filter((d) => d.tersedia)) {
-      map.on("click", `titik-${def.id}`, (e) => {
+      // Gerbang: seluruh interaksi lewat layer hit yang lebih besar. Satu
+      // tap tetap satu popup karena hanya satu layer yang punya handler.
+      const idVisual = `titik-${def.id}`;
+      const idHit = def.id === "gerbang" ? "titik-gerbang-hit" : null;
+      const idInteraksi = idHit ?? idVisual;
+      map.on("click", idInteraksi, (e) => {
         if (
           def.id === "kos" &&
           e.features?.[0]?.properties.id === heldKosId &&
@@ -672,7 +711,9 @@ export default function PetaHeksagon({
         const top = map.queryRenderedFeatures(e.point, {
           layers: ID_LAYER_TITIK.filter((id) => map.getLayer(id)),
         })[0];
-        if (top && top.layer.id !== `titik-${def.id}`) return;
+        // Titik teratas boleh layer visual gerbang (tepat di titik) atau
+        // layer hit-nya (di sekitarnya).
+        if (top && top.layer.id !== idVisual && top.layer.id !== idHit) return;
         const feature = e.features[0];
         const kosData = {
           ...feature.properties,
@@ -814,7 +855,7 @@ export default function PetaHeksagon({
         // paling akhir supaya selalu jadi baris terbawah popup.
         tambahTautanMaps(popup, koordinatFitur(e));
       });
-      map.on("mousemove", `titik-${def.id}`, (e) => {
+      map.on("mousemove", idInteraksi, (e) => {
         if (def.id === "gerbang" && e.features?.length) {
           // Nama gerbang muncul saat hover, tanpa perlu diklik.
           const g = e.features[0].properties;
@@ -847,7 +888,7 @@ export default function PetaHeksagon({
         }
         map.getCanvas().style.cursor = "pointer";
       });
-      map.on("mouseleave", `titik-${def.id}`, () => {
+      map.on("mouseleave", idInteraksi, () => {
         if (def.id === "gerbang") popupGerbang.current?.remove();
         if (def.id === "kos" && pinHover.current) {
           map.setFeatureState(
@@ -1355,11 +1396,12 @@ export default function PetaHeksagon({
     if (!map) return;
     for (const def of DEFINISI_LAPISAN.filter((d) => d.tersedia)) {
       if (!map.getLayer(`titik-${def.id}`)) continue;
-      map.setLayoutProperty(
-        `titik-${def.id}`,
-        "visibility",
-        lapisanAktif[def.id] ? "visible" : "none",
-      );
+      const visibilitas = lapisanAktif[def.id] ? "visible" : "none";
+      map.setLayoutProperty(`titik-${def.id}`, "visibility", visibilitas);
+      // Area tap gerbang ikut toggle yang sama dengan titik visualnya.
+      if (def.id === "gerbang" && map.getLayer("titik-gerbang-hit")) {
+        map.setLayoutProperty("titik-gerbang-hit", "visibility", visibilitas);
+      }
     }
   }, [lapisanAktif]);
 
