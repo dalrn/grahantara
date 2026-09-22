@@ -9,6 +9,12 @@
 // Catatan: path-nya tetap /route/v1/driving/ untuk SEMUA profil, itu nama
 // path bawaan OSRM, sedangkan profil sebenarnya ditentukan oleh server yang
 // dipanggil (routed-foot / routed-car). Bukan salah tulis.
+//
+// Ruas jalan kaki TIDAK BOLEH jatuh ke routed-car. Profil mobil mematuhi
+// jalan satu arah dan larangan belok, sehingga jarak jalan kaki bisa
+// membengkak berkali-kali lipat (mis. 1,5 km jadi 4,3 km) padahal pejalan
+// bisa lewat. Karena itu kegagalan pada profil foot dijawab sebagai galat,
+// bukan dialihkan ke server mobil.
 const SERVER = {
   foot: "https://routing.openstreetmap.de/routed-foot",
   driving: "https://routing.openstreetmap.de/routed-car",

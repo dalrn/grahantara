@@ -9,6 +9,18 @@ const MAKS_JALAN_LANGSUNG_M = 1200; // di atas ini, tawarkan opsi bus
 const MAKS_JALAN_KE_HALTE_M = 1500; // masih wajar dijalani menuju halte
 const KANDIDAT_HALTE = 8;
 
+// Batas kewajaran hasil OSRM terhadap jarak garis lurus. Pejalan kaki boleh
+// memutar (sungai, rel, tembok kampus), tetapi tidak sampai berkali lipat.
+// Di atas batas ini hasilnya hampir selalu artefak profil: halte yang
+// tersnap ke carriageway jalan besar membuat mesin foot menolak menyeberang
+// dan memutar lewat flyover terdekat -- 265 m garis lurus jadi 2,3 km.
+// Jalan kaki di sini "semua jalan bisa dilewati", jadi hasil seperti itu
+// dibuang dan jaraknya dikembalikan ke perkiraan garis lurus.
+const MAKS_LIPAT_JALAN = 2.2;
+// Di jarak sangat pendek, rasio mudah meledak hanya karena titik disnap ke
+// sisi jalan yang berbeda. Beri kelonggaran mutlak sebelum rasio berlaku.
+const TOLERANSI_MEMUTAR_M = 400;
+
 export function jarakMeter(a, b) {
   const R = 6371000;
   const p1 = (a[1] * Math.PI) / 180;
@@ -38,11 +50,33 @@ function koridorHalte(h) {
   return [];
 }
 
+// Data halte memuat banyak rekaman kembar: satu titik fisik bisa muncul
+// 2-3 kali (arah berlawanan, atau hasil impor ganda), sebagian tanpa daftar
+// koridor sama sekali. Kembaran yang kosong koridornya menyingkirkan
+// kembaran yang berisi dari daftar kandidat, sehingga pasangan halte yang
+// sebenarnya sekoridor tidak pernah ketemu. Ambil yang berkoridor lebih
+// dulu, lalu buang kembarannya dalam radius kecil.
+const RADIUS_KEMBAR_M = 30;
+
 function terdekat(titik, daftar, n) {
-  return daftar
+  const urut = daftar
     .map((h) => ({ h, d: jarakMeter(titik, h.geometry.coordinates) }))
-    .sort((a, b) => a.d - b.d)
-    .slice(0, n);
+    .filter((x) => koridorHalte(x.h).length > 0)
+    .sort((a, b) => a.d - b.d);
+
+  const hasil = [];
+  for (const kandidat of urut) {
+    if (hasil.length >= n) break;
+    const kembar = hasil.some(
+      (sudah) =>
+        jarakMeter(
+          sudah.h.geometry.coordinates,
+          kandidat.h.geometry.coordinates,
+        ) < RADIUS_KEMBAR_M,
+    );
+    if (!kembar) hasil.push(kandidat);
+  }
+  return hasil;
 }
 
 // Susun rencana rute (belum ada geometri jalan). Mengembalikan objek dengan
@@ -174,6 +208,21 @@ export function rencanaRute(kos, kampus, halte) {
   };
 }
 
+/**
+ * Benarkah hasil routing ini memutar di luar kewajaran?
+ *
+ * `meterJalan` jarak menurut OSRM, `meterLurus` jarak garis lurus ruas itu.
+ * Selisih kecil selalu dimaafkan lewat TOLERANSI_MEMUTAR_M, supaya ruas
+ * pendek tidak tertolak hanya karena titiknya tersnap ke seberang jalan.
+ */
+function memutarTakWajar(meterJalan, meterLurus) {
+  if (typeof meterJalan !== "number" || !Number.isFinite(meterJalan))
+    return false;
+  if (typeof meterLurus !== "number" || meterLurus <= 0) return false;
+  if (meterJalan - meterLurus <= TOLERANSI_MEMUTAR_M) return false;
+  return meterJalan > meterLurus * MAKS_LIPAT_JALAN;
+}
+
 // Ambil geometri jalan sebenarnya untuk tiap ruas. Ruas bus memakai profil
 // mengemudi (mendekati jalur bus di jalan raya), ruas jalan kaki profil foot.
 export async function lengkapiGeometri(rencana, signal) {
@@ -191,6 +240,12 @@ export async function lengkapiGeometri(rencana, signal) {
         const j = await res.json();
         if (!Array.isArray(j.geometri) || j.geometri.length < 2)
           throw new Error("geometri kosong");
+        // Ruas jalan kaki yang hasilnya berkali lipat jarak garis lurus
+        // hampir selalu artefak snapping, bukan jalan memutar yang nyata.
+        // Pakai perkiraan garis lurus daripada menyajikan 2,3 km untuk
+        // jarak yang sebenarnya 265 m.
+        if (r.mode !== "bus" && memutarTakWajar(j.meter, r.meter))
+          throw new Error("rute memutar tak wajar");
         return { ...r, geometri: j.geometri, meterJalan: j.meter };
       } catch (e) {
         if (e?.name === "AbortError") throw e;
