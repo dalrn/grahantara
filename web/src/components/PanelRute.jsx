@@ -112,7 +112,7 @@ export default function PanelRute({
   const tersedia = DAFTAR_KAMPUS.filter((k) => KOORDINAT_KAMPUS[k]);
 
   return (
-    <div className="route-panel absolute bottom-2 right-2 z-30 w-[19rem] max-w-[calc(100vw-1rem)] rounded-xl bg-slate-900/95 p-3 text-white shadow-xl backdrop-blur-sm md:bottom-4 md:right-4">
+    <div className="route-panel absolute bottom-2 right-2 z-30 w-[19rem] max-w-[calc(100vw-1rem)] rounded-xl bg-slate-900/95 p-3 text-white shadow-xl md:backdrop-blur-sm md:bottom-4 md:right-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-xs text-slate-400">Rute dari</div>

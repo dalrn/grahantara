@@ -172,7 +172,7 @@ export default function TanyaMetode() {
           percakapan tidak hilang saat panel ditutup lalu dibuka lagi. */}
       <div
         id="panel-tanya-metode"
-        className={`${buka ? "" : "hidden "}fixed bottom-16 left-4 right-4 z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-xl bg-slate-900/95 text-white shadow-2xl ring-1 ring-slate-700 backdrop-blur-sm sm:bottom-auto sm:left-auto sm:top-16 sm:w-[380px]`}
+        className={`${buka ? "" : "hidden "}fixed bottom-16 left-4 right-4 z-40 flex max-h-[70vh] flex-col overflow-hidden rounded-xl bg-slate-900/95 text-white shadow-2xl ring-1 ring-slate-700 md:backdrop-blur-sm sm:bottom-auto sm:left-auto sm:top-16 sm:w-[380px]`}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-2">
           <span className="text-sm font-semibold">

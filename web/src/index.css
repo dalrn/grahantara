@@ -1549,7 +1549,14 @@ input[type="checkbox"] {
   border: 1px solid #bbd7c626;
   background: #20332ef2;
   box-shadow: 0 8px 36px #0003;
-  backdrop-filter: blur(6px);
+}
+/* Blur hanya di desktop. Di layar < 768 px backdrop-filter dihitung ulang
+   tiap frame saat peta digeser dan mahal di GPU HP mid-range; latar 0,95
+   sudah cukup pekat tanpa blur. */
+@media (min-width: 768px) {
+  .control-panel {
+    backdrop-filter: blur(6px);
+  }
 }
 .control-tab {
   background: transparent;

@@ -201,7 +201,7 @@ export default function PanelBanding({
   if (!a || !b) {
     // Bar kompak: jangan menutupi peta saat satu slot masih kosong.
     return (
-      <PanelMotion className="comparison-prompt absolute inset-x-2 bottom-2 z-20 rounded-xl bg-slate-900/95 px-3 py-2 text-white shadow-xl backdrop-blur-sm md:inset-x-auto md:bottom-4 md:right-4 md:w-80">
+      <PanelMotion className="comparison-prompt absolute inset-x-2 bottom-2 z-20 rounded-xl bg-slate-900/95 px-3 py-2 text-white shadow-xl md:backdrop-blur-sm md:inset-x-auto md:bottom-4 md:right-4 md:w-80">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold text-slate-300">
             {a
@@ -275,7 +275,7 @@ export default function PanelBanding({
   };
 
   return (
-    <PanelMotion className="detail-panel absolute inset-x-0 bottom-0 z-20 flex h-[80dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[460px] md:rounded-none">
+    <PanelMotion className="detail-panel absolute inset-x-0 bottom-0 z-20 flex h-[80dvh] flex-col rounded-t-2xl bg-slate-900/95 text-white shadow-2xl md:backdrop-blur-sm md:inset-x-auto md:inset-y-0 md:right-0 md:h-full md:w-[460px] md:rounded-none">
       <div className="mx-auto mt-1.5 h-1 w-10 shrink-0 rounded-full bg-white/25 md:hidden" />
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <span className="text-sm font-semibold">Bandingkan kawasan</span>

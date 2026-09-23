@@ -186,7 +186,7 @@ export default function PanelBandingKos({
 
   return (
     <PanelMotion
-      className={`kos-comparison absolute inset-x-2 bottom-2 z-30 overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900/95 p-4 text-slate-100 shadow-xl backdrop-blur-md md:inset-x-auto md:bottom-4 md:right-4 ${complete ? "max-h-[65dvh] md:w-[510px]" : "md:w-96"}`}
+      className={`kos-comparison absolute inset-x-2 bottom-2 z-30 overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900/95 p-4 text-slate-100 shadow-xl md:backdrop-blur-md md:inset-x-auto md:bottom-4 md:right-4 ${complete ? "max-h-[65dvh] md:w-[510px]" : "md:w-96"}`}
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-bold">Bandingkan kos</h2>
