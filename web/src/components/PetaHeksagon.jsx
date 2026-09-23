@@ -187,6 +187,7 @@ export default function PetaHeksagon({
   comparisonType,
   onCompareKos,
   fokus,
+  tujuanRute,
   onMintaRute,
   onPilihGerbang,
   rute,
@@ -220,8 +221,13 @@ export default function PetaHeksagon({
   const popupGerbang = useRef(null);
   const comparisonRef = useRef({ comparisonType, onCompareKos });
   comparisonRef.current = { comparisonType, onCompareKos };
-  const ruteRef = useRef({ onMintaRute, onPilihGerbang, adaRute: false });
-  ruteRef.current = { onMintaRute, onPilihGerbang, adaRute: Boolean(rute) };
+  const ruteRef = useRef({ onMintaRute, onPilihGerbang, adaRute: false, tujuanRute });
+  ruteRef.current = {
+    onMintaRute,
+    onPilihGerbang,
+    adaRute: Boolean(rute),
+    tujuanRute,
+  };
   const fokusRef = useRef(fokus);
   fokusRef.current = fokus;
   const pinJatuhRef = useRef({ onPinJatuh, onMintaRute });
@@ -831,14 +837,20 @@ export default function PetaHeksagon({
             .getElement()
             .querySelector(".maplibregl-popup-content");
           const aktif = ruteRef.current.adaRute;
+          const tujuan = ruteRef.current.tujuanRute;
+          // Gerbang milik kampus lain: tombol memindahkan tujuan sekaligus
+          // (satu klik), bukan diam-diam diabaikan.
+          const beda = aktif && tujuan && p.kampus !== tujuan;
           const tombol = document.createElement("button");
           tombol.type = "button";
           tombol.className = aktif
             ? "mt-3 w-full rounded-lg bg-sky-500 px-3 py-2 text-sm font-bold text-white"
             : "mt-3 w-full cursor-not-allowed rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-400";
-          tombol.textContent = aktif
-            ? "Rute ke gerbang ini"
-            : "Pilih kos dulu untuk rute";
+          tombol.textContent = !aktif
+            ? "Pilih kos dulu untuk rute"
+            : beda
+              ? `Ganti tujuan ke ${p.kampus}`
+              : "Rute ke gerbang ini";
           tombol.disabled = !aktif;
           if (aktif)
             tombol.addEventListener("click", () => {

@@ -29,6 +29,7 @@ function ContohGaris({ mode }) {
 export default function PanelRute({
   kos,
   kampusAwal,
+  onKampusBerubah,
   gerbang,
   onGerbangReset,
   onRute,
@@ -130,7 +131,10 @@ export default function PanelRute({
         <span className="text-slate-400">Ke kampus</span>
         <select
           value={kampus}
-          onChange={(e) => setKampus(e.target.value)}
+          onChange={(e) => {
+            setKampus(e.target.value);
+            onKampusBerubah?.(e.target.value);
+          }}
           className="mt-1 w-full rounded bg-slate-800 px-2 py-1.5 text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
         >
           {tersedia.map((k) => (

@@ -107,6 +107,9 @@ export default function App() {
   const [kosRute, setKosRute] = useState(null);
   const [rute, setRute] = useState(null);
   const [gerbangRute, setGerbangRute] = useState(null);
+  // Kampus tujuan panel rute. Dimiliki App supaya popup gerbang bisa tahu
+  // tujuan aktif dan memindahkannya dalam satu aksi {kampus, gerbang}.
+  const [kampusRute, setKampusRute] = useState(null);
   // Indeks ruas rute yang sedang disorot dari daftar langkah di panel rute.
   const [ruasSorot, setRuasSorot] = useState(null);
   // Pin yang dijatuhkan pengguna lewat klik kanan di peta.
@@ -283,6 +286,7 @@ export default function App() {
     setKosRute(null);
     setRute(null);
     setGerbangRute(null);
+    setKampusRute(null);
     setRuasSorot(null);
   };
 
@@ -297,8 +301,13 @@ export default function App() {
     setKosRute(titik);
   };
 
-  // Gerbang dipilih di peta: rute diarahkan ke pintu itu, bukan titik tengah.
-  const pilihGerbang = (g) => setGerbangRute(g);
+  // Gerbang dipilih di peta: pindahkan tujuan ke kampus gerbang itu DULU,
+  // lalu pasang gerbangnya, supaya penjaga di PanelRute (gerbang.kampus ===
+  // kampus) lolos dan rute langsung dihitung ke pintu tersebut.
+  const pilihGerbang = (g) => {
+    setKampusRute(g.kampus);
+    setGerbangRute(g);
+  };
 
   const keluarBanding = () => {
     setModeBanding(false);
@@ -661,6 +670,7 @@ export default function App() {
                 setAmbangSkor(ambang);
               }}
               fokus={fokusPeta}
+              tujuanRute={kampusRute ?? fokusPeta?.nama ?? null}
               onMintaRute={mintaRute}
               onPilihGerbang={pilihGerbang}
               rute={rute}
@@ -684,7 +694,8 @@ export default function App() {
           {kosRute && (
             <PanelRute
               kos={kosRute}
-              kampusAwal={fokusPeta?.nama}
+              kampusAwal={kampusRute ?? fokusPeta?.nama}
+              onKampusBerubah={setKampusRute}
               gerbang={gerbangRute}
               onGerbangReset={() => setGerbangRute(null)}
               onRute={setRute}
