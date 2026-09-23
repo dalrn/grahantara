@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { muatHeksagon } from "../lib/muatHeksagon";
+
 const LEBAR = 132;
 const TINGGI = 34;
 const KELOMPOK = 22;
@@ -19,12 +21,7 @@ export default function SebaranDimensi({ dimensi, onCakupan }) {
 
   useEffect(() => {
     let batal = false;
-    const controller = new AbortController();
-    fetch("/data/hexagons.geojson", { signal: controller.signal })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    muatHeksagon()
       .then((data) => {
         if (batal) return;
         const hasil = {};
@@ -63,7 +60,6 @@ export default function SebaranDimensi({ dimensi, onCakupan }) {
       });
     return () => {
       batal = true;
-      controller.abort();
     };
   // onCakupan sengaja bukan dependensi: identitasnya berubah tiap render
   // induk dan akan memicu fetch ulang tanpa henti.

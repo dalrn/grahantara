@@ -6,6 +6,7 @@ import { GAYA_BASEMAP_MAPID, WARNA_KELAS } from "../config";
 import { hitungKuintil, ekspresiWarna } from "../lib/kelas";
 import { prepareBasemap } from "../lib/basemap";
 import { campusImage } from "../lib/mapSymbols";
+import { muatHeksagon } from "../lib/muatHeksagon";
 import { TEKS } from "../content/landing.js";
 
 // Wilayah studi penuh; sama dengan BATAS di PetaHeksagon supaya kedua peta
@@ -54,6 +55,9 @@ export default function PetaHero({ onBuka }) {
       pitchWithRotate: false,
       dragRotate: false,
       touchZoomRotate: false,
+      // DPR 2,75 di HP mid-range berarti kanvas 2,6 juta piksel; batasi 2.
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      fadeDuration: 0,
     });
     peta.current = map;
     // Kait untuk uji otomatis; sama pola dengan __qaMap di halaman peta.
@@ -67,11 +71,7 @@ export default function PetaHero({ onBuka }) {
 
     const muat = async () => {
       try {
-        const r = await fetch("/data/hexagons.geojson", {
-          signal: controller.signal,
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
+        const data = await muatHeksagon();
         if (dibuang) return;
 
         // Indikator (16 per heksagon, ~3,3 MB) tidak dipakai di hero.

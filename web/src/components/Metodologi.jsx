@@ -2,6 +2,8 @@ import { StorySection } from "./Motion";
 import TanyaMetode from "./TanyaMetode.jsx";
 import { useEffect, useState } from "react";
 
+import { muatHeksagon } from "../lib/muatHeksagon";
+
 import {
   KELOMPOK_INDIKATOR,
   NAMA_INDIKATOR,
@@ -96,7 +98,7 @@ export default function Metodologi({ onKembali, onBeranda, versi }) {
 
   useEffect(() => {
     Promise.all([
-      fetch("/data/hexagons.geojson").then((r) => r.json()),
+      muatHeksagon(),
       fetch("/data/kos.geojson").then((r) => r.json()),
     ])
       .then(([h, k]) => {

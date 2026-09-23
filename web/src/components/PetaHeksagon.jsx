@@ -10,6 +10,7 @@ import { siapkanMesin } from "../lib/mesinSkor";
 import { DEFINISI_LAPISAN } from "../lib/lapisan";
 import { prepareBasemap } from "../lib/basemap";
 import { busImage, campusImage, polygonCenter } from "../lib/mapSymbols";
+import { muatHeksagon } from "../lib/muatHeksagon";
 import { formatCoordinates } from "../lib/format";
 import { tautanGoogleMaps } from "../lib/tautanPeta";
 import { adalahSentuh } from "../lib/perangkat";
@@ -259,6 +260,10 @@ export default function PetaHeksagon({
       style: gaya,
       center: fokusRef.current?.pusat ?? [110.403, -7.75],
       zoom: fokusRef.current?.zoom ?? 12,
+      // Batasi kanvas di layar DPR tinggi (2,75 di HP mid-range) dan matikan
+      // cross-fade tile supaya geser/zoom tidak menambah kerja GPU.
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      fadeDuration: 0,
     });
     peta.current = map;
     // Kait untuk uji Playwright (tests/ui-*.mjs dan map-symbols-comparison).
@@ -287,7 +292,7 @@ export default function PetaHeksagon({
     };
     const muatData = async () => {
       try {
-        const data = await fetchGeo("/data/hexagons.geojson");
+        const data = await muatHeksagon();
         if (disposed) return;
         hexCoordinates.current = new Map(
           data.features.map((f) => [f.properties.h3_index, polygonCenter(f)]),
@@ -487,6 +492,9 @@ export default function PetaHeksagon({
               id: `titik-${def.id}`,
               type: "symbol",
               source: `titik-${def.id}`,
+              // Halte (566 titik) baru digambar mulai zoom 13; di zoom
+              // kawasan yang lebih jauh ikonnya berdesakan tanpa guna.
+              ...(def.id === "halte" ? { minzoom: 13 } : {}),
               layout: {
                 "icon-image": campus
                   ? ekspresiIkonKampus(fokusRef.current?.nama ?? null)
